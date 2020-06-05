@@ -285,35 +285,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return imageAnalysis;
     }
 
-    private static Mat adjustContrast(Mat image) {
-        Mat newImage = Mat.zeros(image.size(), image.type());
-        double alpha = 3.0; /*< Simple contrast control  [1.0-3.0] */
-        int beta = 100;       /*< Simple brightness control [0-100] */
-
-        byte[] imageData = new byte[(int) (image.total()*image.channels())];
-        image.get(0, 0, imageData);
-        byte[] newImageData = new byte[(int) (newImage.total()*newImage.channels())];
-        for (int y = 0; y < image.rows(); y++) {
-            for (int x = 0; x < image.cols(); x++) {
-                for (int c = 0; c < image.channels(); c++) {
-                    double pixelValue = imageData[(y * image.cols() + x) * image.channels() + c];
-                    pixelValue = pixelValue < 0 ? pixelValue + 256 : pixelValue;
-                    newImageData[(y * image.cols() + x) * image.channels() + c]
-                            = saturate(alpha * pixelValue + beta);
-                }
-            }
-        }
-        newImage.put(0, 0, newImageData);
-
-        return  newImage;
-    }
-
-    private static byte saturate(double val) {
-        int iVal = (int) Math.round(val);
-        iVal = iVal > 255 ? 255 : (iVal < 0 ? 0 : iVal);
-        return (byte) iVal;
-    }
-
     private static Comparator<MatOfPoint> AreaDescendingComparator = new Comparator<MatOfPoint>() {
         public int compare(MatOfPoint m1, MatOfPoint m2) {
             double area1 = Imgproc.contourArea(m1);
