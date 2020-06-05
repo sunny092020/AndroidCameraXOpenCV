@@ -37,11 +37,14 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
+import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfDouble;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
@@ -218,60 +221,178 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         Mat mat = new Mat();
                         Utils.bitmapToMat(bitmap, mat);
 
+                        // Preparing the kernel matrix object
+                        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT,
+                                new  org.opencv.core.Size(10, 10));
+
+                        // Applying erode on the Image
+                        Imgproc.dilate(mat, mat, kernel);
+
                         Mat originMat = new Mat();
                         Utils.bitmapToMat(bitmap, originMat);
 
                         Imgproc.cvtColor(mat, mat, Imgproc.COLOR_RGB2GRAY);
-                        Imgproc.GaussianBlur(mat, mat, new org.opencv.core.Size(5.0, 5.0), 1.0);
+                        Imgproc.medianBlur(mat, mat, 1);
 
-                        double highThres = Imgproc.threshold(mat, mat, 0, 255, Imgproc.THRESH_BINARY + Imgproc.THRESH_OTSU);
-                        Imgproc.Canny(mat, mat, highThres/2, highThres);
+                        Imgproc.adaptiveThreshold(mat, mat, 255,Imgproc.ADAPTIVE_THRESH_MEAN_C,Imgproc.THRESH_BINARY,11, 1);
 
                         List<MatOfPoint> contours = new ArrayList<>();
                         Mat hierarchyMat = new Mat();
 
-                        Imgproc.findContours(mat, contours, hierarchyMat, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_NONE);
+                        Imgproc.findContours(mat, contours, hierarchyMat, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
                         Collections.sort(contours, AreaDescendingComparator);
 
-                        for (MatOfPoint contour : contours) {
+                        double s = (mat.width()*mat.height())/10;
 
-                            MatOfPoint2f contourFloat = MathUtils.toMatOfPointFloat(contour);
-                            double arcLen = Imgproc.arcLength(contourFloat, true) * 0.03;
+                        for(MatOfPoint c : contours){
+                            if(Imgproc.contourArea(c) < s) return;
+                            MatOfPoint2f contour = new MatOfPoint2f(c.toArray());
 
-                            // Approximate polygonal curves.
-                            MatOfPoint2f approx = new MatOfPoint2f();
-                            Imgproc.approxPolyDP(contourFloat, approx, arcLen, true);
+                            double length  = Imgproc.arcLength(contour,true);
+                            Imgproc.approxPolyDP(contour, contour,0.02*length,true);
 
-                            Point[] points = approx.toArray();
-                            // select biggest 4 angles polygon
+                            if(contour.total() == 4){
+                                Log.d("contour", Double.toString(Imgproc.contourArea(contour)));
 
-                            if (points.length == 4 ) {
-                                MatOfPoint approxMat = MathUtils.toMatOfPointInt(approx);
-                                ArrayList<MatOfPoint> contours1 = new ArrayList<>();
-                                contours1.add(approxMat);
-                                Imgproc.drawContours(originMat, contours, -1, new Scalar(255),
-                                        3);
+                                List<MatOfPoint> list = new ArrayList();
+                                list.add(c);
 
-                                Utils.matToBitmap(originMat, bitmap);
-
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        ivBitmap.setImageBitmap(bitmap);
-                                    }
-                                });
+                                Imgproc.polylines (
+                                        originMat,                    // Matrix obj of the image
+                                        list,                      // java.util.List<MatOfPoint> pts
+                                        true,                     // isClosed
+                                        new Scalar(255, 0, 0),     // Scalar object for color
+                                        3                          // Thickness of the line
+                                );
                                 break;
-
                             }
-
                         }
+
+                        Utils.matToBitmap(originMat, bitmap);
+
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                ivBitmap.setImageBitmap(bitmap);
+                            }
+                        });
 
                     }
 
                 });
 
+//        imageAnalysis.setAnalyzer(
+//                new ImageAnalysis.Analyzer() {
+//                    @Override
+//                    public void analyze(ImageProxy image, int rotationDegrees) {
+//                        //Analyzing live camera feed begins.
+//
+//                        final Bitmap bitmap = textureView.getBitmap();
+//
+//                        if(bitmap==null)
+//                            return;
+//
+//                        Mat original = new Mat();
+//                        Utils.bitmapToMat(bitmap, original);
+//
+//                        Mat src = original.clone();
+//                        Mat hsvMat = new Mat();
+//                        Mat saturation = new Mat();
+//                        Mat sobx = new Mat();
+//                        Mat soby = new Mat();
+//                        Mat grad_abs_val_approx = new Mat();
+//
+//                        Imgproc.cvtColor(src, hsvMat, Imgproc.COLOR_BGR2HSV);
+//                        List<Mat> hsv_channels = new ArrayList<Mat>(3);
+//                        Core.split(hsvMat, hsv_channels);
+//                        Mat hue = hsv_channels.get( 0 );
+//                        Mat sat = hsv_channels.get( 1 );
+//                        Mat val = hsv_channels.get( 2 );
+//
+//                        Imgproc.GaussianBlur(sat, saturation, new org.opencv.core.Size(9, 9), 2, 2);
+//                        Mat imf = new Mat();
+//                        saturation.convertTo(imf, org.opencv.core.CvType.CV_32FC1, 0.5f, 0.5f);
+//
+//                        Imgproc.Sobel(imf, sobx, -1, 1, 0);
+//                        Imgproc.Sobel(imf, soby, -1, 0, 1);
+//
+//                        sobx = sobx.mul(sobx);
+//                        soby = soby.mul(soby);
+//
+//                        Mat sumxy = new Mat();
+//                        Core.add(sobx,soby, sumxy);
+//                        Core.pow(sumxy, 0.5, grad_abs_val_approx);
+//
+//                        sobx.release();
+//                        soby.release();
+//                        sumxy.release();
+//
+//                        Mat filtered = new Mat();
+//                        Imgproc.GaussianBlur(grad_abs_val_approx, filtered, new org.opencv.core.Size(9, 9), 2, 2);
+//
+//                        final MatOfDouble mean = new MatOfDouble();
+//                        final MatOfDouble stdev = new MatOfDouble();
+//                        Core.meanStdDev(filtered, mean, stdev);
+//
+//                        Mat thresholded = new Mat();
+//                        Imgproc.threshold(filtered, thresholded, mean.toArray()[0] + stdev.toArray()[0], 1.0, Imgproc.THRESH_TOZERO);
+//
+//                        Mat converted = new Mat();
+//                        thresholded.convertTo(converted, org.opencv.core.CvType.CV_8UC1);
+//
+//                        List<MatOfPoint> contours = new ArrayList<>();
+//
+//                        Mat hierarchyMat = new Mat();
+//
+//                        Imgproc.findContours(converted, contours, hierarchyMat, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_NONE);
+//
+//                        Imgproc.drawContours(original, contours, -1, new Scalar(255),
+//                                3);
+//
+//                        Utils.matToBitmap(original, bitmap);
+//
+//                        runOnUiThread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                ivBitmap.setImageBitmap(bitmap);
+//                            }
+//                        });
+//
+//                    }
+//
+//                });
+
         return imageAnalysis;
+    }
+
+    private static Mat adjustContrast(Mat image) {
+        Mat newImage = Mat.zeros(image.size(), image.type());
+        double alpha = 3.0; /*< Simple contrast control  [1.0-3.0] */
+        int beta = 100;       /*< Simple brightness control [0-100] */
+
+        byte[] imageData = new byte[(int) (image.total()*image.channels())];
+        image.get(0, 0, imageData);
+        byte[] newImageData = new byte[(int) (newImage.total()*newImage.channels())];
+        for (int y = 0; y < image.rows(); y++) {
+            for (int x = 0; x < image.cols(); x++) {
+                for (int c = 0; c < image.channels(); c++) {
+                    double pixelValue = imageData[(y * image.cols() + x) * image.channels() + c];
+                    pixelValue = pixelValue < 0 ? pixelValue + 256 : pixelValue;
+                    newImageData[(y * image.cols() + x) * image.channels() + c]
+                            = saturate(alpha * pixelValue + beta);
+                }
+            }
+        }
+        newImage.put(0, 0, newImageData);
+
+        return  newImage;
+    }
+
+    private static byte saturate(double val) {
+        int iVal = (int) Math.round(val);
+        iVal = iVal > 255 ? 255 : (iVal < 0 ? 0 : iVal);
+        return (byte) iVal;
     }
 
     private static Comparator<MatOfPoint> AreaDescendingComparator = new Comparator<MatOfPoint>() {
