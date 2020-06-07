@@ -1,6 +1,7 @@
 package com.journaldev.androidcameraxopencv;
 
 import android.content.pm.PackageManager;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.os.Bundle;
@@ -34,6 +35,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.journaldev.androidcameraxopencv.helpers.ScannerConstants;
 
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
@@ -199,7 +201,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         HandlerThread analyzerThread = new HandlerThread("OpenCVAnalysis");
         analyzerThread.start();
 
-
         ImageAnalysisConfig imageAnalysisConfig = new ImageAnalysisConfig.Builder()
                 .setImageReaderMode(ImageAnalysis.ImageReaderMode.ACQUIRE_LATEST_IMAGE)
                 .setCallbackHandler(new Handler(analyzerThread.getLooper()))
@@ -211,15 +212,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 new ImageAnalysis.Analyzer() {
                     @Override
                     public void analyze(ImageProxy image, int rotationDegrees) {
+                        if(!ScannerConstants.analyzing) return;
+
                         //Analyzing live camera feed begins.
 
                         final Bitmap bitmap = textureView.getBitmap();
 
-                        if(bitmap==null)
-                            return;
-
                         Mat mat = new Mat();
                         Utils.bitmapToMat(bitmap, mat);
+
+                        Mat originMat = new Mat();
+                        Utils.bitmapToMat(bitmap, originMat);
 
                         // Preparing the kernel matrix object
                         Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT,
@@ -227,9 +230,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                         // Applying erode on the Image
                         Imgproc.dilate(mat, mat, kernel);
-
-                        Mat originMat = new Mat();
-                        Utils.bitmapToMat(bitmap, originMat);
 
                         Imgproc.cvtColor(mat, mat, Imgproc.COLOR_RGB2GRAY);
                         Imgproc.medianBlur(mat, mat, 1);
@@ -243,28 +243,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                         Collections.sort(contours, AreaDescendingComparator);
 
-                        double s = (mat.width()*mat.height())/10;
+                        double minS = (mat.width()*mat.height())*0.4;
+                        double maxS = (mat.width()*mat.height())*0.9;
 
                         for(MatOfPoint c : contours){
-                            if(Imgproc.contourArea(c) < s) return;
                             MatOfPoint2f contour = new MatOfPoint2f(c.toArray());
 
                             double length  = Imgproc.arcLength(contour,true);
                             Imgproc.approxPolyDP(contour, contour,0.02*length,true);
 
+                            if(Imgproc.contourArea(contour) < minS) {
+                                break;
+                            }
+                            if(Imgproc.contourArea(contour) >= maxS) {
+                                break;
+                            }
+
                             if(contour.total() == 4){
                                 Log.d("contour", Double.toString(Imgproc.contourArea(contour)));
+                                Log.d("maxS", Double.toString(maxS));
+                                ScannerConstants.selectedImageBitmap = bitmap;
+                                Log.d("selectedImageBitmap.w", Integer.toString(ScannerConstants.selectedImageBitmap.getWidth()));
+                                Log.d("selectedImageBitmap.h", Integer.toString(ScannerConstants.selectedImageBitmap.getHeight()));
 
-                                List<MatOfPoint> list = new ArrayList();
-                                list.add(c);
+                                ScannerConstants.croptedPolygon = contour;
 
-                                Imgproc.polylines (
-                                        originMat,                    // Matrix obj of the image
-                                        list,                      // java.util.List<MatOfPoint> pts
-                                        true,                     // isClosed
-                                        new Scalar(255, 0, 0),     // Scalar object for color
-                                        3                          // Thickness of the line
-                                );
+                                startCrop(c);
+
+                                drawPoint(contour, originMat);
+
                                 break;
                             }
                         }
@@ -283,6 +290,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 });
 
         return imageAnalysis;
+    }
+
+    private  void drawPoint(MatOfPoint2f contour, Mat myMat) {
+        List<Point> points = contour.toList();
+        for(Point p : points){
+            Imgproc.circle (
+                    myMat,                 //Matrix obj of the image
+                    new Point(p.x, p.y),    //Center of the circle
+                    30,                    //Radius
+                    new Scalar(255, 0, 0),  //Scalar object for color
+                    5                      //Thickness of the circle
+            );
+        }
+    }
+
+    private void startCrop(MatOfPoint c) {
+        Intent cropIntent = new Intent(this, ImageCropActivity.class);
+        ScannerConstants.analyzing = false;
+        startActivityForResult(cropIntent, 1234);
     }
 
     private static Comparator<MatOfPoint> AreaDescendingComparator = new Comparator<MatOfPoint>() {
