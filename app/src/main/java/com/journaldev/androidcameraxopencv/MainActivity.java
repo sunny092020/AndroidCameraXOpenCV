@@ -217,6 +217,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         //Analyzing live camera feed begins.
 
                         final Bitmap bitmap = textureView.getBitmap();
+                        final Bitmap cleanBitmap = textureView.getBitmap();
 
                         Mat mat = new Mat();
                         Utils.bitmapToMat(bitmap, mat);
@@ -243,8 +244,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                         Collections.sort(contours, AreaDescendingComparator);
 
-                        double minS = (mat.width()*mat.height())*0.4;
-                        double maxS = (mat.width()*mat.height())*0.9;
+                        double minS = (mat.width()*mat.height())*0.5;
 
                         for(MatOfPoint c : contours){
                             MatOfPoint2f contour = new MatOfPoint2f(c.toArray());
@@ -255,17 +255,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             if(Imgproc.contourArea(contour) < minS) {
                                 break;
                             }
-                            if(Imgproc.contourArea(contour) >= maxS) {
-                                break;
-                            }
 
                             if(contour.total() == 4){
+                                if(isExceedMat(contour, mat)) break;
                                 Log.d("contour", Double.toString(Imgproc.contourArea(contour)));
-                                Log.d("maxS", Double.toString(maxS));
-                                ScannerConstants.selectedImageBitmap = bitmap;
-                                Log.d("selectedImageBitmap.w", Integer.toString(ScannerConstants.selectedImageBitmap.getWidth()));
-                                Log.d("selectedImageBitmap.h", Integer.toString(ScannerConstants.selectedImageBitmap.getHeight()));
-
+                                ScannerConstants.selectedImageBitmap = cleanBitmap;
                                 ScannerConstants.croptedPolygon = contour;
 
                                 startCrop(c);
@@ -290,6 +284,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 });
 
         return imageAnalysis;
+    }
+
+    private boolean isExceedMat(MatOfPoint2f contour, Mat myMat) {
+        List<Point> points = contour.toList();
+        Log.d("myMat.width()" , Double.toString(myMat.width()));
+        Log.d("myMat.height()" , Double.toString(myMat.height()));
+
+        for(Point p : points){
+            Log.d("p.x" , Double.toString(p.x));
+            Log.d("p.y" , Double.toString(p.y));
+
+            double rateX = p.x/myMat.width();
+            double rateY = p.x/myMat.height();
+
+            if (rateX < 0.01) return true;
+            if (rateX > 0.99) return true;
+            if (rateY < 0.01) return true;
+            if (rateY > 0.99) return true;
+        }
+        return false;
     }
 
     private  void drawPoint(MatOfPoint2f contour, Mat myMat) {

@@ -8,6 +8,7 @@ import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -43,27 +44,39 @@ public class ImageCropActivity extends DocumentScanActivity {
     private OnClickListener btnImageEnhanceClick = new OnClickListener() {
         @Override
         public void onClick(View v) {
-            showProgressBar();
-            disposable.add(
-                    Observable.fromCallable(() -> {
-                        cropImage = getCroppedImage();
-                        if (cropImage == null)
-                            return false;
-                        if (ScannerConstants.saveStorage)
-                            saveToInternalStorage(cropImage);
-                        return false;
-                    })
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe((result) -> {
-                                hideProgressBar();
-                                if (cropImage != null) {
-                                    ScannerConstants.selectedImageBitmap = cropImage;
-                                    setResult(RESULT_OK);
-                                    finish();
-                                }
-                            })
-            );
+            cropImage = getCroppedImage();
+            if (cropImage == null)
+                return;
+            if (ScannerConstants.saveStorage) {
+                Log.d("save cropImage", cropImage.toString());
+                saveToInternalStorage(cropImage);
+            }
+            imageView.setImageBitmap(cropImage);
+
+//            showProgressBar();
+//            disposable.add(
+//                    Observable.fromCallable(() -> {
+//                        cropImage = getCroppedImage();
+//                        if (cropImage == null)
+//                            return false;
+//                        if (ScannerConstants.saveStorage) {
+//                            Log.d("save cropImage", cropImage.toString());
+//                            saveToInternalStorage(cropImage);
+//                        }
+//                        getImageView().setImageBitmap(cropImage);
+//                        return false;
+//                    })
+//                            .subscribeOn(Schedulers.io())
+//                            .observeOn(AndroidSchedulers.mainThread())
+//                            .subscribe((result) -> {
+//                                hideProgressBar();
+//                                if (cropImage != null) {
+//                                    ScannerConstants.selectedImageBitmap = cropImage;
+//                                    setResult(RESULT_OK);
+//                                    finish();
+//                                }
+//                            })
+//            );
         }
     };
     private OnClickListener btnRebase = v -> {
