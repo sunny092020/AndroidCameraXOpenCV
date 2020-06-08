@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -18,6 +19,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -35,6 +37,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.journaldev.androidcameraxopencv.enums.ScanHint;
 import com.journaldev.androidcameraxopencv.helpers.ScannerConstants;
 
 import org.opencv.android.OpenCVLoader;
@@ -57,6 +60,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import static android.view.View.GONE;
+
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
 
@@ -71,6 +76,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Preview preview;
 
     FloatingActionButton btnCapture, btnOk, btnCancel;
+
+    private TextView captureHintText;
+    private LinearLayout captureHintLayout;
+    private ScanHint scanHint = ScanHint.NO_MESSAGE;
 
     private static final double AREA_LOWER_THRESHOLD = 0.2;
     private static final double AREA_UPPER_THRESHOLD = 0.98;
@@ -101,6 +110,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         textureView = findViewById(R.id.textureView);
         ivBitmap = findViewById(R.id.ivBitmap);
 
+        captureHintLayout = findViewById(R.id.capture_hint_layout);
+        captureHintText = findViewById(R.id.capture_hint_text);
+
         if (allPermissionsGranted()) {
             startCamera();
         } else {
@@ -109,7 +121,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void startCamera() {
-
         CameraX.unbindAll();
         preview = setPreview();
         imageCapture = setImageCapture();
@@ -121,10 +132,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
     private Preview setPreview() {
-
         Rational aspectRatio = new Rational(textureView.getWidth(), textureView.getHeight());
         Size screen = new Size(textureView.getWidth(), textureView.getHeight()); //size of the screen
-
 
         PreviewConfig pConfig = new PreviewConfig.Builder().setTargetAspectRatio(aspectRatio).setTargetResolution(screen).build();
         Preview preview = new Preview(pConfig);
@@ -150,14 +159,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         ImageCaptureConfig imageCaptureConfig = new ImageCaptureConfig.Builder().setCaptureMode(ImageCapture.CaptureMode.MIN_LATENCY)
                 .setTargetRotation(getWindowManager().getDefaultDisplay().getRotation()).build();
         final ImageCapture imgCapture = new ImageCapture(imageCaptureConfig);
-
-
         btnCapture.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
-
-
                 imgCapture.takePicture(new ImageCapture.OnImageCapturedListener() {
                     @Override
                     public void onCaptureSuccess(ImageProxy image, int rotationDegrees) {
@@ -194,9 +199,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return imgCapture;
     }
 
-
     private ImageAnalysis setImageAnalysis() {
-
         // Setup image analysis pipeline that computes average pixel luminance
         HandlerThread analyzerThread = new HandlerThread("OpenCVAnalysis");
         analyzerThread.start();
@@ -209,81 +212,129 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         ImageAnalysis imageAnalysis = new ImageAnalysis(imageAnalysisConfig);
 
         imageAnalysis.setAnalyzer(
-                new ImageAnalysis.Analyzer() {
-                    @Override
-                    public void analyze(ImageProxy image, int rotationDegrees) {
-                        if(!ScannerConstants.analyzing) return;
+            new ImageAnalysis.Analyzer() {
+                @Override
+                public void analyze(ImageProxy image, int rotationDegrees) {
+                    if(!ScannerConstants.analyzing) return;
 
-                        //Analyzing live camera feed begins.
+                    //Analyzing live camera feed begins.
 
-                        final Bitmap bitmap = textureView.getBitmap();
-                        final Bitmap cleanBitmap = textureView.getBitmap();
+                    final Bitmap bitmap = textureView.getBitmap();
+                    final Bitmap cleanBitmap = textureView.getBitmap();
 
-                        Mat mat = new Mat();
-                        Utils.bitmapToMat(bitmap, mat);
+                    Mat mat = new Mat();
+                    Utils.bitmapToMat(bitmap, mat);
 
-                        Mat originMat = new Mat();
-                        Utils.bitmapToMat(bitmap, originMat);
+                    Mat originMat = new Mat();
+                    Utils.bitmapToMat(bitmap, originMat);
 
-                        // Preparing the kernel matrix object
-                        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT,
-                                new  org.opencv.core.Size(10, 10));
+                    // Preparing the kernel matrix object
+                    Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT,
+                            new  org.opencv.core.Size(10, 10));
 
-                        // Applying erode on the Image
-                        Imgproc.dilate(mat, mat, kernel);
+                    // Applying erode on the Image
+                    Imgproc.dilate(mat, mat, kernel);
 
-                        Imgproc.cvtColor(mat, mat, Imgproc.COLOR_RGB2GRAY);
-                        Imgproc.medianBlur(mat, mat, 1);
+                    Imgproc.cvtColor(mat, mat, Imgproc.COLOR_RGB2GRAY);
+                    Imgproc.medianBlur(mat, mat, 1);
 
-                        Imgproc.adaptiveThreshold(mat, mat, 255,Imgproc.ADAPTIVE_THRESH_MEAN_C,Imgproc.THRESH_BINARY,11, 1);
+                    Imgproc.adaptiveThreshold(mat, mat, 255,Imgproc.ADAPTIVE_THRESH_MEAN_C,Imgproc.THRESH_BINARY,11, 1);
 
-                        List<MatOfPoint> contours = new ArrayList<>();
-                        Mat hierarchyMat = new Mat();
+                    List<MatOfPoint> contours = new ArrayList<>();
+                    Mat hierarchyMat = new Mat();
 
-                        Imgproc.findContours(mat, contours, hierarchyMat, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+                    Imgproc.findContours(mat, contours, hierarchyMat, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
-                        Collections.sort(contours, AreaDescendingComparator);
+                    Collections.sort(contours, AreaDescendingComparator);
 
-                        double minS = (mat.width()*mat.height())*0.5;
+                    double minS = (mat.width()*mat.height())*0.5;
 
-                        for(MatOfPoint c : contours){
-                            MatOfPoint2f contour = new MatOfPoint2f(c.toArray());
+                    scanHint = ScanHint.NO_MESSAGE;
 
-                            double length  = Imgproc.arcLength(contour,true);
-                            Imgproc.approxPolyDP(contour, contour,0.02*length,true);
+                    for(MatOfPoint c : contours){
+                        MatOfPoint2f contour = new MatOfPoint2f(c.toArray());
 
-                            if(Imgproc.contourArea(contour) < minS) {
-                                break;
+                        double length  = Imgproc.arcLength(contour,true);
+                        Imgproc.approxPolyDP(contour, contour,0.02*length,true);
+
+                        // break loop if it is not quad
+                        if(contour.total() != 4) break;
+
+                        // break loop if points are in the edge of the frame
+                        if(isExceedMat(contour, mat)) break;
+
+                        // break loop if the document is too far from the phone
+                        if(Imgproc.contourArea(contour) < minS) {
+                            scanHint = ScanHint.MOVE_CLOSER;
+                            break;
+                        }
+
+                        new CountDownTimer(2000, 100) {
+                            public void onTick(long millisUntilFinished) {
+                                scanHint = ScanHint.CAPTURING_IMAGE;
                             }
 
-                            if(contour.total() == 4){
-                                if(isExceedMat(contour, mat)) break;
+                            public void onFinish() {
                                 Log.d("contour", Double.toString(Imgproc.contourArea(contour)));
                                 ScannerConstants.selectedImageBitmap = cleanBitmap;
                                 ScannerConstants.croptedPolygon = contour;
-
                                 startCrop(c);
-
-                                drawPoint(contour, originMat);
-
-                                break;
                             }
-                        }
+                        }.start();
 
-                        Utils.matToBitmap(originMat, bitmap);
+                        drawPoint(contour, originMat);
 
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                ivBitmap.setImageBitmap(bitmap);
-                            }
-                        });
-
+                        break;
                     }
 
-                });
+                    Utils.matToBitmap(originMat, bitmap);
+
+                    image.close();
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            displayHint(scanHint);
+                            ivBitmap.setImageBitmap(bitmap);
+                        }
+                    });
+
+                }
+
+            });
 
         return imageAnalysis;
+    }
+
+    public void displayHint(ScanHint scanHint) {
+        captureHintLayout.setVisibility(View.VISIBLE);
+        switch (scanHint) {
+            case MOVE_CLOSER:
+                captureHintText.setText(getResources().getString(R.string.move_closer));
+                captureHintLayout.setBackground(getResources().getDrawable(R.drawable.hint_white));
+                break;
+            case MOVE_AWAY:
+                captureHintText.setText(getResources().getString(R.string.move_away));
+                captureHintLayout.setBackground(getResources().getDrawable(R.drawable.hint_red));
+                break;
+            case ADJUST_ANGLE:
+                captureHintText.setText(getResources().getString(R.string.adjust_angle));
+                captureHintLayout.setBackground(getResources().getDrawable(R.drawable.hint_red));
+                break;
+            case FIND_RECT:
+                captureHintText.setText(getResources().getString(R.string.finding_rect));
+                captureHintLayout.setBackground(getResources().getDrawable(R.drawable.hint_white));
+                break;
+            case CAPTURING_IMAGE:
+                captureHintText.setText(getResources().getString(R.string.hold_still));
+                captureHintLayout.setBackground(getResources().getDrawable(R.drawable.hint_green));
+                break;
+            case NO_MESSAGE:
+                captureHintLayout.setVisibility(GONE);
+                break;
+            default:
+                break;
+        }
     }
 
     private boolean isExceedMat(MatOfPoint2f contour, Mat myMat) {

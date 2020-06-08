@@ -7,10 +7,10 @@
         android:left="5dp"
         android:right="5dp"
         android:top="5dp" />
-    <solid android:color="@color/crop_color" />
+    <solid android:color="@color/red" />
 
     <stroke
         android:width="1dp"
-        android:color="@color/crop_color" />
+        android:color="@color/red" />
 
 </shape>

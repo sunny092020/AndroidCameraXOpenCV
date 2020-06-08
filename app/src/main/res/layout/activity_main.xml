@@ -90,7 +90,9 @@
         android:layout_gravity="center"
         android:background="@drawable/hint_white"
         android:orientation="vertical"
-        android:visibility="gone">
+        android:visibility="gone"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent">
 
         <TextView
             android:id="@+id/capture_hint_text"

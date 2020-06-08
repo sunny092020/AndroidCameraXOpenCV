@@ -8,6 +8,8 @@
     <color name="halfTransparentBackground">#aacccccc</color>
     <color name="colorBlackFortyPercentAlpha">#66000000</color>
     <color name="white">#FFFFFF</color>
+    <color name="red">#ff2600</color>
+    <color name="green">#26d84c</color>
 
     // Scanner Colors
     <color name="colorGrey">#cccccc</color>
