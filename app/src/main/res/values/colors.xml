@@ -6,6 +6,8 @@
     <color name="rejectedRed">#c62828</color>
     <color name="acceptedGreen">#2e7d32</color>
     <color name="halfTransparentBackground">#aacccccc</color>
+    <color name="colorBlackFortyPercentAlpha">#66000000</color>
+    <color name="white">#FFFFFF</color>
 
     // Scanner Colors
     <color name="colorGrey">#cccccc</color>
@@ -14,4 +16,5 @@
     <color name="bottom_background_color">#ffc4c2bc</color>
     <color name="polygonViewCircleStrokeColor">#ff59a9ff</color>
     <color name="polygonViewCircleBackground">#90e5f8ff</color>
+    <color name="crop_color">#00d1fe</color>
 </resources>

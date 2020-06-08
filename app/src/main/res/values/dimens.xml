@@ -16,6 +16,7 @@
     <dimen name="polygonViewCircleWidth">32dp</dimen>
     <dimen name="polygonViewStrokeWidth">2dp</dimen>
     <dimen name="bottom_bar_padding">15dp</dimen>
+    <dimen name="text_size_18">18sp</dimen>
     //
 
 </resources>
