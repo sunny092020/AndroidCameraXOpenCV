@@ -117,17 +117,30 @@ public class PolygonView extends FrameLayout {
             centerPoint.x += pointF.x / size;
             centerPoint.y += pointF.y / size;
         }
+
+        // make crop square smaller a little bit
+        int step = 6;
+
         Map<Integer, PointF> orderedPoints = new HashMap<>();
+
         for (PointF pointF : points) {
             int index = -1;
             if (pointF.x < centerPoint.x && pointF.y < centerPoint.y) {
                 index = 0;
+                pointF.x = pointF.x + step;
+                pointF.y = pointF.y + step;
             } else if (pointF.x > centerPoint.x && pointF.y < centerPoint.y) {
                 index = 1;
+                pointF.x = pointF.x - step;
+                pointF.y = pointF.y + step;
             } else if (pointF.x < centerPoint.x && pointF.y > centerPoint.y) {
                 index = 2;
+                pointF.x = pointF.x + step;
+                pointF.y = pointF.y - step;
             } else if (pointF.x > centerPoint.x && pointF.y > centerPoint.y) {
                 index = 3;
+                pointF.x = pointF.x - step;
+                pointF.y = pointF.y - step;
             }
             orderedPoints.put(index, pointF);
         }

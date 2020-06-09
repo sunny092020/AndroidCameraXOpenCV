@@ -183,6 +183,14 @@ public abstract class DocumentScanActivity extends AppCompatActivity {
         return result;
     }
 
+    private Map<Integer, PointF> orderedValidEdgePoints(Bitmap tempBitmap, List<PointF> pointFs) {
+        Map<Integer, PointF> orderedPoints = getPolygonView().getOrderedPoints(pointFs);
+        if (!getPolygonView().isValidShape(orderedPoints)) {
+            orderedPoints = getOutlinePoints(tempBitmap);
+        }
+        return orderedPoints;
+    }
+
     private Map<Integer, PointF> getOutlinePoints(Bitmap tempBitmap) {
         Map<Integer, PointF> outlinePoints = new HashMap<>();
         outlinePoints.put(0, new PointF(0, 0));
@@ -190,14 +198,6 @@ public abstract class DocumentScanActivity extends AppCompatActivity {
         outlinePoints.put(2, new PointF(0, tempBitmap.getHeight()));
         outlinePoints.put(3, new PointF(tempBitmap.getWidth(), tempBitmap.getHeight()));
         return outlinePoints;
-    }
-
-    private Map<Integer, PointF> orderedValidEdgePoints(Bitmap tempBitmap, List<PointF> pointFs) {
-        Map<Integer, PointF> orderedPoints = getPolygonView().getOrderedPoints(pointFs);
-        if (!getPolygonView().isValidShape(orderedPoints)) {
-            orderedPoints = getOutlinePoints(tempBitmap);
-        }
-        return orderedPoints;
     }
 
     @Override
