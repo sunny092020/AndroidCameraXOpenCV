@@ -84,11 +84,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView captureHintText;
     private LinearLayout captureHintLayout;
     private ScanHint scanHint = ScanHint.NO_MESSAGE;
-    Bitmap textureViewBitmap;
     SimpleDrawingView simpleDrawingView;
-
-    private static final double AREA_LOWER_THRESHOLD = 0.2;
-    private static final double AREA_UPPER_THRESHOLD = 0.98;
 
     long beginTime = System.currentTimeMillis();
     int frameCount = 0;
@@ -312,9 +308,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                     if(scanHint == ScanHint.CAPTURING_IMAGE) {
                         ScannerConstants.analyzing = false;
-                        new CountDownTimer(1500, 100) {
-                            public void onTick(long millisUntilFinished) {}
+                        new CountDownTimer(3000, 100) {
+                            public void onTick(long millisUntilFinished) {
+                                scanHint = ScanHint.CAPTURING_IMAGE;
+                            }
                             public void onFinish() {
+                                // TODO should retake image this moment
                                 startCrop();
                             }
                         }.start();
