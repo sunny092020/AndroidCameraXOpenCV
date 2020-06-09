@@ -3,12 +3,16 @@ package com.journaldev.androidcameraxopencv;
 import android.content.pm.PackageManager;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.util.Rational;
 import android.util.Size;
@@ -39,6 +43,7 @@ import androidx.core.content.ContextCompat;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.journaldev.androidcameraxopencv.enums.ScanHint;
 import com.journaldev.androidcameraxopencv.helpers.ScannerConstants;
+import com.journaldev.androidcameraxopencv.libraries.SimpleDrawingView;
 
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
@@ -59,12 +64,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static android.view.View.GONE;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-
-
     private int REQUEST_CODE_PERMISSIONS = 101;
     private final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA", "android.permission.WRITE_EXTERNAL_STORAGE"};
     TextureView textureView;
@@ -80,10 +84,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView captureHintText;
     private LinearLayout captureHintLayout;
     private ScanHint scanHint = ScanHint.NO_MESSAGE;
+    Bitmap textureViewBitmap;
+    SimpleDrawingView simpleDrawingView;
 
     private static final double AREA_LOWER_THRESHOLD = 0.2;
     private static final double AREA_UPPER_THRESHOLD = 0.98;
 
+    long beginTime = System.currentTimeMillis();
+    int frameCount = 0;
 
     static {
         if (!OpenCVLoader.initDebug())
@@ -112,6 +120,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         captureHintLayout = findViewById(R.id.capture_hint_layout);
         captureHintText = findViewById(R.id.capture_hint_text);
+
+        simpleDrawingView = findViewById(R.id.simpleDrawingView1);
 
         if (allPermissionsGranted()) {
             startCamera();
@@ -211,16 +221,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         ImageAnalysis imageAnalysis = new ImageAnalysis(imageAnalysisConfig);
 
-        imageAnalysis.setAnalyzer(
-            new ImageAnalysis.Analyzer() {
-                @Override
-                public void analyze(ImageProxy image, int rotationDegrees) {
-                    if(!ScannerConstants.analyzing) return;
-
-                    //Analyzing live camera feed begins.
-
+        Thread thread = new Thread(){
+            public void run(){
+                while (true) {
                     final Bitmap bitmap = textureView.getBitmap();
                     final Bitmap cleanBitmap = textureView.getBitmap();
+                    if(bitmap == null) continue;
+                    if(cleanBitmap == null) continue;
 
                     Mat mat = new Mat();
                     Utils.bitmapToMat(bitmap, mat);
@@ -260,6 +267,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         // break loop if it is not quad
                         if(contour.total() != 4) break;
 
+                        drawPoint(contour);
+
                         // break loop if points are in the edge of the frame
                         if(isExceedMat(contour, mat)) break;
 
@@ -269,33 +278,54 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             break;
                         }
 
-                        new CountDownTimer(2000, 100) {
-                            public void onTick(long millisUntilFinished) {
-                                scanHint = ScanHint.CAPTURING_IMAGE;
-                            }
-
-                            public void onFinish() {
-                                Log.d("contour", Double.toString(Imgproc.contourArea(contour)));
-                                ScannerConstants.selectedImageBitmap = cleanBitmap;
-                                ScannerConstants.croptedPolygon = contour;
-                                startCrop(c);
-                            }
-                        }.start();
-
-                        drawPoint(contour, originMat);
+                        // begin capturing
+                        if(!ScannerConstants.analyzing) continue;
+                        scanHint = ScanHint.CAPTURING_IMAGE;
+                        ScannerConstants.selectedImageBitmap = cleanBitmap;
+                        ScannerConstants.croptedPolygon = contour;
 
                         break;
                     }
 
-                    Utils.matToBitmap(originMat, bitmap);
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        };
+        thread.start();
 
-                    image.close();
+        imageAnalysis.setAnalyzer(
+            new ImageAnalysis.Analyzer() {
+                @Override
+                public void analyze(ImageProxy image, int rotationDegrees) {
+                    if(!ScannerConstants.analyzing) return;
+
+                    long currentTime = System.currentTimeMillis();
+                    frameCount+=1;
+
+                    long fps = (long)frameCount*1000/(currentTime-beginTime);
+                    Log.d("currentTime-beginTime ", Long.toString(currentTime-beginTime));
+                    Log.d("fps ", Long.toString(fps));
+
+                    if(scanHint == ScanHint.CAPTURING_IMAGE) {
+                        ScannerConstants.analyzing = false;
+                        new CountDownTimer(1500, 100) {
+                            public void onTick(long millisUntilFinished) {}
+                            public void onFinish() {
+                                startCrop();
+                            }
+                        }.start();
+                    }
+
+                    //Analyzing live camera feed begins.
 
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             displayHint(scanHint);
-                            ivBitmap.setImageBitmap(bitmap);
                         }
                     });
 
@@ -339,13 +369,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private boolean isExceedMat(MatOfPoint2f contour, Mat myMat) {
         List<Point> points = contour.toList();
-        Log.d("myMat.width()" , Double.toString(myMat.width()));
-        Log.d("myMat.height()" , Double.toString(myMat.height()));
-
         for(Point p : points){
-            Log.d("p.x" , Double.toString(p.x));
-            Log.d("p.y" , Double.toString(p.y));
-
             double rateX = p.x/myMat.width();
             double rateY = p.x/myMat.height();
 
@@ -357,22 +381,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return false;
     }
 
-    private  void drawPoint(MatOfPoint2f contour, Mat myMat) {
+    private  void drawPoint(MatOfPoint2f contour) {
         List<Point> points = contour.toList();
-        for(Point p : points){
-            Imgproc.circle (
-                    myMat,                 //Matrix obj of the image
-                    new Point(p.x, p.y),    //Center of the circle
-                    30,                    //Radius
-                    new Scalar(255, 0, 0),  //Scalar object for color
-                    5                      //Thickness of the circle
-            );
-        }
+        simpleDrawingView.setPoints(points);
+        simpleDrawingView.invalidate();
     }
 
-    private void startCrop(MatOfPoint c) {
+    private void startCrop() {
         Intent cropIntent = new Intent(this, ImageCropActivity.class);
-        ScannerConstants.analyzing = false;
         startActivityForResult(cropIntent, 1234);
     }
 

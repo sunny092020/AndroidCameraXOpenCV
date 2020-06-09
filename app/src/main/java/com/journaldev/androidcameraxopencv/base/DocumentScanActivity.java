@@ -161,12 +161,12 @@ public abstract class DocumentScanActivity extends AppCompatActivity {
     }
 
     private Map<Integer, PointF> getEdgePoints(Bitmap tempBitmap) throws Exception {
-        List<PointF> pointFs = getContourEdgePoints(tempBitmap);
+        List<PointF> pointFs = getContourEdgePoints();
         Map<Integer, PointF> orderedPoints = orderedValidEdgePoints(tempBitmap, pointFs);
         return orderedPoints;
     }
 
-    private List<PointF> getContourEdgePoints(Bitmap tempBitmap) {
+    private List<PointF> getContourEdgePoints() {
         MatOfPoint2f point2f = ScannerConstants.croptedPolygon;
         if (point2f == null)
             point2f = new MatOfPoint2f();
