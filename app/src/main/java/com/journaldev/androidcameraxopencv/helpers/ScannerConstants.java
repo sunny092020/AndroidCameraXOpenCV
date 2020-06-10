@@ -12,6 +12,6 @@ public class ScannerConstants {
     public static String cropText="Crop",backText="Retake",
             imageError="No images selected, please try again.",
             cropError="You have not selected a valid field. Please correct it until the lines turn blue.";
-    public static String cropColor="#6666ff",backColor="#ff0000",progressColor="#331199";
+    public static String cropColor="#3399ff",backColor="#000000",progressColor="#331199";
     public static boolean saveStorage=false;
 }
