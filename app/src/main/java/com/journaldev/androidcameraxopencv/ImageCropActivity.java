@@ -186,9 +186,6 @@ public class ImageCropActivity extends DocumentScanActivity {
         Button btnClose = findViewById(R.id.btnClose);
         holderImageCrop = findViewById(R.id.holderImageCrop);
         imageView = findViewById(R.id.imageView);
-        ImageView ivRotate = findViewById(R.id.ivRotate);
-        ImageView ivInvert = findViewById(R.id.ivInvert);
-        ImageView ivRebase = findViewById(R.id.ivRebase);
         btnImageCrop.setText(ScannerConstants.cropText);
         btnClose.setText(ScannerConstants.backText);
         polygonView = findViewById(R.id.polygonView);
@@ -201,9 +198,6 @@ public class ImageCropActivity extends DocumentScanActivity {
         btnClose.setBackgroundColor(Color.parseColor(ScannerConstants.backColor));
         btnImageCrop.setOnClickListener(btnImageEnhanceClick);
         btnClose.setOnClickListener(btnCloseClick);
-        ivRotate.setOnClickListener(onRotateClick);
-        ivInvert.setOnClickListener(btnInvertColor);
-        ivRebase.setOnClickListener(btnRebase);
         startCropping();
     }
 
