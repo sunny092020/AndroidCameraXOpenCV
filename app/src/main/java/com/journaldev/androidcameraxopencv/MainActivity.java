@@ -217,72 +217,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         ImageAnalysis imageAnalysis = new ImageAnalysis(imageAnalysisConfig);
 
-        Thread thread = new Thread(){
-            public void run(){
+
+        Thread thread = new Thread() {
+            public void run() {
                 while (true) {
-                    final Bitmap bitmap = textureView.getBitmap();
-                    if(bitmap == null) continue;
-
-                    Mat mat = new Mat();
-                    Utils.bitmapToMat(bitmap, mat);
-                    
-                    // Preparing the kernel matrix object
-                    Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT,
-                            new  org.opencv.core.Size(10, 10));
-
-                    // Applying erode on the Image
-                    Imgproc.dilate(mat, mat, kernel);
-
-                    Imgproc.cvtColor(mat, mat, Imgproc.COLOR_RGB2GRAY);
-                    Imgproc.medianBlur(mat, mat, 1);
-
-                    Imgproc.adaptiveThreshold(mat, mat, 255,Imgproc.ADAPTIVE_THRESH_MEAN_C,Imgproc.THRESH_BINARY,11, 1);
-
-                    List<MatOfPoint> contours = new ArrayList<>();
-                    Mat hierarchyMat = new Mat();
-
-                    Imgproc.findContours(mat, contours, hierarchyMat, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-
-                    Collections.sort(contours, AreaDescendingComparator);
-
-                    double minS = (mat.width()*mat.height())*0.5;
-
-                    scanHint = ScanHint.NO_MESSAGE;
-
-                    for(MatOfPoint c : contours){
-                        MatOfPoint2f contour = new MatOfPoint2f(c.toArray());
-
-                        double length  = Imgproc.arcLength(contour,true);
-                        Imgproc.approxPolyDP(contour, contour,0.02*length,true);
-
-                        // break loop if it is not quad
-                        if(contour.total() != 4) break;
-
-                        drawPoint(contour);
-
-                        // break loop if points are in the edge of the frame
-                        if(isExceedMat(contour, mat)) break;
-
-                        // break loop if the document is too far from the phone
-                        if(Imgproc.contourArea(contour) < minS) {
-                            scanHint = ScanHint.MOVE_CLOSER;
-                            break;
-                        }
-
-                        // begin capturing
-                        if(!ScannerConstants.analyzing) continue;
-                        scanHint = ScanHint.CAPTURING_IMAGE;
-                        ScannerConstants.selectedImageBitmap = bitmap;
-                        ScannerConstants.croptedPolygon = contour;
-
-                        break;
-                    }
-
                     try {
                         TimeUnit.MILLISECONDS.sleep(100);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
+
+                    Bitmap bitmap = textureView.getBitmap();
+                    if(bitmap == null) continue;
+
+                    if(!ScannerConstants.analyzing) continue;
+
+                    findContours(bitmap);
                 }
             }
         };
@@ -294,18 +244,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 public void analyze(ImageProxy image, int rotationDegrees) {
                     if(!ScannerConstants.analyzing) return;
 
-                    long currentTime = System.currentTimeMillis();
-                    frameCount+=1;
-
-                    long fps = (long)frameCount*1000/(currentTime-beginTime);
-                    Log.d("currentTime-beginTime ", Long.toString(currentTime-beginTime));
-                    Log.d("fps ", Long.toString(fps));
-
                     if(scanHint == ScanHint.CAPTURING_IMAGE) {
                         ScannerConstants.analyzing = false;
                         new CountDownTimer(3000, 100) {
                             public void onTick(long millisUntilFinished) {
-                                scanHint = ScanHint.CAPTURING_IMAGE;
+                                Bitmap bitmap = textureView.getBitmap();
+
+                                // recalculate contour to update the latest position
+                                findContours(bitmap);
                             }
                             public void onFinish() {
                                 // TODO should retake image this moment
@@ -328,6 +274,61 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             });
 
         return imageAnalysis;
+    }
+
+    private void findContours(Bitmap bitmap) {
+        Mat mat = new Mat();
+        Utils.bitmapToMat(bitmap, mat);
+
+        // Preparing the kernel matrix object
+        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT,
+                new  org.opencv.core.Size(10, 10));
+
+        // Applying erode on the Image
+        Imgproc.dilate(mat, mat, kernel);
+
+        Imgproc.cvtColor(mat, mat, Imgproc.COLOR_RGB2GRAY);
+        Imgproc.medianBlur(mat, mat, 1);
+
+        Imgproc.adaptiveThreshold(mat, mat, 255,Imgproc.ADAPTIVE_THRESH_MEAN_C,Imgproc.THRESH_BINARY,11, 1);
+
+        List<MatOfPoint> contours = new ArrayList<>();
+        Mat hierarchyMat = new Mat();
+
+        Imgproc.findContours(mat, contours, hierarchyMat, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+
+        Collections.sort(contours, AreaDescendingComparator);
+
+        double minS = (mat.width()*mat.height())*0.5;
+
+        scanHint = ScanHint.NO_MESSAGE;
+
+        for(MatOfPoint c : contours){
+            MatOfPoint2f contour = new MatOfPoint2f(c.toArray());
+
+            double length  = Imgproc.arcLength(contour,true);
+            Imgproc.approxPolyDP(contour, contour,0.02*length,true);
+
+            // break loop if it is not quad
+            if(contour.total() != 4) break;
+
+            drawPoint(contour);
+
+            // break loop if points are in the edge of the frame
+            if(isExceedMat(contour, mat)) break;
+
+            // break loop if the document is too far from the phone
+            if(Imgproc.contourArea(contour) < minS) {
+                scanHint = ScanHint.MOVE_CLOSER;
+                break;
+            }
+
+            scanHint = ScanHint.CAPTURING_IMAGE;
+            ScannerConstants.selectedImageBitmap = bitmap;
+            ScannerConstants.croptedPolygon = contour;
+
+            break;
+        }
     }
 
     public void displayHint(ScanHint scanHint) {
