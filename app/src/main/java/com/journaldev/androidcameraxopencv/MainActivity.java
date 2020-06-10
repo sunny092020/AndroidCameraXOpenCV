@@ -221,16 +221,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void run(){
                 while (true) {
                     final Bitmap bitmap = textureView.getBitmap();
-                    final Bitmap cleanBitmap = textureView.getBitmap();
                     if(bitmap == null) continue;
-                    if(cleanBitmap == null) continue;
 
                     Mat mat = new Mat();
                     Utils.bitmapToMat(bitmap, mat);
-
-                    Mat originMat = new Mat();
-                    Utils.bitmapToMat(bitmap, originMat);
-
+                    
                     // Preparing the kernel matrix object
                     Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT,
                             new  org.opencv.core.Size(10, 10));
@@ -277,7 +272,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         // begin capturing
                         if(!ScannerConstants.analyzing) continue;
                         scanHint = ScanHint.CAPTURING_IMAGE;
-                        ScannerConstants.selectedImageBitmap = cleanBitmap;
+                        ScannerConstants.selectedImageBitmap = bitmap;
                         ScannerConstants.croptedPolygon = contour;
 
                         break;
