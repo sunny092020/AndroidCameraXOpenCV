@@ -3,16 +3,12 @@ package com.journaldev.androidcameraxopencv;
 import android.content.pm.PackageManager;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Matrix;
-import android.graphics.Paint;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.util.AttributeSet;
 import android.util.Log;
 import android.util.Rational;
 import android.util.Size;
@@ -47,20 +43,14 @@ import com.journaldev.androidcameraxopencv.libraries.SimpleDrawingView;
 
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
-import org.opencv.core.Core;
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfDouble;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
-import org.opencv.core.Rect;
-import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -83,7 +73,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private TextView captureHintText;
     private LinearLayout captureHintLayout;
-    private ScanHint scanHint = ScanHint.NO_MESSAGE;
     SimpleDrawingView simpleDrawingView;
 
     static {
@@ -240,7 +229,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 public void analyze(ImageProxy image, int rotationDegrees) {
                     if(!ScannerConstants.analyzing) return;
 
-                    if(scanHint == ScanHint.CAPTURING_IMAGE) {
+                    if(ScannerConstants.scanHint == ScanHint.CAPTURING_IMAGE) {
                         ScannerConstants.analyzing = false;
                         new CountDownTimer(3000, 100) {
                             public void onTick(long millisUntilFinished) {
@@ -250,7 +239,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 findContours(bitmap);
                             }
                             public void onFinish() {
-                                // TODO should retake image this moment
                                 startCrop();
                             }
                         }.start();
@@ -261,7 +249,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            displayHint(scanHint);
+                            displayHint(ScannerConstants.scanHint);
                         }
                     });
 
@@ -297,7 +285,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         double minS = (mat.width()*mat.height())*0.5;
 
-        scanHint = ScanHint.NO_MESSAGE;
+        ScannerConstants.scanHint = ScanHint.NO_MESSAGE;
 
         for(MatOfPoint c : contours){
             MatOfPoint2f contour = new MatOfPoint2f(c.toArray());
@@ -315,11 +303,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             // break loop if the document is too far from the phone
             if(Imgproc.contourArea(contour) < minS) {
-                scanHint = ScanHint.MOVE_CLOSER;
+                ScannerConstants.scanHint = ScanHint.MOVE_CLOSER;
                 break;
             }
 
-            scanHint = ScanHint.CAPTURING_IMAGE;
+            ScannerConstants.scanHint = ScanHint.CAPTURING_IMAGE;
             ScannerConstants.selectedImageBitmap = bitmap;
             ScannerConstants.croptedPolygon = contour;
 

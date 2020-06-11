@@ -74,7 +74,11 @@ public class ImageCropActivity extends DocumentScanActivity {
         isInverted = false;
         startCropping();
     };
-    private OnClickListener btnCloseClick = v -> finish();
+    private OnClickListener btnCloseClick = v -> {
+        ScannerConstants.resetCaptureState();
+        finish();
+    };
+
     private OnClickListener btnInvertColor = new OnClickListener() {
         @Override
         public void onClick(View v) {
