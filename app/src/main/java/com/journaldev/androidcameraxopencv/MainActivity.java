@@ -86,9 +86,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ScanHint scanHint = ScanHint.NO_MESSAGE;
     SimpleDrawingView simpleDrawingView;
 
-    long beginTime = System.currentTimeMillis();
-    int frameCount = 0;
-
     static {
         if (!OpenCVLoader.initDebug())
             Log.d("ERROR", "Unable to load OpenCV");
@@ -217,23 +214,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         ImageAnalysis imageAnalysis = new ImageAnalysis(imageAnalysisConfig);
 
-
         Thread thread = new Thread() {
             public void run() {
-                while (true) {
-                    try {
-                        TimeUnit.MILLISECONDS.sleep(100);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-
-                    Bitmap bitmap = textureView.getBitmap();
-                    if(bitmap == null) continue;
-
-                    if(!ScannerConstants.analyzing) continue;
-
-                    findContours(bitmap);
+            while (true) {
+                try {
+                    TimeUnit.MILLISECONDS.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
+
+                Bitmap bitmap = textureView.getBitmap();
+                if(bitmap == null) continue;
+
+                if(!ScannerConstants.analyzing) continue;
+
+                findContours(bitmap);
+            }
             }
         };
         thread.start();
