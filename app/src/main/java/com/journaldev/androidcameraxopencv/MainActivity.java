@@ -3,6 +3,7 @@ package com.journaldev.androidcameraxopencv;
 import android.content.pm.PackageManager;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -150,7 +151,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return preview;
     }
 
-
     private ImageCapture setImageCapture() {
         ImageCaptureConfig imageCaptureConfig = new ImageCaptureConfig.Builder().setCaptureMode(ImageCapture.CaptureMode.MIN_LATENCY)
                 .setTargetRotation(getWindowManager().getDefaultDisplay().getRotation()).build();
@@ -215,6 +215,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+
+                if(textureView == null) continue;
 
                 Bitmap bitmap = textureView.getBitmap();
                 if(bitmap == null) continue;
@@ -369,6 +371,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void startCrop() {
         Intent cropIntent = new Intent(this, ImageCropActivity.class);
         startActivityForResult(cropIntent, 1234);
+        finish();
     }
 
     private static Comparator<MatOfPoint> AreaDescendingComparator = new Comparator<MatOfPoint>() {

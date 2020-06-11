@@ -1,5 +1,6 @@
 package com.journaldev.androidcameraxopencv;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -74,8 +75,11 @@ public class ImageCropActivity extends DocumentScanActivity {
         isInverted = false;
         startCropping();
     };
+
     private OnClickListener btnCloseClick = v -> {
         ScannerConstants.resetCaptureState();
+        Intent intent = new Intent(this, MainActivity.class);
+        startActivityForResult(intent, 1234);
         finish();
     };
 
