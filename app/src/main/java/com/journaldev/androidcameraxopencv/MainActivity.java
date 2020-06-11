@@ -62,7 +62,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private int REQUEST_CODE_PERMISSIONS = 101;
     private final String[] REQUIRED_PERMISSIONS = new String[]{
             "android.permission.CAMERA",
-            "android.permission.WRITE_EXTERNAL_STORAGE" 
+            "android.permission.WRITE_EXTERNAL_STORAGE"
     };
 
     TextureView textureView;
@@ -228,9 +228,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         thread.start();
 
         imageAnalysis.setAnalyzer(
-            new ImageAnalysis.Analyzer() {
-                @Override
-                public void analyze(ImageProxy image, int rotationDegrees) {
+                (image, rotationDegrees) -> {
                     if(!ScannerConstants.analyzing) return;
 
                     if(ScannerConstants.scanHint == ScanHint.CAPTURING_IMAGE) {
@@ -257,9 +255,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         }
                     });
 
-                }
-
-            });
+                });
 
         return imageAnalysis;
     }
