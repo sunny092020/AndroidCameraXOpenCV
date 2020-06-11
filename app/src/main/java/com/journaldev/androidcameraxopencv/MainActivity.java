@@ -60,7 +60,11 @@ import static android.view.View.GONE;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private int REQUEST_CODE_PERMISSIONS = 101;
-    private final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA", "android.permission.WRITE_EXTERNAL_STORAGE"};
+    private final String[] REQUIRED_PERMISSIONS = new String[]{
+            "android.permission.CAMERA",
+            "android.permission.WRITE_EXTERNAL_STORAGE"
+    };
+    
     TextureView textureView;
     ImageView ivBitmap;
     LinearLayout llBottom;
