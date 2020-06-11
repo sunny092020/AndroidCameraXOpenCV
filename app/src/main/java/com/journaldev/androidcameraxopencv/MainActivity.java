@@ -49,6 +49,7 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.photo.Photo;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -266,17 +267,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Mat mat = new Mat();
         Utils.bitmapToMat(bitmap, mat);
 
+        Imgproc.cvtColor(mat, mat, Imgproc.COLOR_RGB2GRAY);
+
         // Preparing the kernel matrix object
         Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT,
                 new  org.opencv.core.Size(10, 10));
 
-        // Applying erode on the Image
-        Imgproc.dilate(mat, mat, kernel);
+        for(int i = 1; i<=3; i++) {
+            Imgproc.dilate(mat, mat, kernel);
+        }
 
-        Imgproc.cvtColor(mat, mat, Imgproc.COLOR_RGB2GRAY);
         Imgproc.medianBlur(mat, mat, 1);
 
         Imgproc.adaptiveThreshold(mat, mat, 255,Imgproc.ADAPTIVE_THRESH_MEAN_C,Imgproc.THRESH_BINARY,11, 1);
+
+        // increase contrast
+        for(int i = 1; i<=3; i++) {
+            Imgproc.equalizeHist(mat, mat);
+        }
 
         List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchyMat = new Mat();
