@@ -4,12 +4,16 @@ import android.content.pm.PackageManager;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.Looper;
 import android.util.Log;
 import android.util.Rational;
 import android.util.Size;
@@ -26,18 +30,23 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.camera.core.AspectRatio;
+import androidx.camera.core.CameraSelector;
 import androidx.camera.core.CameraX;
+import androidx.camera.core.Camera;
 import androidx.camera.core.ImageAnalysis;
-import androidx.camera.core.ImageAnalysisConfig;
 import androidx.camera.core.ImageCapture;
-import androidx.camera.core.ImageCaptureConfig;
 import androidx.camera.core.ImageProxy;
 import androidx.camera.core.Preview;
-import androidx.camera.core.PreviewConfig;
+import androidx.camera.core.Preview.Builder;
+import androidx.camera.lifecycle.ProcessCameraProvider;
+import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.LifecycleOwner;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.journaldev.androidcameraxopencv.enums.ScanHint;
 import com.journaldev.androidcameraxopencv.helpers.ScannerConstants;
 import com.journaldev.androidcameraxopencv.libraries.SimpleDrawingView;
@@ -48,14 +57,20 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
+import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
-import org.opencv.photo.Photo;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import static android.view.View.GONE;
@@ -66,6 +81,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             "android.permission.CAMERA",
             "android.permission.WRITE_EXTERNAL_STORAGE"
     };
+    PreviewView previewView;
 
     TextureView textureView;
     ImageView ivBitmap;
@@ -74,12 +90,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     ImageCapture imageCapture;
     ImageAnalysis imageAnalysis;
     Preview preview;
+    Camera camera;
 
     FloatingActionButton btnCapture, btnOk, btnCancel;
 
     private TextView captureHintText;
     private LinearLayout captureHintLayout;
     SimpleDrawingView simpleDrawingView;
+    Bitmap overlay;
 
     static {
         if (!OpenCVLoader.initDebug())
@@ -111,6 +129,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         simpleDrawingView = findViewById(R.id.simpleDrawingView1);
 
+        previewView = findViewById(R.id.preview_view);
+
         if (allPermissionsGranted()) {
             startCamera();
         } else {
@@ -119,146 +139,119 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void startCamera() {
-        CameraX.unbindAll();
-        preview = setPreview();
-        imageCapture = setImageCapture();
-        imageAnalysis = setImageAnalysis();
+        ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
 
-        //bind to lifecycle:
-        CameraX.bindToLifecycle(this, preview, imageCapture, imageAnalysis);
+        cameraProviderFuture.addListener(() -> {
+            try {
+                // Camera provider is now guaranteed to be available
+                ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
+
+                preview = setPreview();
+                imageCapture = setImageCapture();
+                imageAnalysis = setImageAnalysis();
+
+                // Select back camera
+                CameraSelector cameraSelector = new CameraSelector.Builder().requireLensFacing(CameraSelector.LENS_FACING_BACK).build();
+
+                // Unbind use cases before rebinding
+                cameraProvider.unbindAll();
+
+                // Attach use cases to the camera with the same lifecycle owner
+                camera = cameraProvider.bindToLifecycle(
+                        ((LifecycleOwner) this),
+                        cameraSelector,
+                        preview,
+                        imageCapture,
+                        imageAnalysis);
+
+                // Connect the preview use case to the previewView
+                previewView.setPreferredImplementationMode(PreviewView.ImplementationMode.TEXTURE_VIEW);
+                preview.setSurfaceProvider(
+                        previewView.createSurfaceProvider());
+
+            } catch (InterruptedException | ExecutionException e) {
+                // Currently no exceptions thrown. cameraProviderFuture.get() should
+                // not block since the listener is being called, so no need to
+                // handle InterruptedException.
+            }
+        }, ContextCompat.getMainExecutor(this));
     }
 
-
     private Preview setPreview() {
-        Rational aspectRatio = new Rational(textureView.getWidth(), textureView.getHeight());
         Size screen = new Size(textureView.getWidth(), textureView.getHeight()); //size of the screen
-
-        PreviewConfig pConfig = new PreviewConfig.Builder().setTargetAspectRatio(aspectRatio).setTargetResolution(screen).build();
-        Preview preview = new Preview(pConfig);
-
-        preview.setOnPreviewOutputUpdateListener(
-                new Preview.OnPreviewOutputUpdateListener() {
-                    @Override
-                    public void onUpdated(Preview.PreviewOutput output) {
-                        ViewGroup parent = (ViewGroup) textureView.getParent();
-                        parent.removeView(textureView);
-                        parent.addView(textureView, 0);
-
-                        textureView.setSurfaceTexture(output.getSurfaceTexture());
-                        updateTransform();
-                    }
-                });
-
+        Preview.Builder previewBuilder = new Preview.Builder().setTargetResolution(screen);
+        Preview preview = previewBuilder.build();
         return preview;
     }
 
     private ImageCapture setImageCapture() {
-        ImageCaptureConfig imageCaptureConfig = new ImageCaptureConfig.Builder().setCaptureMode(ImageCapture.CaptureMode.MIN_LATENCY)
-                .setTargetRotation(getWindowManager().getDefaultDisplay().getRotation()).build();
-        final ImageCapture imgCapture = new ImageCapture(imageCaptureConfig);
+        ImageCapture.Builder imageCaptureBuilder = new ImageCapture.Builder().setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                .setTargetRotation(getWindowManager().getDefaultDisplay().getRotation());
+
+
+        final ImageCapture imgCapture = imageCaptureBuilder.build();
+
         btnCapture.setOnClickListener(new View.OnClickListener() {
-
             @Override
-            public void onClick(View v) {
-                imgCapture.takePicture(new ImageCapture.OnImageCapturedListener() {
-                    @Override
-                    public void onCaptureSuccess(ImageProxy image, int rotationDegrees) {
-                        Bitmap bitmap = textureView.getBitmap();
-                        showAcceptedRejectedButton(true);
-                        ivBitmap.setImageBitmap(bitmap);
-                    }
-
-                    @Override
-                    public void onError(ImageCapture.UseCaseError useCaseError, String message, @Nullable Throwable cause) {
-                        super.onError(useCaseError, message, cause);
-                    }
-                });
-
-
-                /*File file = new File(
-                        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "" + System.currentTimeMillis() + "_JDCameraX.jpg");
-                imgCapture.takePicture(file, new ImageCapture.OnImageSavedListener() {
-                    @Override
-                    public void onImageSaved(@NonNull File file) {
-                        Bitmap bitmap = textureView.getBitmap();
-                        showAcceptedRejectedButton(true);
-                        ivBitmap.setImageBitmap(bitmap);
-                    }
-
-                    @Override
-                    public void onError(@NonNull ImageCapture.UseCaseError useCaseError, @NonNull String message, @Nullable Throwable cause) {
-
-                    }
-                });*/
-            }
+            public void onClick(View v) {}
         });
 
         return imgCapture;
     }
 
     private ImageAnalysis setImageAnalysis() {
-        // Setup image analysis pipeline that computes average pixel luminance
-        HandlerThread analyzerThread = new HandlerThread("OpenCVAnalysis");
-        analyzerThread.start();
+        ImageAnalysis.Builder imageAnalysisBuilder = new ImageAnalysis.Builder()
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .setImageQueueDepth(1);
 
-        ImageAnalysisConfig imageAnalysisConfig = new ImageAnalysisConfig.Builder()
-                .setImageReaderMode(ImageAnalysis.ImageReaderMode.ACQUIRE_LATEST_IMAGE)
-                .setCallbackHandler(new Handler(analyzerThread.getLooper()))
-                .setImageQueueDepth(1).build();
+        ImageAnalysis imageAnalysis = imageAnalysisBuilder.build();
 
-        ImageAnalysis imageAnalysis = new ImageAnalysis(imageAnalysisConfig);
+        imageAnalysis.setAnalyzer(Executors.newSingleThreadExecutor(),
+            (image) -> {
+                if(!ScannerConstants.analyzing) {
+                    image.close();
+                    return;
+                };
 
-        Thread thread = new Thread() {
-            public void run() {
-            while (true) {
-                try {
-                    TimeUnit.MILLISECONDS.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
-                if(textureView == null) continue;
-
-                Bitmap bitmap = textureView.getBitmap();
-                if(bitmap == null) continue;
-
-                if(!ScannerConstants.analyzing) continue;
+                Bitmap bitmap = previewView.getBitmap();
 
                 findContours(bitmap);
-            }
-            }
-        };
-        thread.start();
 
-        imageAnalysis.setAnalyzer(
-                (image, rotationDegrees) -> {
-                    if(!ScannerConstants.analyzing) return;
 
-                    if(ScannerConstants.scanHint == ScanHint.CAPTURING_IMAGE) {
-                        ScannerConstants.analyzing = false;
-                        new CountDownTimer(3000, 100) {
-                            public void onTick(long millisUntilFinished) {
-                                Bitmap bitmap = textureView.getBitmap();
-
-                                // recalculate contour to update the latest position
-                                findContours(bitmap);
-                            }
-                            public void onFinish() {
-                                startCrop();
-                            }
-                        }.start();
-                    }
-
-                    //Analyzing live camera feed begins.
-
-                    runOnUiThread(new Runnable() {
+                if(ScannerConstants.scanHint == ScanHint.CAPTURING_IMAGE) {
+                    ScannerConstants.analyzing = false;
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
                         @Override
                         public void run() {
-                            displayHint(ScannerConstants.scanHint);
+                            new CountDownTimer(3000, 100) {
+                                public void onTick(long millisUntilFinished) {
+                                    Bitmap bitmap = previewView.getBitmap();
+
+                                    // recalculate contour to update the latest position
+                                    findContours(bitmap);
+                                }
+                                public void onFinish() {
+                                    image.close();
+                                    startCrop();
+                                }
+                            }.start();
                         }
                     });
+                }
 
+                image.close();
+
+                //Analyzing live camera feed begins.
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        displayHint(ScannerConstants.scanHint);
+                        ivBitmap.setImageBitmap(overlay);
+                    }
                 });
+
+            });
 
         return imageAnalysis;
     }
@@ -358,9 +351,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private boolean isExceedMat(MatOfPoint2f contour, Mat myMat) {
         List<Point> points = contour.toList();
+
         for(Point p : points){
             double rateX = p.x/myMat.width();
-            double rateY = p.x/myMat.height();
+            double rateY = p.y/myMat.height();
 
             if (rateX < 0.01) return true;
             if (rateX > 0.99) return true;
@@ -372,8 +366,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private  void drawPoint(MatOfPoint2f contour) {
         List<Point> points = contour.toList();
-        simpleDrawingView.setPoints(points);
-        simpleDrawingView.invalidate();
+
+        int paintColor = Color.RED;
+
+        // Setup paint with color and stroke styles
+        Paint drawPaint = new Paint();
+        drawPaint.setColor(paintColor);
+        drawPaint.setAntiAlias(true);
+        drawPaint.setStrokeWidth(5);
+        drawPaint.setStyle(Paint.Style.STROKE);
+        drawPaint.setStrokeJoin(Paint.Join.ROUND);
+        drawPaint.setStrokeCap(Paint.Cap.ROUND);
+
+        Bitmap bitmap = previewView.getBitmap();
+        overlay = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(overlay);
+
+        for (Point p : points) {
+            canvas.drawCircle((float) p.x, (float)p.y, 30, drawPaint);
+        }
     }
 
     private void startCrop() {
@@ -392,25 +403,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     };
 
-    private void showAcceptedRejectedButton(boolean acceptedRejected) {
-        if (acceptedRejected) {
-            CameraX.unbind(preview, imageAnalysis);
-            llBottom.setVisibility(View.VISIBLE);
-            btnCapture.hide();
-            textureView.setVisibility(View.GONE);
-        } else {
-            btnCapture.show();
-            llBottom.setVisibility(View.GONE);
-            textureView.setVisibility(View.VISIBLE);
-            textureView.post(new Runnable() {
-                @Override
-                public void run() {
-                    startCamera();
-                }
-            });
-        }
-    }
-
+    private void showAcceptedRejectedButton(boolean acceptedRejected) {}
 
     private void updateTransform() {
         Matrix mx = new Matrix();
@@ -484,19 +477,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.btnAccept:
                 File file = new File(
                         Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "" + System.currentTimeMillis() + "_JDCameraX.jpg");
-                imageCapture.takePicture(file, new ImageCapture.OnImageSavedListener() {
-                    @Override
-                    public void onImageSaved(@NonNull File file) {
-                        showAcceptedRejectedButton(false);
-
-                        Toast.makeText(getApplicationContext(), "Image saved successfully in Pictures Folder", Toast.LENGTH_LONG).show();
-                    }
-
-                    @Override
-                    public void onError(@NonNull ImageCapture.UseCaseError useCaseError, @NonNull String message, @Nullable Throwable cause) {
-
-                    }
-                });
                 break;
         }
     }
