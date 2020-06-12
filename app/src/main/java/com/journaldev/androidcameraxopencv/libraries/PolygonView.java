@@ -119,7 +119,7 @@ public class PolygonView extends FrameLayout {
         }
 
         // make crop square smaller a little bit
-        int step = 13;
+        int step = 0;
 
         Map<Integer, PointF> orderedPoints = new HashMap<>();
 

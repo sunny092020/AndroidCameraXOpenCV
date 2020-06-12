@@ -208,40 +208,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         imageAnalysis.setAnalyzer(Executors.newSingleThreadExecutor(),
             (image) -> {
-                if(!ScannerConstants.analyzing) {
-                    image.close();
-                    return;
-                };
-
                 Bitmap bitmap = previewView.getBitmap();
-
                 findContours(bitmap);
 
-
-                if(ScannerConstants.scanHint == ScanHint.CAPTURING_IMAGE) {
-                    ScannerConstants.analyzing = false;
-                    new Handler(Looper.getMainLooper()).post(new Runnable() {
-                        @Override
-                        public void run() {
-                            new CountDownTimer(3000, 100) {
-                                public void onTick(long millisUntilFinished) {
-                                    Bitmap bitmap = previewView.getBitmap();
-
-                                    // recalculate contour to update the latest position
-                                    findContours(bitmap);
-                                }
-                                public void onFinish() {
-                                    image.close();
-                                    startCrop();
-                                }
-                            }.start();
-                        }
-                    });
-                }
-
-                image.close();
-
-                //Analyzing live camera feed begins.
+                Log.d("after", "findContours");
 
                 runOnUiThread(new Runnable() {
                     @Override
@@ -251,6 +221,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 });
 
+                if(!ScannerConstants.analyzing) {
+                    image.close();
+                    return;
+                };
+
+                if(ScannerConstants.scanHint == ScanHint.CAPTURING_IMAGE) {
+                    ScannerConstants.analyzing = false;
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            new CountDownTimer(3000, 100) {
+                                public void onTick(long millisUntilFinished) {}
+                                public void onFinish() {
+                                    Bitmap bitmap = previewView.getBitmap();
+                                    findContours(bitmap);
+
+                                    image.close();
+                                    startCrop();
+                                }
+                            }.start();
+                        }
+                    });
+                }
+
+                image.close();
             });
 
         return imageAnalysis;
@@ -260,15 +255,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Mat mat = new Mat();
         Utils.bitmapToMat(bitmap, mat);
 
+        Mat originMat = new Mat();
+        Utils.bitmapToMat(bitmap, originMat);
+
         Imgproc.cvtColor(mat, mat, Imgproc.COLOR_RGB2GRAY);
 
         // Preparing the kernel matrix object
         Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT,
-                new  org.opencv.core.Size(10, 10));
+                new  org.opencv.core.Size(5, 5));
 
-        for(int i = 1; i<=3; i++) {
-            Imgproc.dilate(mat, mat, kernel);
-        }
+        Imgproc.dilate(mat, mat, kernel);
 
         Imgproc.medianBlur(mat, mat, 1);
 
@@ -283,6 +279,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Mat hierarchyMat = new Mat();
 
         Imgproc.findContours(mat, contours, hierarchyMat, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+
+//        Imgproc.drawContours(originMat, contours, -1, new Scalar(255,0,0));
+//
+//        overlay = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
+//        Utils.matToBitmap(originMat, overlay);
 
         Collections.sort(contours, AreaDescendingComparator);
 
@@ -299,7 +300,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             // break loop if it is not quad
             if(contour.total() != 4) break;
 
-            drawPoint(contour);
+            drawPoint(contour, bitmap);
 
             // break loop if points are in the edge of the frame
             if(isExceedMat(contour, mat)) break;
@@ -364,7 +365,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return false;
     }
 
-    private  void drawPoint(MatOfPoint2f contour) {
+    private  void drawPoint(MatOfPoint2f contour, Bitmap bitmap) {
         List<Point> points = contour.toList();
 
         int paintColor = Color.RED;
@@ -378,7 +379,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         drawPaint.setStrokeJoin(Paint.Join.ROUND);
         drawPaint.setStrokeCap(Paint.Cap.ROUND);
 
-        Bitmap bitmap = previewView.getBitmap();
         overlay = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(overlay);
 
