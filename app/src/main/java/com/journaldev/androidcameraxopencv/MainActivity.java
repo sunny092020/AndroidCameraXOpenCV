@@ -3,7 +3,6 @@ package com.journaldev.androidcameraxopencv;
 import android.content.pm.PackageManager;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
@@ -12,33 +11,25 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.HandlerThread;
 import android.os.Looper;
 import android.util.Log;
-import android.util.Rational;
 import android.util.Size;
 import android.view.Menu;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.camera.core.AspectRatio;
 import androidx.camera.core.CameraSelector;
-import androidx.camera.core.CameraX;
 import androidx.camera.core.Camera;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageCapture;
-import androidx.camera.core.ImageProxy;
 import androidx.camera.core.Preview;
-import androidx.camera.core.Preview.Builder;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
@@ -49,7 +40,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.journaldev.androidcameraxopencv.enums.ScanHint;
 import com.journaldev.androidcameraxopencv.helpers.ScannerConstants;
-import com.journaldev.androidcameraxopencv.libraries.SimpleDrawingView;
 
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
@@ -57,21 +47,15 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
-import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import static android.view.View.GONE;
 
@@ -96,7 +80,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private TextView captureHintText;
     private LinearLayout captureHintLayout;
-    SimpleDrawingView simpleDrawingView;
     Bitmap overlay;
 
     static {
@@ -126,8 +109,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         captureHintLayout = findViewById(R.id.capture_hint_layout);
         captureHintText = findViewById(R.id.capture_hint_text);
-
-        simpleDrawingView = findViewById(R.id.simpleDrawingView1);
 
         previewView = findViewById(R.id.preview_view);
 
