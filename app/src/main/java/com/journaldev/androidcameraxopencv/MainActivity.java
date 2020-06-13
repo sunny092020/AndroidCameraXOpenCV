@@ -69,9 +69,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     };
     PreviewView previewView;
 
-    TextureView textureView;
     ImageView ivBitmap;
-    LinearLayout llBottom;
 
     ImageCapture imageCapture;
     ImageAnalysis imageAnalysis;
@@ -105,8 +103,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnOk.setOnClickListener(this);
         btnCancel.setOnClickListener(this);
 
-        llBottom = findViewById(R.id.llBottom);
-        textureView = findViewById(R.id.textureView);
         ivBitmap = findViewById(R.id.ivBitmap);
 
         captureHintLayout = findViewById(R.id.capture_hint_layout);
@@ -160,7 +156,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private Preview setPreview() {
-        Size screen = new Size(textureView.getWidth(), textureView.getHeight()); //size of the screen
+        Size screen = new Size(previewView.getWidth(), previewView.getHeight()); //size of the screen
         Preview.Builder previewBuilder = new Preview.Builder().setTargetResolution(screen);
         Preview preview = previewBuilder.build();
         return preview;
@@ -389,38 +385,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     };
 
     private void showAcceptedRejectedButton(boolean acceptedRejected) {}
-
-    private void updateTransform() {
-        Matrix mx = new Matrix();
-        float w = textureView.getMeasuredWidth();
-        float h = textureView.getMeasuredHeight();
-
-        float cX = w / 2f;
-        float cY = h / 2f;
-
-        int rotationDgr;
-        int rotation = (int) textureView.getRotation();
-
-        switch (rotation) {
-            case Surface.ROTATION_0:
-                rotationDgr = 0;
-                break;
-            case Surface.ROTATION_90:
-                rotationDgr = 90;
-                break;
-            case Surface.ROTATION_180:
-                rotationDgr = 180;
-                break;
-            case Surface.ROTATION_270:
-                rotationDgr = 270;
-                break;
-            default:
-                return;
-        }
-
-        mx.postRotate((float) rotationDgr, cX, cY);
-        textureView.setTransform(mx);
-    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
