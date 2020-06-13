@@ -148,7 +148,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         imageAnalysis);
 
                 // Connect the preview use case to the previewView
-                previewView.setPreferredImplementationMode(PreviewView.ImplementationMode.TEXTURE_VIEW);
                 preview.setSurfaceProvider(
                         previewView.createSurfaceProvider());
 
