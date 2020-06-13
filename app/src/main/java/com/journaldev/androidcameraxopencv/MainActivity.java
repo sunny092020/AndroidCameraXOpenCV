@@ -67,10 +67,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             "android.permission.CAMERA",
             "android.permission.WRITE_EXTERNAL_STORAGE"
     };
+
     PreviewView previewView;
-
     ImageView ivBitmap;
-
     ImageCapture imageCapture;
     ImageAnalysis imageAnalysis;
     Preview preview;

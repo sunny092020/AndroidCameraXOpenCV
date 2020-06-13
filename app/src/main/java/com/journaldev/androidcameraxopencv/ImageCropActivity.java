@@ -46,30 +46,41 @@ public class ImageCropActivity extends DocumentScanActivity {
         @Override
         public void onClick(View v) {
             showProgressBar();
-            disposable.add(
-                    Observable.fromCallable(() -> {
-                        cropImage = getCroppedImage();
-                        if (cropImage == null)
-                            return false;
-                        if (ScannerConstants.saveStorage) {
-                            Log.d("save cropImage", cropImage.toString());
-                            saveToInternalStorage(cropImage);
-                        }
-                        return false;
-                    })
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe((result) -> {
-                                hideProgressBar();
-                                if (cropImage != null) {
-                                    ScannerConstants.selectedImageBitmap = cropImage;
-                                    setResult(RESULT_OK);
-                                    finish();
-                                }
-                            })
-            );
+
+            toEditImage();
+
+//            disposable.add(
+//                    Observable.fromCallable(() -> {
+//                        cropImage = getCroppedImage();
+//                        if (cropImage == null)
+//                            return false;
+//                        if (ScannerConstants.saveStorage) {
+//                            Log.d("save cropImage", cropImage.toString());
+//                            saveToInternalStorage(cropImage);
+//                        }
+//                        return false;
+//                    })
+//                            .subscribeOn(Schedulers.io())
+//                            .observeOn(AndroidSchedulers.mainThread())
+//                            .subscribe((result) -> {
+//                                hideProgressBar();
+//                                if (cropImage != null) {
+//                                    ScannerConstants.selectedImageBitmap = cropImage;
+//                                    setResult(RESULT_OK);
+//                                    finish();
+//                                }
+//                            })
+//            );
         }
     };
+
+    private  void toEditImage() {
+        ScannerConstants.cropImageBitmap = getCroppedImage();
+        Intent cropIntent = new Intent(this, ImageEditActivity.class);
+        startActivityForResult(cropIntent, 1234);
+        finish();
+    }
+
     private OnClickListener btnRebase = v -> {
         cropImage = ScannerConstants.selectedImageBitmap.copy(ScannerConstants.selectedImageBitmap.getConfig(), true);
         isInverted = false;

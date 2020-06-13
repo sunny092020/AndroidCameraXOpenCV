@@ -12,6 +12,7 @@ public class ScannerConstants {
     public static boolean captured_finish = false;
     public static MatOfPoint2f croptedPolygon;
     public static Bitmap selectedImageBitmap;
+    public static Bitmap cropImageBitmap;
     public static ScanHint scanHint = ScanHint.NO_MESSAGE;
     public static boolean saveStorage=false;
 
@@ -27,5 +28,6 @@ public class ScannerConstants {
         ScannerConstants.scanHint = ScanHint.NO_MESSAGE;
         croptedPolygon = null;
         selectedImageBitmap = null;
+        cropImageBitmap = null;
     }
 }
