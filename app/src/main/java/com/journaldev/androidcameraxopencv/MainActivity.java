@@ -50,9 +50,11 @@ import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.File;
+import java.security.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -189,10 +191,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         imageAnalysis.setAnalyzer(Executors.newSingleThreadExecutor(),
             (image) -> {
+                if(ScannerConstants.captured_finish) {
+                    image.close();
+                    return;
+                };
+
                 Bitmap bitmap = previewView.getBitmap();
                 findContours(bitmap);
-
-                Log.d("after", "findContours");
 
                 runOnUiThread(new Runnable() {
                     @Override
@@ -215,6 +220,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             new CountDownTimer(3000, 100) {
                                 public void onTick(long millisUntilFinished) {}
                                 public void onFinish() {
+                                    ScannerConstants.captured_finish = true;
                                     Bitmap bitmap = previewView.getBitmap();
                                     findContours(bitmap);
 
@@ -243,8 +249,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         // Preparing the kernel matrix object
         Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT,
-                new  org.opencv.core.Size(5, 5));
-
+                new  org.opencv.core.Size(3, 3));
         Imgproc.dilate(mat, mat, kernel);
 
         Imgproc.medianBlur(mat, mat, 1);
@@ -268,7 +273,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         Collections.sort(contours, AreaDescendingComparator);
 
-        double minS = (mat.width()*mat.height())*0.5;
+        double minS = (mat.width()*mat.height())*0.3;
 
         ScannerConstants.scanHint = ScanHint.NO_MESSAGE;
 

@@ -9,6 +9,7 @@ import org.opencv.core.MatOfPoint2f;
 
 public class ScannerConstants {
     public static boolean analyzing = true;
+    public static boolean captured_finish = false;
     public static MatOfPoint2f croptedPolygon;
     public static Bitmap selectedImageBitmap;
     public static ScanHint scanHint = ScanHint.NO_MESSAGE;
@@ -22,6 +23,7 @@ public class ScannerConstants {
     // retake image, back to main activity from crop activity
     public static void resetCaptureState() {
         ScannerConstants.analyzing = true;
+        ScannerConstants.captured_finish = false;
         ScannerConstants.scanHint = ScanHint.NO_MESSAGE;
         croptedPolygon = null;
         selectedImageBitmap = null;
