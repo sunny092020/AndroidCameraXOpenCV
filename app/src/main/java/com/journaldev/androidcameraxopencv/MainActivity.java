@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -15,8 +14,6 @@ import android.os.Looper;
 import android.util.Log;
 import android.util.Size;
 import android.view.Menu;
-import android.view.Surface;
-import android.view.TextureView;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -43,6 +40,7 @@ import com.journaldev.androidcameraxopencv.helpers.ScannerConstants;
 
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
@@ -50,16 +48,20 @@ import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.File;
-import java.security.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Vector;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
 import static android.view.View.GONE;
+import static java.lang.Math.abs;
+import static java.lang.Math.min;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private int REQUEST_CODE_PERMISSIONS = 101;
@@ -232,6 +234,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return imageAnalysis;
     }
 
+    Point computeIntersect(Line l1, Line l2) {
+        double x1 = l1._p1.x, x2 = l1._p2.x, y1 = l1._p1.y, y2 = l1._p2.y;
+        double x3 = l2._p1.x, x4 = l2._p2.x, y3 = l2._p1.y, y4 = l2._p2.y;
+        double d = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+        if (d != 0) {
+            Point pt = new Point();
+            pt.x= ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / d;
+            pt.y = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / d;
+            return pt;
+        }
+        return new Point(-1, -1);
+    }
+
+
+    private void getCanny(Mat gray, Mat canny) {
+        Mat thres = new Mat();
+        double high_thres = Imgproc.threshold(gray, thres, 0, 255, Imgproc.THRESH_BINARY + Imgproc.THRESH_OTSU),
+                low_thres = high_thres * 0.5;
+        Imgproc.Canny(gray, canny, low_thres, high_thres);
+    }
+
     private void findContours(Bitmap bitmap) {
         Mat mat = new Mat();
         Utils.bitmapToMat(bitmap, mat);
@@ -239,26 +262,189 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Mat originMat = new Mat();
         Utils.bitmapToMat(bitmap, originMat);
 
-        Imgproc.cvtColor(mat, mat, Imgproc.COLOR_RGB2GRAY);
+        int w = mat.width(), h = mat.height();
+
+        /* get four outline edges of the document */
+        // get edges of the image
+        Mat gray = new Mat(), canny = new Mat();
+        Imgproc.cvtColor(mat, gray, Imgproc.COLOR_RGB2GRAY);
+
+        Mat hsv = new Mat();
+        Imgproc.cvtColor(mat, hsv, Imgproc.COLOR_RGB2HSV);
+
+        List<Mat> channels = new ArrayList<>();
+
+        Core.split(hsv, channels);
+
+        Mat H = channels.get(0);
+        Mat S = channels.get(1);
+        Mat V = channels.get(2);
+
+//        Mat blurMat = new Mat();
+//        Imgproc.medianBlur(gray, blurMat, 3);
+
+        Mat blurMat = new Mat();
+        Imgproc.GaussianBlur(gray, blurMat, new org.opencv.core.Size(5, 5), 0);
+
+        // Preparing the kernel matrix object
+        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT,
+                new  org.opencv.core.Size(1, 1));
+
+        Mat dilateMat = new Mat();
+
+        Imgproc.dilate(blurMat, dilateMat, kernel);
+
+        getCanny(dilateMat, canny);
+
+        int paintColor = Color.RED;
+
+        // Setup paint with color and stroke styles
+        Paint drawPaint = new Paint();
+        drawPaint.setColor(paintColor);
+        drawPaint.setAntiAlias(true);
+        drawPaint.setStrokeWidth(5);
+        drawPaint.setStyle(Paint.Style.STROKE);
+        drawPaint.setStrokeJoin(Paint.Join.ROUND);
+        drawPaint.setStrokeCap(Paint.Cap.ROUND);
+
+        overlay = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(overlay);
+
+        canvas.drawCircle(0, 0, 30, drawPaint);
+
+        canvas.drawLine(0, 0,0, 1000,drawPaint );
+        canvas.drawLine(0, 0,1000, 0,drawPaint );
+
+//        Line line =  new Line(new Point(0, 100), new Point(200, 100));
+//        canvas.drawLine(0,100, 200, 100, drawPaint );
+//        LinePolar lp = toLinePolar(line);
+//        Log.d("r", Double.toString(lp._r));
+//        Log.d("theta", Double.toString(lp._theta));
+
+
+
+        // extract lines from the edge image
+        Mat lines = new Mat();
+        Vector<Line> horizontals = new Vector<>(), verticals = new Vector<>();
+
+        Imgproc.HoughLinesP(canny, lines, 1, Math.PI / 180, 70, 30, 10);
+
+//        HashMap<Double, HashMap<Double, List<Line>>> lineMap = new HashMap<Double, HashMap<Double, List<Line>>>();
+
+        HashMap<LinePolar, List<Line>> lineMap = new HashMap<LinePolar, List<Line>>();
+
+        for (int i = 0; i < lines.rows(); i++) {
+            double[] v = lines.get(i, 0);
+
+            List<Point> points = new ArrayList<>();
+            points.add(new Point(v[0], v[1]));
+            points.add(new Point(v[2], v[3]));
+
+            double delta_x = v[0] - v[2], delta_y = v[1] - v[3];
+
+            Line l = new Line(new Point(v[0], v[1]), new Point(v[2], v[3]));
+            LinePolar pl = toLinePolar(l);
+
+            if (pl._theta > 10 && pl._theta < 80 ) continue;
+
+            if (pl._theta < -10 && pl._theta > -80 ) continue;
+
+
+            // get horizontal lines and vertical lines respectively
+            if (abs(delta_x) > abs(delta_y)) {
+                horizontals.addElement(l);
+            } else {
+                verticals.addElement(l);
+            }
+
+            canvas.drawLine((float) v[0], (float)v[1],(float) v[2], (float)v[3],drawPaint );
+
+            if (!lineMap.containsKey(pl)) {
+                List<Line> linesByPl = new ArrayList<Line>();
+                linesByPl.add(l);
+                lineMap.put(pl, linesByPl);
+            } else {
+                List<Line> linesByPl = lineMap.get(pl);
+                linesByPl.add(l);
+                lineMap.put(pl, linesByPl);
+            }
+
+            Comparator<Map.Entry> valueComparator = new Comparator<Map.Entry>() {
+                @Override
+                public int compare(Map.Entry o1, Map.Entry o2) {
+                    List<Line> linesByPl = (List<Line>) o1.getValue();
+                    return 0;
+                }
+            };
+
+
+
+//            if (!lineMap.containsKey(pl._theta)) {
+//                HashMap<Double, List<Line>> lineMapByR = new HashMap<Double, List<Line>>();
+//
+//                List<Line> linesByR = new ArrayList<Line>();
+//                linesByR.add(l);
+//
+//                lineMapByR.put(pl._r, linesByR);
+//                lineMap.put(pl._theta, lineMapByR);
+//            } else {
+//                HashMap<Double, List<Line>> lineMapByR = lineMap.get(pl._theta);
+//
+//                if (!lineMapByR.containsKey(pl._r)) {
+//                    List<Line> linesByR = new ArrayList<Line>();
+//                    linesByR.add(l);
+//                    lineMapByR.put(pl._r, linesByR);
+//                } else {
+//                    List<Line> linesByR = lineMapByR.get(pl._r);
+//                    linesByR.add(l);
+//                    lineMapByR.put(pl._r, linesByR);
+//                }
+//                lineMap.put(pl._theta, lineMapByR);
+//            }
+
+        }
+
+    }
+
+    private void findContours1(Bitmap bitmap) {
+        Mat mat = new Mat();
+        Utils.bitmapToMat(bitmap, mat);
+
+        Mat hsv = new Mat();
+        Imgproc.cvtColor(mat, hsv, Imgproc.COLOR_RGB2HSV);
+
+        List<Mat> channels = new ArrayList<>();
+
+        Core.split(hsv, channels);
+
+        Mat H = channels.get(0);
+        Mat S = channels.get(1);
+        Mat V = channels.get(2);
+
+        Mat originMat = mat.clone();
+
+        Mat gray = new Mat();
+        Imgproc.cvtColor(mat, gray, Imgproc.COLOR_RGB2GRAY);
 
         // Preparing the kernel matrix object
         Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT,
                 new  org.opencv.core.Size(3, 3));
-        Imgproc.dilate(mat, mat, kernel);
 
-        Imgproc.medianBlur(mat, mat, 1);
+        Mat dilate = new Mat();
+        Imgproc.dilate(V, dilate, kernel);
 
-        Imgproc.adaptiveThreshold(mat, mat, 255,Imgproc.ADAPTIVE_THRESH_MEAN_C,Imgproc.THRESH_BINARY,11, 1);
+        Mat medianBlur = new Mat();
 
-        // increase contrast
-        for(int i = 1; i<=3; i++) {
-            Imgproc.equalizeHist(mat, mat);
-        }
+        Imgproc.medianBlur(dilate, medianBlur, 1);
+
+        Mat adaptiveThreshold = new Mat();
+
+        Imgproc.adaptiveThreshold(medianBlur, adaptiveThreshold, 255,Imgproc.ADAPTIVE_THRESH_MEAN_C,Imgproc.THRESH_BINARY,11, 1);
 
         List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchyMat = new Mat();
 
-        Imgproc.findContours(mat, contours, hierarchyMat, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.findContours(adaptiveThreshold, contours, hierarchyMat, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
 //        Imgproc.drawContours(originMat, contours, -1, new Scalar(255,0,0));
 //
@@ -330,6 +516,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    private boolean isExceedMat(MatOfPoint c, Mat myMat) {
+        Point[] points = c.toArray();
+
+        for(Point p : points){
+            double rateX = p.x/myMat.width();
+            double rateY = p.y/myMat.height();
+
+            if (rateX < 0.01) return true;
+            if (rateX > 0.99) return true;
+            if (rateY < 0.01) return true;
+            if (rateY > 0.99) return true;
+        }
+        return false;
+    }
+
     private boolean isExceedMat(MatOfPoint2f contour, Mat myMat) {
         List<Point> points = contour.toList();
 
@@ -344,6 +545,47 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         return false;
     }
+
+    private boolean isExceedMat(List<Point> points, Mat myMat) {
+        for(Point p : points){
+            double rateX = p.x/myMat.width();
+            double rateY = p.y/myMat.height();
+
+            Log.d("rateX", Double.toString(rateX));
+            Log.d("rateY", Double.toString(rateY));
+
+            if (rateX < 0.01) return true;
+            if (rateX > 0.99) return true;
+            if (rateY < 0.01) return true;
+            if (rateY > 0.99) return true;
+        }
+        return false;
+    }
+
+    private  void drawPoint(MatOfPoint contour, Bitmap bitmap) {
+        Point[] points = contour.toArray();
+
+        int paintColor = Color.RED;
+
+        // Setup paint with color and stroke styles
+        Paint drawPaint = new Paint();
+        drawPaint.setColor(paintColor);
+        drawPaint.setAntiAlias(true);
+        drawPaint.setStrokeWidth(5);
+        drawPaint.setStyle(Paint.Style.STROKE);
+        drawPaint.setStrokeJoin(Paint.Join.ROUND);
+        drawPaint.setStrokeCap(Paint.Cap.ROUND);
+
+//        overlay = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(overlay);
+
+        for (Point p : points) {
+            Log.d("p.x", Double.toString(p.x));
+            Log.d("p.y", Double.toString(p.y));
+            canvas.drawCircle((float) p.x, (float)p.y, 30, drawPaint);
+        }
+    }
+
 
     private  void drawPoint(MatOfPoint2f contour, Bitmap bitmap) {
         List<Point> points = contour.toList();
@@ -363,6 +605,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Canvas canvas = new Canvas(overlay);
 
         for (Point p : points) {
+            Log.d("p.x", Double.toString(p.x));
+            Log.d("p.y", Double.toString(p.y));
             canvas.drawCircle((float) p.x, (float)p.y, 30, drawPaint);
         }
     }
@@ -428,4 +672,74 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
         }
     }
+
+    private LinePolar toLinePolar(Line l) {
+        // y = ax+b
+        double x1 = l._p1.x, y1 = l._p1.y,
+                x2 = l._p2.x, y2 = l._p2.y;
+        double a = (y2-y1)/(x2-x1);
+
+        if (x2==x1) return new LinePolar(x1, 90);
+        if (y2==y1) return new LinePolar(y1, 0);
+
+//        Log.d("a", Double.toString(a));
+
+        double b = y1 - a*x1;
+//        Log.d("b", Double.toString(b));
+
+        double x0 = -b/a;
+        double y0 = b;
+//        Log.d("x0", Double.toString(x0));
+//        Log.d("y0", Double.toString(y0));
+
+        double r     = x0*y0/Math.sqrt(x0*x0 + y0*y0);
+        double theta = Math.atan2(x0, y0)*180/Math.PI;
+
+        if(theta>90) theta=theta-180;
+        if(theta<-90) theta=theta+180;
+
+        LinePolar lp = new LinePolar(r,theta);
+        return lp;
+    }
+
+    class Line {
+        Point _p1;
+        Point _p2;
+        Point _center;
+
+        Line(Point p1, Point p2) {
+            _p1 = p1;
+            _p2 = p2;
+            _center = new Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
+        }
+    };
+
+    class LinePolar {
+        double _theta;
+        double _r;
+
+        LinePolar(double r, double theta) {
+            _theta = theta;
+            _r = r;
+        }
+
+        public int hashCode() {
+            return Objects.hash(getSigFields());
+        }
+
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            LinePolar other = (LinePolar) o;
+            return ((this._theta == other._theta) &&
+                (this._r == other._r));
+        }
+
+        private Object[] getSigFields(){
+            Object[] result = {_theta, _r};
+            return result;
+        }
+    };
+
 }
