@@ -55,6 +55,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -315,23 +316,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         canvas.drawLine(0, 0,0, 1000,drawPaint );
         canvas.drawLine(0, 0,1000, 0,drawPaint );
 
-//        Line line =  new Line(new Point(0, 100), new Point(200, 100));
-//        canvas.drawLine(0,100, 200, 100, drawPaint );
-//        LinePolar lp = toLinePolar(line);
-//        Log.d("r", Double.toString(lp._r));
-//        Log.d("theta", Double.toString(lp._theta));
-
-
-
         // extract lines from the edge image
         Mat lines = new Mat();
-        Vector<Line> horizontals = new Vector<>(), verticals = new Vector<>();
 
         Imgproc.HoughLinesP(canny, lines, 1, Math.PI / 180, 70, 30, 10);
 
-//        HashMap<Double, HashMap<Double, List<Line>>> lineMap = new HashMap<Double, HashMap<Double, List<Line>>>();
-
-        HashMap<LinePolar, List<Line>> lineMap = new HashMap<LinePolar, List<Line>>();
+        HashMap<LinePolar, List<Line>> verticalLineMap = new HashMap<LinePolar, List<Line>>();
+        HashMap<LinePolar, List<Line>> horizontalLineMap = new HashMap<LinePolar, List<Line>>();
 
         for (int i = 0; i < lines.rows(); i++) {
             double[] v = lines.get(i, 0);
@@ -343,67 +334,195 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             double delta_x = v[0] - v[2], delta_y = v[1] - v[3];
 
             Line l = new Line(new Point(v[0], v[1]), new Point(v[2], v[3]));
-            LinePolar pl = toLinePolar(l);
+            LinePolar pl = l.toLinePolar();
 
             if (pl._theta > 10 && pl._theta < 80 ) continue;
 
             if (pl._theta < -10 && pl._theta > -80 ) continue;
 
 
-            // get horizontal lines and vertical lines respectively
+            // put horizontal lines and vertical lines respectively
             if (abs(delta_x) > abs(delta_y)) {
-                horizontals.addElement(l);
+                putToLineMap(horizontalLineMap, l);
             } else {
-                verticals.addElement(l);
+                putToLineMap(verticalLineMap, l);
             }
-
-            canvas.drawLine((float) v[0], (float)v[1],(float) v[2], (float)v[3],drawPaint );
-
-            if (!lineMap.containsKey(pl)) {
-                List<Line> linesByPl = new ArrayList<Line>();
-                linesByPl.add(l);
-                lineMap.put(pl, linesByPl);
-            } else {
-                List<Line> linesByPl = lineMap.get(pl);
-                linesByPl.add(l);
-                lineMap.put(pl, linesByPl);
-            }
-
-            Comparator<Map.Entry> valueComparator = new Comparator<Map.Entry>() {
-                @Override
-                public int compare(Map.Entry o1, Map.Entry o2) {
-                    List<Line> linesByPl = (List<Line>) o1.getValue();
-                    return 0;
-                }
-            };
-
-
-
-//            if (!lineMap.containsKey(pl._theta)) {
-//                HashMap<Double, List<Line>> lineMapByR = new HashMap<Double, List<Line>>();
-//
-//                List<Line> linesByR = new ArrayList<Line>();
-//                linesByR.add(l);
-//
-//                lineMapByR.put(pl._r, linesByR);
-//                lineMap.put(pl._theta, lineMapByR);
-//            } else {
-//                HashMap<Double, List<Line>> lineMapByR = lineMap.get(pl._theta);
-//
-//                if (!lineMapByR.containsKey(pl._r)) {
-//                    List<Line> linesByR = new ArrayList<Line>();
-//                    linesByR.add(l);
-//                    lineMapByR.put(pl._r, linesByR);
-//                } else {
-//                    List<Line> linesByR = lineMapByR.get(pl._r);
-//                    linesByR.add(l);
-//                    lineMapByR.put(pl._r, linesByR);
-//                }
-//                lineMap.put(pl._theta, lineMapByR);
-//            }
 
         }
 
+        List<Map.Entry<LinePolar, List<Line>>> horizontalLineMapValsList = sortLineMap(horizontalLineMap);
+        List<Map.Entry<LinePolar, List<Line>>> verticalLineMapValsList = sortLineMap(verticalLineMap);
+
+        List<Line> documentHorizontalEdges = getDocumentHorizontalEdges(horizontalLineMapValsList);
+        for (Line l: documentHorizontalEdges) {
+            l.draw(canvas, drawPaint);
+        }
+
+        List<Line> documentVerticalEdges = getDocumentVerticalEdges(verticalLineMapValsList);
+        for (Line l: documentVerticalEdges) {
+            l.draw(canvas, drawPaint);
+        }
+
+    }
+
+    private List<Line> getDocumentHorizontalEdges(List<Map.Entry<LinePolar, List<Line>>> horizontalLineMapValsList) {
+        if(horizontalLineMapValsList.size()<2) return new ArrayList<>();
+        List<Line> ret = new ArrayList<Line>();
+        Line firstEdge = horizontalLineMapValsList.get(0).getValue().get(0);
+
+        LinePolar firstEdgePolar = firstEdge.toLinePolar();
+        Log.d("firstEdge x1 ", Double.toString(firstEdge._p1.x));
+        Log.d("firstEdge y1 ", Double.toString(firstEdge._p1.y));
+        Log.d("firstEdge x2 ", Double.toString(firstEdge._p2.x));
+        Log.d("firstEdge y2 ", Double.toString(firstEdge._p2.y));
+
+        Log.d("firstEdge theta ", Double.toString(firstEdgePolar._theta));
+        Log.d("firstEdge r ", Double.toString(firstEdgePolar._r));
+
+        Line secondEdge = null;
+
+        double maxDistance = 0;
+
+        for (Map.Entry<LinePolar, List<Line>> entry: horizontalLineMapValsList) {
+            List<Line> localLines = entry.getValue();
+            LinePolar key = entry.getKey();
+            if(abs(key._theta - firstEdgePolar._theta) < 2) {
+                secondEdge = localLines.get(0);
+                LinePolar localLinePolar = secondEdge.toLinePolar();
+                if(abs(localLinePolar._r - firstEdgePolar._r) > maxDistance) {
+                    maxDistance = Math.abs(localLinePolar._r - firstEdgePolar._r);
+                    secondEdge = localLines.get(0);
+                }
+            }
+        }
+        ret.add(firstEdge);
+
+        if(secondEdge!=null) {
+            ret.add(secondEdge);
+            LinePolar secondEdgePolar = secondEdge.toLinePolar();
+            Log.d("secondEdge theta 2 ", Double.toString(secondEdgePolar._theta));
+            Log.d("secondEdge r 2 ", Double.toString(secondEdgePolar._r));
+        }
+
+        return ret;
+    }
+
+    private List<Line> getDocumentVerticalEdges(List<Map.Entry<LinePolar, List<Line>>> verticalLineMapValsList) {
+        if(verticalLineMapValsList.size()<2) return new ArrayList<>();
+        List<Line> ret = new ArrayList<Line>();
+        Line firstEdge = verticalLineMapValsList.get(0).getValue().get(0);
+        LinePolar firstEdgePolar = firstEdge.toLinePolar();
+        Line secondEdge = verticalLineMapValsList.get(1).getValue().get(0);
+
+        double maxDistance = 0;
+
+        for (Map.Entry<LinePolar, List<Line>> entry: verticalLineMapValsList) {
+            List<Line> localLines = entry.getValue();
+            secondEdge = localLines.get(0);
+            LinePolar localLinePolar = secondEdge.toLinePolar();
+            if((abs(localLinePolar._theta - firstEdgePolar._theta) < 2) ||
+               (abs(localLinePolar._theta - firstEdgePolar._theta) > 178)) {
+                if(abs(localLinePolar._r - firstEdgePolar._r) > maxDistance) {
+                    maxDistance = Math.abs(localLinePolar._r - firstEdgePolar._r);
+                    secondEdge = localLines.get(0);
+                }
+            }
+        }
+        ret.add(firstEdge);
+        ret.add(secondEdge);
+        return ret;
+    }
+
+
+    private void putToLineMap(HashMap<LinePolar, List<Line>> lineMap, Line line) {
+        LinePolar pl = line.toLinePolar();
+        if (!lineMap.containsKey(pl)) {
+            List<Line> linesByPl = new ArrayList<Line>();
+            linesByPl.add(line);
+            lineMap.put(pl, linesByPl);
+        } else {
+            List<Line> linesByPl = lineMap.get(pl);
+            linesByPl.add(line);
+            lineMap.put(pl, linesByPl);
+        }
+    }
+
+    private List<Map.Entry<LinePolar, List<Line>>> sortLineMap(HashMap<LinePolar, List<Line>> lineMap) {
+        Comparator<Map.Entry> distanceComparator = new Comparator<Map.Entry>() {
+            @Override
+            public int compare(Map.Entry o1, Map.Entry o2) {
+                List<Line> linesByPl1 = (List<Line>) o1.getValue();
+                List<Line> linesByPl2 = (List<Line>) o2.getValue();
+
+                double maxDistance1 = maxDistance(linesByPl1);
+                double maxDistance2 = maxDistance(linesByPl2);
+
+                return Double.compare(maxDistance2, maxDistance1);
+            }
+        };
+
+        Set<Map.Entry<LinePolar, List<Line>>> lineMapVals = lineMap.entrySet();
+
+        List<Map.Entry<LinePolar, List<Line>>> lineMapValsList = new ArrayList<Map.Entry<LinePolar, List<Line>>>(lineMapVals);
+        Collections.sort(lineMapValsList, distanceComparator);
+
+        return lineMapValsList;
+    }
+
+    private double maxDistance(List<Line> lines) {
+        double ret = 0;
+
+//        Comparator distanceComparator = new Comparator() {
+//            @Override
+//            public int compare(Object o1, Object o2) {
+//                Line l1 = (Line)o1;
+//                Line l2 = (Line)o2;
+//                return Double.compare(l2.distance(), l1.distance());
+//            }
+//        };
+//
+//        Collections.sort(lines, distanceComparator);
+//
+//        ret = lines.get(0).distance();
+
+        List xs = new ArrayList();
+        List ys = new ArrayList();
+
+        for(Line line: lines) {
+            xs.add(line._p1.x);
+            xs.add(line._p2.x);
+            ys.add(line._p1.y);
+            ys.add(line._p2.y);
+        }
+
+
+        Comparator xComparator = new Comparator() {
+            @Override
+            public int compare(Object o1, Object o2) {
+                double x1 = (double)o1;
+                double x2 = (double)o2;
+                return Double.compare(x1, x2);
+            }
+        };
+
+        Comparator yComparator = new Comparator() {
+            public int compare(Object o1, Object o2) {
+                double y1 = (double)o1;
+                double y2 = (double)o2;
+                return Double.compare(y1, y2);
+            }
+        };
+
+        Collections.sort(xs, xComparator);
+        double xmin = (double) xs.get(0),
+                xmax = (double) xs.get(xs.size()-1);
+
+        double ymin = (double) ys.get(0),
+                ymax = (double) ys.get(ys.size()-1);
+
+        ret = Math. sqrt((xmax-xmin)*(xmax-xmin) + (ymax-ymin)*(ymax-ymin));
+
+        return ret;
     }
 
     private void findContours1(Bitmap bitmap) {
@@ -673,35 +792,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private LinePolar toLinePolar(Line l) {
-        // y = ax+b
-        double x1 = l._p1.x, y1 = l._p1.y,
-                x2 = l._p2.x, y2 = l._p2.y;
-        double a = (y2-y1)/(x2-x1);
-
-        if (x2==x1) return new LinePolar(x1, 90);
-        if (y2==y1) return new LinePolar(y1, 0);
-
-//        Log.d("a", Double.toString(a));
-
-        double b = y1 - a*x1;
-//        Log.d("b", Double.toString(b));
-
-        double x0 = -b/a;
-        double y0 = b;
-//        Log.d("x0", Double.toString(x0));
-//        Log.d("y0", Double.toString(y0));
-
-        double r     = x0*y0/Math.sqrt(x0*x0 + y0*y0);
-        double theta = Math.atan2(x0, y0)*180/Math.PI;
-
-        if(theta>90) theta=theta-180;
-        if(theta<-90) theta=theta+180;
-
-        LinePolar lp = new LinePolar(r,theta);
-        return lp;
-    }
-
     class Line {
         Point _p1;
         Point _p2;
@@ -711,6 +801,44 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             _p1 = p1;
             _p2 = p2;
             _center = new Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
+        }
+
+        void draw(Canvas canvas, Paint drawPaint) {
+            canvas.drawLine((float) _p1.x, (float)_p1.y,(float) _p2.x, (float) _p2.y, drawPaint );
+        }
+
+        double distance() {
+            return  Math. sqrt((_p2.x-_p1.x)*(_p2.x-_p1.x) + (_p2.y-_p1.y)*(_p2.y-_p1.y));
+        }
+
+        LinePolar toLinePolar() {
+            // y = ax+b
+            double x1 = this._p1.x, y1 = this._p1.y,
+                    x2 = this._p2.x, y2 = this._p2.y;
+            double a = (y2-y1)/(x2-x1);
+
+            if (x2==x1) return new LinePolar(x1, 90);
+            if (y2==y1) return new LinePolar(y1, 0);
+
+//        Log.d("a", Double.toString(a));
+
+            double b = y1 - a*x1;
+//        Log.d("b", Double.toString(b));
+
+            double x0 = -b/a;
+            double y0 = b;
+//        Log.d("x0", Double.toString(x0));
+//        Log.d("y0", Double.toString(y0));
+
+            double r     = x0*y0/Math.sqrt(x0*x0 + y0*y0);
+            double theta = Math.atan2(x0, y0)*180/Math.PI;
+
+            if(theta>90) theta=theta-180;
+            if(theta<-90) theta=theta+180;
+
+            LinePolar lp = new LinePolar(r,theta);
+            return lp;
+
         }
     };
 
