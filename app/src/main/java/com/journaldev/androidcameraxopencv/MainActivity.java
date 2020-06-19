@@ -37,6 +37,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.journaldev.androidcameraxopencv.enums.ScanHint;
 import com.journaldev.androidcameraxopencv.helpers.ScannerConstants;
+import com.journaldev.androidcameraxopencv.libraries.Line;
+import com.journaldev.androidcameraxopencv.libraries.LinePolar;
 
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
@@ -791,81 +793,5 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
         }
     }
-
-    class Line {
-        Point _p1;
-        Point _p2;
-        Point _center;
-
-        Line(Point p1, Point p2) {
-            _p1 = p1;
-            _p2 = p2;
-            _center = new Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
-        }
-
-        void draw(Canvas canvas, Paint drawPaint) {
-            canvas.drawLine((float) _p1.x, (float)_p1.y,(float) _p2.x, (float) _p2.y, drawPaint );
-        }
-
-        double distance() {
-            return  Math. sqrt((_p2.x-_p1.x)*(_p2.x-_p1.x) + (_p2.y-_p1.y)*(_p2.y-_p1.y));
-        }
-
-        LinePolar toLinePolar() {
-            // y = ax+b
-            double x1 = this._p1.x, y1 = this._p1.y,
-                    x2 = this._p2.x, y2 = this._p2.y;
-            double a = (y2-y1)/(x2-x1);
-
-            if (x2==x1) return new LinePolar(x1, 90);
-            if (y2==y1) return new LinePolar(y1, 0);
-
-//        Log.d("a", Double.toString(a));
-
-            double b = y1 - a*x1;
-//        Log.d("b", Double.toString(b));
-
-            double x0 = -b/a;
-            double y0 = b;
-//        Log.d("x0", Double.toString(x0));
-//        Log.d("y0", Double.toString(y0));
-
-            double r     = x0*y0/Math.sqrt(x0*x0 + y0*y0);
-            double theta = Math.atan2(x0, y0)*180/Math.PI;
-
-            if(theta>90) theta=theta-180;
-            if(theta<-90) theta=theta+180;
-
-            return new LinePolar(r,theta);
-
-        }
-    };
-
-    class LinePolar {
-        double _theta;
-        double _r;
-
-        LinePolar(double r, double theta) {
-            _theta = theta;
-            _r = r;
-        }
-
-        public int hashCode() {
-            return Objects.hash(getSigFields());
-        }
-
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            LinePolar other = (LinePolar) o;
-            return ((this._theta == other._theta) &&
-                (this._r == other._r));
-        }
-
-        private Object[] getSigFields(){
-            return new Object[]{_theta, _r};
-        }
-    };
 
 }
