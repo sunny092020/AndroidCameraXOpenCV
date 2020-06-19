@@ -836,8 +836,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if(theta>90) theta=theta-180;
             if(theta<-90) theta=theta+180;
 
-            LinePolar lp = new LinePolar(r,theta);
-            return lp;
+            return new LinePolar(r,theta);
 
         }
     };
@@ -865,8 +864,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         private Object[] getSigFields(){
-            Object[] result = {_theta, _r};
-            return result;
+            return new Object[]{_theta, _r};
         }
     };
 
