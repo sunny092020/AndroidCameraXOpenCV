@@ -253,9 +253,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void getCanny(Mat gray, Mat canny) {
         Mat thres = new Mat();
-        double high_thres = Imgproc.threshold(gray, thres, 0, 255, Imgproc.THRESH_BINARY + Imgproc.THRESH_OTSU),
-                low_thres = high_thres * 0.5;
-        Imgproc.Canny(gray, canny, low_thres, high_thres);
+//        double high_thres = 2*Imgproc.threshold(gray, thres, 0, 255, Imgproc.THRESH_BINARY + Imgproc.THRESH_OTSU),
+//                low_thres = high_thres/3;
+        Imgproc.Canny(gray, canny, 255/3, 255);
     }
 
     private void findContours(Bitmap bitmap) {
@@ -350,21 +350,124 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 putToLineMap(verticalLineMap, l);
             }
 
+
         }
 
         List<Map.Entry<LinePolar, List<Line>>> horizontalLineMapValsList = sortLineMap(horizontalLineMap);
         List<Map.Entry<LinePolar, List<Line>>> verticalLineMapValsList = sortLineMap(verticalLineMap);
 
+        int max = 0;
+
+        for(Map.Entry<LinePolar, List<Line>> e : horizontalLineMapValsList) {
+            LinePolar key = e.getKey();
+            List<Line> localLines = e.getValue();
+            for(Line l: localLines) {
+                LinePolar lp = l.toLinePolar();
+//                l.draw(canvas, drawPaint);
+            }
+
+            max++;
+
+            if(max>=2) break;
+
+        }
+
+        max = 0;
+        for(Map.Entry<LinePolar, List<Line>> e : verticalLineMapValsList) {
+            LinePolar key = e.getKey();
+            List<Line> localLines = e.getValue();
+            for(Line l: localLines) {
+                LinePolar lp = l.toLinePolar();
+//                l.draw(canvas, drawPaint);
+            }
+
+            max++;
+
+            if(max>=2) break;
+
+        }
+
         List<Line> documentHorizontalEdges = getDocumentHorizontalEdges(horizontalLineMapValsList);
-        for (Line l: documentHorizontalEdges) {
-            l.draw(canvas, drawPaint);
-        }
-
         List<Line> documentVerticalEdges = getDocumentVerticalEdges(verticalLineMapValsList);
-        for (Line l: documentVerticalEdges) {
-            l.draw(canvas, drawPaint);
+
+
+        if(documentHorizontalEdges.size()==2&&documentVerticalEdges.size()==2) {
+            Line l1 = documentHorizontalEdges.get(0);
+            Line l3 = documentHorizontalEdges.get(1);
+
+            Line l2 = documentVerticalEdges.get(0);
+            Line l4 = documentVerticalEdges.get(1);
+
+            Point p1 = computeIntersect(l1, l2);
+            Point p2 = computeIntersect(l2, l3);
+            Point p3 = computeIntersect(l3, l4);
+            Point p4 = computeIntersect(l4, l1);
+
+//            Log.d("p1.x", Double.toString(p1.x));
+//            Log.d("p1.y", Double.toString(p1.y));
+//            Log.d("p2.x", Double.toString(p2.x));
+//            Log.d("p2.y", Double.toString(p2.y));
+//            Log.d("p3.x", Double.toString(p3.x));
+//            Log.d("p3.y", Double.toString(p3.y));
+//            Log.d("p4.x", Double.toString(p4.x));
+//            Log.d("p4.y", Double.toString(p4.y));
+
+
+
+            canvas.drawCircle((float) p1.x, (float)p1.y, 30, drawPaint);
+            canvas.drawCircle((float) p2.x, (float)p2.y, 30, drawPaint);
+            canvas.drawCircle((float) p3.x, (float)p3.y, 30, drawPaint);
+            canvas.drawCircle((float) p4.x, (float)p4.y, 30, drawPaint);
+
+            Point[] points ={p1, p2, p3, p4};
+            MatOfPoint2f contour = new MatOfPoint2f(points);
+
+            // break loop if the document is too far from the phone
+            double minS = mat.width()*mat.height()*0.3;
+            if(Imgproc.contourArea(contour) < minS) {
+                ScannerConstants.scanHint = ScanHint.MOVE_CLOSER;
+                return;
+            }
+
+            ScannerConstants.scanHint = ScanHint.CAPTURING_IMAGE;
+            ScannerConstants.selectedImageBitmap = bitmap;
+
+            ScannerConstants.croptedPolygon = contour;
+
         }
 
+    }
+
+    private void putToLineMap(HashMap<LinePolar, List<Line>> lineMap, Line line) {
+        LinePolar lp = line.toLinePolar();
+
+        LinePolar oldAverage=null, newAverage=null;
+        List<Line> lines = null;
+
+        boolean isNewBucket = true;
+
+        for (Map.Entry<LinePolar, List<Line>> entry : lineMap.entrySet()) {
+            LinePolar averageLp = entry.getKey();
+            Double deltaTheta = averageLp.deltaTheta(lp);
+            Double deltaR = averageLp.deltaR(lp);
+            if((deltaTheta < 1) && (deltaR < 2)) {
+                isNewBucket = false;
+                oldAverage = averageLp;
+                lines = entry.getValue();
+                lines.add(line);
+                break;
+            }
+        }
+
+        if (isNewBucket) {
+            List<Line> newLines = new ArrayList<>();
+            newLines.add(line);
+            lineMap.put(lp, newLines);
+        } else {
+            lineMap.remove(oldAverage);
+            newAverage = LinePolar.average(lines);
+            lineMap.put(newAverage, lines);
+        }
     }
 
     private List<Line> getDocumentHorizontalEdges(List<Map.Entry<LinePolar, List<Line>>> horizontalLineMapValsList) {
@@ -372,14 +475,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         List<Line> ret = new ArrayList<Line>();
         Line firstEdge = horizontalLineMapValsList.get(0).getValue().get(0);
 
-        LinePolar firstEdgePolar = firstEdge.toLinePolar();
-        Log.d("firstEdge x1 ", Double.toString(firstEdge._p1.x));
-        Log.d("firstEdge y1 ", Double.toString(firstEdge._p1.y));
-        Log.d("firstEdge x2 ", Double.toString(firstEdge._p2.x));
-        Log.d("firstEdge y2 ", Double.toString(firstEdge._p2.y));
-
-        Log.d("firstEdge theta ", Double.toString(firstEdgePolar._theta));
-        Log.d("firstEdge r ", Double.toString(firstEdgePolar._r));
+        LinePolar firstEdgePolar = horizontalLineMapValsList.get(0).getKey();
+//        Log.d("firstEdge x1 ", Double.toString(firstEdge._p1.x));
+//        Log.d("firstEdge y1 ", Double.toString(firstEdge._p1.y));
+//        Log.d("firstEdge x2 ", Double.toString(firstEdge._p2.x));
+//        Log.d("firstEdge y2 ", Double.toString(firstEdge._p2.y));
+//
 
         Line secondEdge = null;
 
@@ -388,22 +489,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         for (Map.Entry<LinePolar, List<Line>> entry: horizontalLineMapValsList) {
             List<Line> localLines = entry.getValue();
             LinePolar key = entry.getKey();
-            if(abs(key._theta - firstEdgePolar._theta) < 2) {
-                secondEdge = localLines.get(0);
-                LinePolar localLinePolar = secondEdge.toLinePolar();
-                if(abs(localLinePolar._r - firstEdgePolar._r) > maxDistance) {
-                    maxDistance = Math.abs(localLinePolar._r - firstEdgePolar._r);
+            if(key.deltaTheta(firstEdgePolar) < 2) {
+                double deltaR = key.deltaR(firstEdgePolar);
+                if(deltaR > maxDistance ) {
+                    maxDistance = deltaR;
                     secondEdge = localLines.get(0);
                 }
             }
         }
         ret.add(firstEdge);
 
-        if(secondEdge!=null) {
+        if(maxDistance > previewView.getBitmap().getHeight()*0.5) {
             ret.add(secondEdge);
+
+            Log.d("firstEdge beta ", Double.toString(firstEdgePolar.getBeta()));
+            Log.d("firstEdge r ", Double.toString(firstEdgePolar._r));
+
             LinePolar secondEdgePolar = secondEdge.toLinePolar();
-            Log.d("secondEdge theta 2 ", Double.toString(secondEdgePolar._theta));
+            Log.d("secondEdge beta 2 ", Double.toString(secondEdgePolar.getBeta()));
             Log.d("secondEdge r 2 ", Double.toString(secondEdgePolar._r));
+            Log.d("maxDistance Horizon", Double.toString(maxDistance));
+
+            Log.d("preview height", Double.toString(previewView.getBitmap().getHeight()/2));
         }
 
         return ret;
@@ -413,40 +520,40 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if(verticalLineMapValsList.size()<2) return new ArrayList<>();
         List<Line> ret = new ArrayList<Line>();
         Line firstEdge = verticalLineMapValsList.get(0).getValue().get(0);
-        LinePolar firstEdgePolar = firstEdge.toLinePolar();
-        Line secondEdge = verticalLineMapValsList.get(1).getValue().get(0);
+        LinePolar firstEdgePolar = verticalLineMapValsList.get(0).getKey();
+        Line secondEdge = null;
 
         double maxDistance = 0;
 
         for (Map.Entry<LinePolar, List<Line>> entry: verticalLineMapValsList) {
             List<Line> localLines = entry.getValue();
-            secondEdge = localLines.get(0);
-            LinePolar localLinePolar = secondEdge.toLinePolar();
-            if((abs(localLinePolar._theta - firstEdgePolar._theta) < 2) ||
-               (abs(localLinePolar._theta - firstEdgePolar._theta) > 178)) {
-                if(abs(localLinePolar._r - firstEdgePolar._r) > maxDistance) {
-                    maxDistance = Math.abs(localLinePolar._r - firstEdgePolar._r);
+            LinePolar key = entry.getKey();
+            double deltaTheta = key.deltaTheta(firstEdgePolar);
+
+//            Log.d("deltaTheta", Double.toString(deltaTheta));
+            if(deltaTheta < 2 || deltaTheta > 178) {
+                double deltaR = key.deltaR(firstEdgePolar);
+//                Log.d("deltaR", Double.toString(deltaR));
+                if(deltaR > maxDistance ) {
+                    maxDistance = deltaR;
                     secondEdge = localLines.get(0);
                 }
             }
         }
         ret.add(firstEdge);
-        ret.add(secondEdge);
-        return ret;
-    }
 
+//        Log.d("maxDistance", Double.toString(maxDistance));
 
-    private void putToLineMap(HashMap<LinePolar, List<Line>> lineMap, Line line) {
-        LinePolar pl = line.toLinePolar();
-        if (!lineMap.containsKey(pl)) {
-            List<Line> linesByPl = new ArrayList<Line>();
-            linesByPl.add(line);
-            lineMap.put(pl, linesByPl);
-        } else {
-            List<Line> linesByPl = lineMap.get(pl);
-            linesByPl.add(line);
-            lineMap.put(pl, linesByPl);
+        if(maxDistance > previewView.getBitmap().getWidth()*0.5) {
+//            Log.d("maxDistance vertical", Double.toString(maxDistance));
+            ret.add(secondEdge);
+            LinePolar secondEdgePolar = secondEdge.toLinePolar();
+//            Log.d("secondEdge beta 2 ", Double.toString(secondEdgePolar.getBeta()));
+//            Log.d("secondEdge r 2 ", Double.toString(secondEdgePolar._r));
+//            Log.d("maxDistance ", Double.toString(maxDistance));
         }
+
+        return ret;
     }
 
     private List<Map.Entry<LinePolar, List<Line>>> sortLineMap(HashMap<LinePolar, List<Line>> lineMap) {
@@ -474,18 +581,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private double maxDistance(List<Line> lines) {
         double ret = 0;
 
-//        Comparator distanceComparator = new Comparator() {
-//            @Override
-//            public int compare(Object o1, Object o2) {
-//                Line l1 = (Line)o1;
-//                Line l2 = (Line)o2;
-//                return Double.compare(l2.distance(), l1.distance());
-//            }
-//        };
-//
-//        Collections.sort(lines, distanceComparator);
-//
-//        ret = lines.get(0).distance();
+//        for(Line l:lines) {
+//            ret = ret+l.distance();
+//        }
+
 
         List xs = new ArrayList();
         List ys = new ArrayList();
@@ -519,6 +618,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         double xmin = (double) xs.get(0),
                 xmax = (double) xs.get(xs.size()-1);
 
+        Collections.sort(ys, xComparator);
         double ymin = (double) ys.get(0),
                 ymax = (double) ys.get(ys.size()-1);
 
@@ -552,7 +652,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 new  org.opencv.core.Size(3, 3));
 
         Mat dilate = new Mat();
-        Imgproc.dilate(V, dilate, kernel);
+        Imgproc.dilate(gray, dilate, kernel);
 
         Mat medianBlur = new Mat();
 
@@ -682,31 +782,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         return false;
     }
-
-    private  void drawPoint(MatOfPoint contour, Bitmap bitmap) {
-        Point[] points = contour.toArray();
-
-        int paintColor = Color.RED;
-
-        // Setup paint with color and stroke styles
-        Paint drawPaint = new Paint();
-        drawPaint.setColor(paintColor);
-        drawPaint.setAntiAlias(true);
-        drawPaint.setStrokeWidth(5);
-        drawPaint.setStyle(Paint.Style.STROKE);
-        drawPaint.setStrokeJoin(Paint.Join.ROUND);
-        drawPaint.setStrokeCap(Paint.Cap.ROUND);
-
-//        overlay = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(overlay);
-
-        for (Point p : points) {
-            Log.d("p.x", Double.toString(p.x));
-            Log.d("p.y", Double.toString(p.y));
-            canvas.drawCircle((float) p.x, (float)p.y, 30, drawPaint);
-        }
-    }
-
 
     private  void drawPoint(MatOfPoint2f contour, Bitmap bitmap) {
         List<Point> points = contour.toList();
