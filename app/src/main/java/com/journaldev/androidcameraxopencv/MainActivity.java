@@ -61,6 +61,7 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
 
 import static android.view.View.GONE;
 import static java.lang.Math.abs;
@@ -262,11 +263,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Mat mat = new Mat();
         Utils.bitmapToMat(bitmap, mat);
 
-        Mat originMat = new Mat();
-        Utils.bitmapToMat(bitmap, originMat);
-
-        int w = mat.width(), h = mat.height();
-
         /* get four outline edges of the document */
         // get edges of the image
         Mat gray = new Mat(), canny = new Mat();
@@ -283,8 +279,50 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Mat S = channels.get(1);
         Mat V = channels.get(2);
 
+        Mat notGray = new Mat();
+        Mat notH = new Mat();
+        Mat notS = new Mat();
+        Mat notV = new Mat();
+
+        Core.bitwise_not(gray, notGray);
+        Core.bitwise_not(H, notH);
+        Core.bitwise_not(S, notS);
+        Core.bitwise_not(V, notV);
+
+        Mat[] inputMats = {gray, H, S, V, notGray, notH, notS, notV};
+
+        MatOfPoint2f contour = coverAllMethods4Contours(inputMats);
+
+        if(contour == null) return;
+
+        drawPoint(contour.toList());
+
+        ScannerConstants.scanHint = ScanHint.CAPTURING_IMAGE;
+        ScannerConstants.selectedImageBitmap = bitmap;
+        ScannerConstants.croptedPolygon = contour;
+    }
+
+    private MatOfPoint2f coverAllMethods4Contours(Mat[] inputMats) {
+        MatOfPoint2f contour = null;
+
+        List<Function <Mat, MatOfPoint2f>> functions = new ArrayList<>();
+
+        // apply in this order
+        functions.add(mat -> adaptiveThreshold(mat));
+        functions.add(mat -> houghLines(mat));
+
+        for(Function <Mat, MatOfPoint2f> f:functions) {
+            for(Mat localMat: inputMats) {
+                contour = f.apply(localMat);
+                if(contour!=null) return contour;
+            }
+        }
+        return null;
+    }
+
+    private MatOfPoint2f houghLines(Mat mat) {
         Mat blurMat = new Mat();
-        Imgproc.GaussianBlur(gray, blurMat, new org.opencv.core.Size(5, 5), 0);
+        Imgproc.GaussianBlur(mat, blurMat, new org.opencv.core.Size(5, 5), 0);
 
         // Preparing the kernel matrix object
         Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT,
@@ -294,26 +332,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         Imgproc.dilate(blurMat, dilateMat, kernel);
 
+        Mat canny = new Mat();
         getCanny(dilateMat, canny);
-
-        int paintColor = Color.RED;
-
-        // Setup paint with color and stroke styles
-        Paint drawPaint = new Paint();
-        drawPaint.setColor(paintColor);
-        drawPaint.setAntiAlias(true);
-        drawPaint.setStrokeWidth(5);
-        drawPaint.setStyle(Paint.Style.STROKE);
-        drawPaint.setStrokeJoin(Paint.Join.ROUND);
-        drawPaint.setStrokeCap(Paint.Cap.ROUND);
-
-        overlay = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(overlay);
-
-        canvas.drawCircle(0, 0, 30, drawPaint);
-
-        canvas.drawLine(0, 0,0, 1000,drawPaint );
-        canvas.drawLine(0, 0,1000, 0,drawPaint );
 
         // extract lines from the edge image
         Mat lines = new Mat();
@@ -366,26 +386,71 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Point p3 = computeIntersect(l3, l4);
             Point p4 = computeIntersect(l4, l1);
 
-            canvas.drawCircle((float) p1.x, (float)p1.y, 30, drawPaint);
-            canvas.drawCircle((float) p2.x, (float)p2.y, 30, drawPaint);
-            canvas.drawCircle((float) p3.x, (float)p3.y, 30, drawPaint);
-            canvas.drawCircle((float) p4.x, (float)p4.y, 30, drawPaint);
-
             Point[] points ={p1, p2, p3, p4};
-            MatOfPoint2f contour = new MatOfPoint2f(points);
+
+            MatOfPoint2f contour =  new MatOfPoint2f(points);
 
             // break loop if the document is too far from the phone
             double minS = mat.width()*mat.height()*0.3;
             if(Imgproc.contourArea(contour) < minS) {
                 ScannerConstants.scanHint = ScanHint.MOVE_CLOSER;
-                return;
+                return null;
             }
 
-            ScannerConstants.scanHint = ScanHint.CAPTURING_IMAGE;
-            ScannerConstants.selectedImageBitmap = bitmap;
-            ScannerConstants.croptedPolygon = contour;
+            return contour;
         }
 
+        return null;
+    }
+
+    private MatOfPoint2f adaptiveThreshold(Mat mat) {
+        // Preparing the kernel matrix object
+        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT,
+                new  org.opencv.core.Size(3, 3));
+
+        Mat dilate = new Mat();
+        Imgproc.dilate(mat, dilate, kernel);
+
+        Mat medianBlur = new Mat();
+
+        Imgproc.medianBlur(dilate, medianBlur, 1);
+
+        Mat adaptiveThreshold = new Mat();
+
+        Imgproc.adaptiveThreshold(medianBlur, adaptiveThreshold, 255,Imgproc.ADAPTIVE_THRESH_MEAN_C,Imgproc.THRESH_BINARY,11, 1);
+
+        List<MatOfPoint> contours = new ArrayList<>();
+        Mat hierarchyMat = new Mat();
+
+        Imgproc.findContours(adaptiveThreshold, contours, hierarchyMat, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+
+        Collections.sort(contours, AreaDescendingComparator);
+
+        double minS = (mat.width()*mat.height())*0.3;
+
+        ScannerConstants.scanHint = ScanHint.NO_MESSAGE;
+
+        for(MatOfPoint c : contours){
+            MatOfPoint2f contour = new MatOfPoint2f(c.toArray());
+
+            double length  = Imgproc.arcLength(contour,true);
+            Imgproc.approxPolyDP(contour, contour,0.02*length,true);
+
+            // break loop if it is not quad
+            if(contour.total() != 4) break;
+
+            // break loop if points are in the edge of the frame
+            if(isExceedMat(contour, mat)) break;
+
+            // break loop if the document is too far from the phone
+            if(Imgproc.contourArea(contour) < minS) {
+                ScannerConstants.scanHint = ScanHint.MOVE_CLOSER;
+                break;
+            }
+
+            return contour;
+        }
+        return null;
     }
 
     private void putToLineMap(HashMap<LinePolar, List<Line>> lineMap, Line line) {
@@ -549,80 +614,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return ret;
     }
 
-    private void findContours1(Bitmap bitmap) {
-        Mat mat = new Mat();
-        Utils.bitmapToMat(bitmap, mat);
-
-        Mat hsv = new Mat();
-        Imgproc.cvtColor(mat, hsv, Imgproc.COLOR_RGB2HSV);
-
-        List<Mat> channels = new ArrayList<>();
-
-        Core.split(hsv, channels);
-
-        Mat H = channels.get(0);
-        Mat S = channels.get(1);
-        Mat V = channels.get(2);
-
-        Mat originMat = mat.clone();
-
-        Mat gray = new Mat();
-        Imgproc.cvtColor(mat, gray, Imgproc.COLOR_RGB2GRAY);
-
-        // Preparing the kernel matrix object
-        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT,
-                new  org.opencv.core.Size(3, 3));
-
-        Mat dilate = new Mat();
-        Imgproc.dilate(gray, dilate, kernel);
-
-        Mat medianBlur = new Mat();
-
-        Imgproc.medianBlur(dilate, medianBlur, 1);
-
-        Mat adaptiveThreshold = new Mat();
-
-        Imgproc.adaptiveThreshold(medianBlur, adaptiveThreshold, 255,Imgproc.ADAPTIVE_THRESH_MEAN_C,Imgproc.THRESH_BINARY,11, 1);
-
-        List<MatOfPoint> contours = new ArrayList<>();
-        Mat hierarchyMat = new Mat();
-
-        Imgproc.findContours(adaptiveThreshold, contours, hierarchyMat, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-
-        Collections.sort(contours, AreaDescendingComparator);
-
-        double minS = (mat.width()*mat.height())*0.3;
-
-        ScannerConstants.scanHint = ScanHint.NO_MESSAGE;
-
-        for(MatOfPoint c : contours){
-            MatOfPoint2f contour = new MatOfPoint2f(c.toArray());
-
-            double length  = Imgproc.arcLength(contour,true);
-            Imgproc.approxPolyDP(contour, contour,0.02*length,true);
-
-            // break loop if it is not quad
-            if(contour.total() != 4) break;
-
-            drawPoint(contour, bitmap);
-
-            // break loop if points are in the edge of the frame
-            if(isExceedMat(contour, mat)) break;
-
-            // break loop if the document is too far from the phone
-            if(Imgproc.contourArea(contour) < minS) {
-                ScannerConstants.scanHint = ScanHint.MOVE_CLOSER;
-                break;
-            }
-
-            ScannerConstants.scanHint = ScanHint.CAPTURING_IMAGE;
-            ScannerConstants.selectedImageBitmap = bitmap;
-            ScannerConstants.croptedPolygon = contour;
-
-            break;
-        }
-    }
-
     public void displayHint(ScanHint scanHint) {
         captureHintLayout.setVisibility(View.VISIBLE);
         switch (scanHint) {
@@ -700,9 +691,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return false;
     }
 
-    private  void drawPoint(MatOfPoint2f contour, Bitmap bitmap) {
-        List<Point> points = contour.toList();
-
+    private  void drawPoint(List<Point> points) {
         int paintColor = Color.RED;
 
         // Setup paint with color and stroke styles
@@ -714,7 +703,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         drawPaint.setStrokeJoin(Paint.Join.ROUND);
         drawPaint.setStrokeCap(Paint.Cap.ROUND);
 
-        overlay = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
+        overlay = Bitmap.createBitmap(previewView.getWidth(), previewView.getHeight(), Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(overlay);
 
         for (Point p : points) {
