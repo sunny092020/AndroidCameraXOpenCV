@@ -265,7 +265,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         /* get four outline edges of the document */
         // get edges of the image
-        Mat gray = new Mat(), canny = new Mat();
+        Mat gray = new Mat();
         Imgproc.cvtColor(mat, gray, Imgproc.COLOR_RGB2GRAY);
 
         Mat hsv = new Mat();
@@ -303,8 +303,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private MatOfPoint2f coverAllMethods4Contours(Mat[] inputMats) {
-        MatOfPoint2f contour = null;
-
         List<Function <Mat, MatOfPoint2f>> functions = new ArrayList<>();
 
         // apply in this order
@@ -313,7 +311,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         for(Function <Mat, MatOfPoint2f> f:functions) {
             for(Mat localMat: inputMats) {
-                contour = f.apply(localMat);
+                MatOfPoint2f contour = f.apply(localMat);
                 if(contour!=null) return contour;
             }
         }
