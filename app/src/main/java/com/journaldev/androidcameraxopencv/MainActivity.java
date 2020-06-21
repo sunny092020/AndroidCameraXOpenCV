@@ -283,9 +283,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Mat S = channels.get(1);
         Mat V = channels.get(2);
 
-//        Mat blurMat = new Mat();
-//        Imgproc.medianBlur(gray, blurMat, 3);
-
         Mat blurMat = new Mat();
         Imgproc.GaussianBlur(gray, blurMat, new org.opencv.core.Size(5, 5), 0);
 
@@ -342,7 +339,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             if (pl._theta < -10 && pl._theta > -80 ) continue;
 
-
             // put horizontal lines and vertical lines respectively
             if (abs(delta_x) > abs(delta_y)) {
                 putToLineMap(horizontalLineMap, l);
@@ -350,46 +346,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 putToLineMap(verticalLineMap, l);
             }
 
-
         }
 
         List<Map.Entry<LinePolar, List<Line>>> horizontalLineMapValsList = sortLineMap(horizontalLineMap);
         List<Map.Entry<LinePolar, List<Line>>> verticalLineMapValsList = sortLineMap(verticalLineMap);
 
-        int max = 0;
-
-        for(Map.Entry<LinePolar, List<Line>> e : horizontalLineMapValsList) {
-            LinePolar key = e.getKey();
-            List<Line> localLines = e.getValue();
-            for(Line l: localLines) {
-                LinePolar lp = l.toLinePolar();
-//                l.draw(canvas, drawPaint);
-            }
-
-            max++;
-
-            if(max>=2) break;
-
-        }
-
-        max = 0;
-        for(Map.Entry<LinePolar, List<Line>> e : verticalLineMapValsList) {
-            LinePolar key = e.getKey();
-            List<Line> localLines = e.getValue();
-            for(Line l: localLines) {
-                LinePolar lp = l.toLinePolar();
-//                l.draw(canvas, drawPaint);
-            }
-
-            max++;
-
-            if(max>=2) break;
-
-        }
-
         List<Line> documentHorizontalEdges = getDocumentHorizontalEdges(horizontalLineMapValsList);
         List<Line> documentVerticalEdges = getDocumentVerticalEdges(verticalLineMapValsList);
-
 
         if(documentHorizontalEdges.size()==2&&documentVerticalEdges.size()==2) {
             Line l1 = documentHorizontalEdges.get(0);
@@ -402,17 +365,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Point p2 = computeIntersect(l2, l3);
             Point p3 = computeIntersect(l3, l4);
             Point p4 = computeIntersect(l4, l1);
-
-//            Log.d("p1.x", Double.toString(p1.x));
-//            Log.d("p1.y", Double.toString(p1.y));
-//            Log.d("p2.x", Double.toString(p2.x));
-//            Log.d("p2.y", Double.toString(p2.y));
-//            Log.d("p3.x", Double.toString(p3.x));
-//            Log.d("p3.y", Double.toString(p3.y));
-//            Log.d("p4.x", Double.toString(p4.x));
-//            Log.d("p4.y", Double.toString(p4.y));
-
-
 
             canvas.drawCircle((float) p1.x, (float)p1.y, 30, drawPaint);
             canvas.drawCircle((float) p2.x, (float)p2.y, 30, drawPaint);
@@ -431,9 +383,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             ScannerConstants.scanHint = ScanHint.CAPTURING_IMAGE;
             ScannerConstants.selectedImageBitmap = bitmap;
-
             ScannerConstants.croptedPolygon = contour;
-
         }
 
     }
@@ -473,44 +423,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private List<Line> getDocumentHorizontalEdges(List<Map.Entry<LinePolar, List<Line>>> horizontalLineMapValsList) {
         if(horizontalLineMapValsList.size()<2) return new ArrayList<>();
         List<Line> ret = new ArrayList<Line>();
-        Line firstEdge = horizontalLineMapValsList.get(0).getValue().get(0);
-
         LinePolar firstEdgePolar = horizontalLineMapValsList.get(0).getKey();
-//        Log.d("firstEdge x1 ", Double.toString(firstEdge._p1.x));
-//        Log.d("firstEdge y1 ", Double.toString(firstEdge._p1.y));
-//        Log.d("firstEdge x2 ", Double.toString(firstEdge._p2.x));
-//        Log.d("firstEdge y2 ", Double.toString(firstEdge._p2.y));
-//
-
-        Line secondEdge = null;
-
         double maxDistance = 0;
+        List<Line> secondBucket = new ArrayList<>();
 
         for (Map.Entry<LinePolar, List<Line>> entry: horizontalLineMapValsList) {
-            List<Line> localLines = entry.getValue();
             LinePolar key = entry.getKey();
             if(key.deltaTheta(firstEdgePolar) < 2) {
                 double deltaR = key.deltaR(firstEdgePolar);
                 if(deltaR > maxDistance ) {
                     maxDistance = deltaR;
-                    secondEdge = localLines.get(0);
+                    secondBucket = entry.getValue();
                 }
             }
         }
-        ret.add(firstEdge);
+
+        List<Line> firstBucket = horizontalLineMapValsList.get(0).getValue();
+
+        ret.add(LinePolar.averageLine(firstBucket));
 
         if(maxDistance > previewView.getBitmap().getHeight()*0.5) {
-            ret.add(secondEdge);
-
-            Log.d("firstEdge beta ", Double.toString(firstEdgePolar.getBeta()));
-            Log.d("firstEdge r ", Double.toString(firstEdgePolar._r));
-
-            LinePolar secondEdgePolar = secondEdge.toLinePolar();
-            Log.d("secondEdge beta 2 ", Double.toString(secondEdgePolar.getBeta()));
-            Log.d("secondEdge r 2 ", Double.toString(secondEdgePolar._r));
-            Log.d("maxDistance Horizon", Double.toString(maxDistance));
-
-            Log.d("preview height", Double.toString(previewView.getBitmap().getHeight()/2));
+            ret.add(LinePolar.averageLine(secondBucket));
         }
 
         return ret;
@@ -519,40 +452,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private List<Line> getDocumentVerticalEdges(List<Map.Entry<LinePolar, List<Line>>> verticalLineMapValsList) {
         if(verticalLineMapValsList.size()<2) return new ArrayList<>();
         List<Line> ret = new ArrayList<Line>();
-        Line firstEdge = verticalLineMapValsList.get(0).getValue().get(0);
         LinePolar firstEdgePolar = verticalLineMapValsList.get(0).getKey();
-        Line secondEdge = null;
-
         double maxDistance = 0;
 
+        List<Line> secondBucket = new ArrayList<>();
+
         for (Map.Entry<LinePolar, List<Line>> entry: verticalLineMapValsList) {
-            List<Line> localLines = entry.getValue();
             LinePolar key = entry.getKey();
             double deltaTheta = key.deltaTheta(firstEdgePolar);
 
-//            Log.d("deltaTheta", Double.toString(deltaTheta));
             if(deltaTheta < 2 || deltaTheta > 178) {
                 double deltaR = key.deltaR(firstEdgePolar);
-//                Log.d("deltaR", Double.toString(deltaR));
                 if(deltaR > maxDistance ) {
                     maxDistance = deltaR;
-                    secondEdge = localLines.get(0);
+                    secondBucket = entry.getValue();
                 }
             }
         }
-        ret.add(firstEdge);
 
-//        Log.d("maxDistance", Double.toString(maxDistance));
-
+        List<Line> firstBucket = verticalLineMapValsList.get(0).getValue();
+        ret.add(LinePolar.averageLine(firstBucket));
         if(maxDistance > previewView.getBitmap().getWidth()*0.5) {
-//            Log.d("maxDistance vertical", Double.toString(maxDistance));
-            ret.add(secondEdge);
-            LinePolar secondEdgePolar = secondEdge.toLinePolar();
-//            Log.d("secondEdge beta 2 ", Double.toString(secondEdgePolar.getBeta()));
-//            Log.d("secondEdge r 2 ", Double.toString(secondEdgePolar._r));
-//            Log.d("maxDistance ", Double.toString(maxDistance));
+            ret.add(LinePolar.averageLine(secondBucket));
         }
-
         return ret;
     }
 
@@ -666,11 +588,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Mat hierarchyMat = new Mat();
 
         Imgproc.findContours(adaptiveThreshold, contours, hierarchyMat, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-
-//        Imgproc.drawContours(originMat, contours, -1, new Scalar(255,0,0));
-//
-//        overlay = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
-//        Utils.matToBitmap(originMat, overlay);
 
         Collections.sort(contours, AreaDescendingComparator);
 
