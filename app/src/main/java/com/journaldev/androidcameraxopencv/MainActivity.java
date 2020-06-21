@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Environment;
@@ -85,6 +86,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private TextView captureHintText;
     private LinearLayout captureHintLayout;
+
+    private Function <Mat, MatOfPoint2f> cacheFindContoursFun = null;
+    private int cacheMatIndex = -1;
+
     Bitmap overlay;
 
     static {
@@ -260,6 +265,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void findContours(Bitmap bitmap) {
+        clearPoints();
+
         Mat mat = new Mat();
         Utils.bitmapToMat(bitmap, mat);
 
@@ -290,7 +297,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Core.bitwise_not(V, notV);
 
         Mat[] inputMats = {gray, H, S, V, notGray, notH, notS, notV};
-
+        
         MatOfPoint2f contour = coverAllMethods4Contours(inputMats);
 
         if(contour == null) return;
@@ -303,6 +310,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private MatOfPoint2f coverAllMethods4Contours(Mat[] inputMats) {
+        if((cacheFindContoursFun!=null) && (cacheMatIndex>=0)) {
+            Mat localMat = inputMats[cacheMatIndex];
+            return cacheFindContoursFun.apply(localMat);
+        }
+
         List<Function <Mat, MatOfPoint2f>> functions = new ArrayList<>();
 
         // apply in this order
@@ -310,9 +322,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         functions.add(mat -> houghLines(mat));
 
         for(Function <Mat, MatOfPoint2f> f:functions) {
+            int inputMatsIndex = 0;
             for(Mat localMat: inputMats) {
                 MatOfPoint2f contour = f.apply(localMat);
-                if(contour!=null) return contour;
+                if(contour!=null) {
+                    cacheFindContoursFun = f;
+                    cacheMatIndex = inputMatsIndex;
+                    return contour;
+                }
+                inputMatsIndex++;
             }
         }
         return null;
@@ -388,6 +406,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             MatOfPoint2f contour =  new MatOfPoint2f(points);
 
+            // break loop if points are in the edge of the frame
+            if(isExceedMat(contour.toList())) return null;
+
             // break loop if the document is too far from the phone
             double minS = mat.width()*mat.height()*0.3;
             if(Imgproc.contourArea(contour) < minS) {
@@ -438,7 +459,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if(contour.total() != 4) break;
 
             // break loop if points are in the edge of the frame
-            if(isExceedMat(contour, mat)) break;
+            if(isExceedMat(contour.toList())) break;
 
             // break loop if the document is too far from the phone
             if(Imgproc.contourArea(contour) < minS) {
@@ -582,28 +603,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
 
-        Comparator xComparator = new Comparator() {
-            @Override
-            public int compare(Object o1, Object o2) {
-                double x1 = (double)o1;
-                double x2 = (double)o2;
-                return Double.compare(x1, x2);
-            }
+        Comparator xyComparator = (o1, o2) -> {
+            double xy1 = (double)o1;
+            double xy2 = (double)o2;
+            return Double.compare(xy1, xy2);
         };
 
-        Comparator yComparator = new Comparator() {
-            public int compare(Object o1, Object o2) {
-                double y1 = (double)o1;
-                double y2 = (double)o2;
-                return Double.compare(y1, y2);
-            }
-        };
-
-        Collections.sort(xs, xComparator);
+        Collections.sort(xs, xyComparator);
         double xmin = (double) xs.get(0),
                 xmax = (double) xs.get(xs.size()-1);
 
-        Collections.sort(ys, xComparator);
+        Collections.sort(ys, xyComparator);
         double ymin = (double) ys.get(0),
                 ymax = (double) ys.get(ys.size()-1);
 
@@ -643,13 +653,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private boolean isExceedMat(MatOfPoint c, Mat myMat) {
-        Point[] points = c.toArray();
+    private boolean isExceedMat(List<Point> points) {
+        double screenWidth = previewView.getBitmap().getWidth();
+        double screenHeight = previewView.getBitmap().getHeight();
 
         for(Point p : points){
-            double rateX = p.x/myMat.width();
-            double rateY = p.y/myMat.height();
-
+            double rateX = p.x/screenWidth;
+            double rateY = p.y/screenHeight;
             if (rateX < 0.01) return true;
             if (rateX > 0.99) return true;
             if (rateY < 0.01) return true;
@@ -658,35 +668,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return false;
     }
 
-    private boolean isExceedMat(MatOfPoint2f contour, Mat myMat) {
-        List<Point> points = contour.toList();
+    private  void drawL(Line l) {
+        int paintColor = Color.RED;
 
-        for(Point p : points){
-            double rateX = p.x/myMat.width();
-            double rateY = p.y/myMat.height();
+        // Setup paint with color and stroke styles
+        Paint drawPaint = new Paint();
+        drawPaint.setColor(paintColor);
+        drawPaint.setAntiAlias(true);
+        drawPaint.setStrokeWidth(5);
+        drawPaint.setStyle(Paint.Style.STROKE);
+        drawPaint.setStrokeJoin(Paint.Join.ROUND);
+        drawPaint.setStrokeCap(Paint.Cap.ROUND);
 
-            if (rateX < 0.01) return true;
-            if (rateX > 0.99) return true;
-            if (rateY < 0.01) return true;
-            if (rateY > 0.99) return true;
-        }
-        return false;
+        overlay = Bitmap.createBitmap(previewView.getWidth(), previewView.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(overlay);
+
+        l.draw(canvas, drawPaint);
     }
 
-    private boolean isExceedMat(List<Point> points, Mat myMat) {
-        for(Point p : points){
-            double rateX = p.x/myMat.width();
-            double rateY = p.y/myMat.height();
-
-            Log.d("rateX", Double.toString(rateX));
-            Log.d("rateY", Double.toString(rateY));
-
-            if (rateX < 0.01) return true;
-            if (rateX > 0.99) return true;
-            if (rateY < 0.01) return true;
-            if (rateY > 0.99) return true;
-        }
-        return false;
+    private void clearPoints() {
+        overlay = Bitmap.createBitmap(previewView.getWidth(), previewView.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(overlay);
+        canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
     }
 
     private  void drawPoint(List<Point> points) {
@@ -705,8 +708,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Canvas canvas = new Canvas(overlay);
 
         for (Point p : points) {
-            Log.d("p.x", Double.toString(p.x));
-            Log.d("p.y", Double.toString(p.y));
             canvas.drawCircle((float) p.x, (float)p.y, 30, drawPaint);
         }
     }
@@ -751,7 +752,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         return true;
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
