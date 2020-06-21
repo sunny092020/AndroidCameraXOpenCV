@@ -3,10 +3,12 @@ package com.journaldev.androidcameraxopencv;
 import android.content.pm.PackageManager;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Environment;
@@ -27,12 +29,13 @@ import androidx.camera.core.CameraSelector;
 import androidx.camera.core.Camera;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageCapture;
+import androidx.camera.core.ImageCaptureException;
+import androidx.camera.core.ImageProxy;
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.lifecycle.LifecycleOwner;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -41,6 +44,7 @@ import com.journaldev.androidcameraxopencv.helpers.ScannerConstants;
 import com.journaldev.androidcameraxopencv.libraries.Line;
 import com.journaldev.androidcameraxopencv.libraries.LinePolar;
 
+import org.jetbrains.annotations.NotNull;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
@@ -51,6 +55,10 @@ import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -59,14 +67,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.Vector;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
 
 import static android.view.View.GONE;
 import static java.lang.Math.abs;
-import static java.lang.Math.min;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private int REQUEST_CODE_PERMISSIONS = 101;
@@ -147,7 +153,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 // Attach use cases to the camera with the same lifecycle owner
                 camera = cameraProvider.bindToLifecycle(
-                        ((LifecycleOwner) this),
+                        this,
                         cameraSelector,
                         preview,
                         imageCapture,
@@ -168,21 +174,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Preview setPreview() {
         Size screen = new Size(previewView.getWidth(), previewView.getHeight()); //size of the screen
         Preview.Builder previewBuilder = new Preview.Builder().setTargetResolution(screen);
-        Preview preview = previewBuilder.build();
-        return preview;
+        return previewBuilder.build();
     }
 
     private ImageCapture setImageCapture() {
-        ImageCapture.Builder imageCaptureBuilder = new ImageCapture.Builder().setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+        ImageCapture.Builder imageCaptureBuilder = new ImageCapture.Builder().setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
                 .setTargetRotation(getWindowManager().getDefaultDisplay().getRotation());
 
 
         final ImageCapture imgCapture = imageCaptureBuilder.build();
 
-        btnCapture.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {}
-        });
+        btnCapture.setOnClickListener(v -> {});
 
         return imgCapture;
     }
@@ -194,47 +196,54 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         ImageAnalysis imageAnalysis = imageAnalysisBuilder.build();
 
+        File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/YOUR_DIRECTORY", "YOUR_IMAGE.jpg");
+        ImageCapture.OutputFileOptions.Builder outputFileOptionsBuilder =
+                new ImageCapture.OutputFileOptions.Builder(file);
+
         imageAnalysis.setAnalyzer(Executors.newSingleThreadExecutor(),
             (image) -> {
                 if(ScannerConstants.captured_finish) {
                     image.close();
                     return;
-                };
+                }
 
                 Bitmap bitmap = previewView.getBitmap();
                 findContours(bitmap);
 
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        displayHint(ScannerConstants.scanHint);
-                        ivBitmap.setImageBitmap(overlay);
-                    }
+                runOnUiThread(() -> {
+                    displayHint(ScannerConstants.scanHint);
+                    ivBitmap.setImageBitmap(overlay);
                 });
 
                 if(!ScannerConstants.analyzing) {
                     image.close();
                     return;
-                };
+                }
 
                 if(ScannerConstants.scanHint == ScanHint.CAPTURING_IMAGE) {
                     ScannerConstants.analyzing = false;
-                    new Handler(Looper.getMainLooper()).post(new Runnable() {
-                        @Override
-                        public void run() {
-                            new CountDownTimer(3000, 100) {
-                                public void onTick(long millisUntilFinished) {}
-                                public void onFinish() {
-                                    ScannerConstants.captured_finish = true;
-                                    Bitmap bitmap = previewView.getBitmap();
-                                    findContours(bitmap);
-
-                                    image.close();
-                                    startCrop();
+                    new Handler(Looper.getMainLooper()).post(() -> new CountDownTimer(3000, 100) {
+                        public void onTick(long millisUntilFinished) {}
+                        public void onFinish() {
+                            imageCapture.takePicture(outputFileOptionsBuilder.build(), Executors.newSingleThreadExecutor(), new ImageCapture.OnImageSavedCallback(){
+                                @Override
+                                public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
+                                    Uri uri = outputFileResults.getSavedUri();
+                                    try {
+                                        InputStream ims = getContentResolver().openInputStream(uri);
+                                        ScannerConstants.captured_finish = true;
+                                        Bitmap bitmap1 = BitmapFactory.decodeStream(ims);
+                                        findContours(bitmap1);
+                                        image.close();
+                                        startCrop();
+                                    } catch (FileNotFoundException e) {
+                                        e.printStackTrace();
+                                    }
                                 }
-                            }.start();
+                                public void onError(@NotNull ImageCaptureException exception) {}
+                            });
                         }
-                    });
+                    }.start());
                 }
 
                 image.close();
@@ -297,7 +306,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Core.bitwise_not(V, notV);
 
         Mat[] inputMats = {gray, H, S, V, notGray, notH, notS, notV};
-        
+
         MatOfPoint2f contour = coverAllMethods4Contours(inputMats);
 
         if(contour == null) return;
@@ -318,8 +327,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         List<Function <Mat, MatOfPoint2f>> functions = new ArrayList<>();
 
         // apply in this order
-        functions.add(mat -> adaptiveThreshold(mat));
-        functions.add(mat -> houghLines(mat));
+        functions.add(this::adaptiveThreshold);
+        functions.add(this::houghLines);
 
         for(Function <Mat, MatOfPoint2f> f:functions) {
             int inputMatsIndex = 0;
@@ -356,15 +365,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         Imgproc.HoughLinesP(canny, lines, 1, Math.PI / 180, 70, 30, 10);
 
-        HashMap<LinePolar, List<Line>> verticalLineMap = new HashMap<LinePolar, List<Line>>();
-        HashMap<LinePolar, List<Line>> horizontalLineMap = new HashMap<LinePolar, List<Line>>();
+        HashMap<LinePolar, List<Line>> verticalLineMap = new HashMap<>();
+        HashMap<LinePolar, List<Line>> horizontalLineMap = new HashMap<>();
 
         for (int i = 0; i < lines.rows(); i++) {
             double[] v = lines.get(i, 0);
-
-            List<Point> points = new ArrayList<>();
-            points.add(new Point(v[0], v[1]));
-            points.add(new Point(v[2], v[3]));
 
             double delta_x = v[0] - v[2], delta_y = v[1] - v[3];
 
@@ -475,15 +480,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void putToLineMap(HashMap<LinePolar, List<Line>> lineMap, Line line) {
         LinePolar lp = line.toLinePolar();
 
-        LinePolar oldAverage=null, newAverage=null;
+        LinePolar oldAverage=null, newAverage;
         List<Line> lines = null;
 
         boolean isNewBucket = true;
 
         for (Map.Entry<LinePolar, List<Line>> entry : lineMap.entrySet()) {
             LinePolar averageLp = entry.getKey();
-            Double deltaTheta = averageLp.deltaTheta(lp);
-            Double deltaR = averageLp.deltaR(lp);
+            double deltaTheta = averageLp.deltaTheta(lp);
+            double deltaR = averageLp.deltaR(lp);
             if((deltaTheta < 1) && (deltaR < 2)) {
                 isNewBucket = false;
                 oldAverage = averageLp;
@@ -506,7 +511,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private List<Line> getDocumentHorizontalEdges(List<Map.Entry<LinePolar, List<Line>>> horizontalLineMapValsList) {
         if(horizontalLineMapValsList.size()<2) return new ArrayList<>();
-        List<Line> ret = new ArrayList<Line>();
+        List<Line> ret = new ArrayList<>();
         LinePolar firstEdgePolar = horizontalLineMapValsList.get(0).getKey();
         double maxDistance = 0;
         List<Line> secondBucket = new ArrayList<>();
@@ -526,7 +531,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         ret.add(LinePolar.averageLine(firstBucket));
 
-        if(maxDistance > previewView.getBitmap().getHeight()*0.5) {
+        if(maxDistance > Objects.requireNonNull(previewView.getBitmap()).getHeight()*0.5) {
             ret.add(LinePolar.averageLine(secondBucket));
         }
 
@@ -535,7 +540,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private List<Line> getDocumentVerticalEdges(List<Map.Entry<LinePolar, List<Line>>> verticalLineMapValsList) {
         if(verticalLineMapValsList.size()<2) return new ArrayList<>();
-        List<Line> ret = new ArrayList<Line>();
+        List<Line> ret = new ArrayList<>();
         LinePolar firstEdgePolar = verticalLineMapValsList.get(0).getKey();
         double maxDistance = 0;
 
@@ -556,24 +561,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         List<Line> firstBucket = verticalLineMapValsList.get(0).getValue();
         ret.add(LinePolar.averageLine(firstBucket));
-        if(maxDistance > previewView.getBitmap().getWidth()*0.5) {
+        if(maxDistance > Objects.requireNonNull(previewView.getBitmap()).getWidth()*0.5) {
             ret.add(LinePolar.averageLine(secondBucket));
         }
         return ret;
     }
 
     private List<Map.Entry<LinePolar, List<Line>>> sortLineMap(HashMap<LinePolar, List<Line>> lineMap) {
-        Comparator<Map.Entry> distanceComparator = new Comparator<Map.Entry>() {
-            @Override
-            public int compare(Map.Entry o1, Map.Entry o2) {
-                List<Line> linesByPl1 = (List<Line>) o1.getValue();
-                List<Line> linesByPl2 = (List<Line>) o2.getValue();
+        Comparator<Map.Entry> distanceComparator = (o1, o2) -> {
+            List<Line> linesByPl1 = (List<Line>) o1.getValue();
+            List<Line> linesByPl2 = (List<Line>) o2.getValue();
 
-                double maxDistance1 = maxDistance(linesByPl1);
-                double maxDistance2 = maxDistance(linesByPl2);
+            double maxDistance1 = maxDistance(linesByPl1);
+            double maxDistance2 = maxDistance(linesByPl2);
 
-                return Double.compare(maxDistance2, maxDistance1);
-            }
+            return Double.compare(maxDistance2, maxDistance1);
         };
 
         Set<Map.Entry<LinePolar, List<Line>>> lineMapVals = lineMap.entrySet();
@@ -585,7 +587,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private double maxDistance(List<Line> lines) {
-        double ret = 0;
+        double ret;
 
 //        for(Line l:lines) {
 //            ret = ret+l.distance();
@@ -654,7 +656,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private boolean isExceedMat(List<Point> points) {
-        double screenWidth = previewView.getBitmap().getWidth();
+        double screenWidth = Objects.requireNonNull(previewView.getBitmap()).getWidth();
         double screenHeight = previewView.getBitmap().getHeight();
 
         for(Point p : points){
@@ -666,24 +668,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if (rateY > 0.99) return true;
         }
         return false;
-    }
-
-    private  void drawL(Line l) {
-        int paintColor = Color.RED;
-
-        // Setup paint with color and stroke styles
-        Paint drawPaint = new Paint();
-        drawPaint.setColor(paintColor);
-        drawPaint.setAntiAlias(true);
-        drawPaint.setStrokeWidth(5);
-        drawPaint.setStyle(Paint.Style.STROKE);
-        drawPaint.setStrokeJoin(Paint.Join.ROUND);
-        drawPaint.setStrokeCap(Paint.Cap.ROUND);
-
-        overlay = Bitmap.createBitmap(previewView.getWidth(), previewView.getHeight(), Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(overlay);
-
-        l.draw(canvas, drawPaint);
     }
 
     private void clearPoints() {
@@ -718,17 +702,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         finish();
     }
 
-    private static Comparator<MatOfPoint> AreaDescendingComparator = new Comparator<MatOfPoint>() {
-        public int compare(MatOfPoint m1, MatOfPoint m2) {
-            double area1 = Imgproc.contourArea(m1);
-            double area2 = Imgproc.contourArea(m2);
-            if(area2>area1) return 1;
-            else if (area2<area1) return -1;
-            else return 0;
-        }
+    private static Comparator<MatOfPoint> AreaDescendingComparator = (m1, m2) -> {
+        double area1 = Imgproc.contourArea(m1);
+        double area2 = Imgproc.contourArea(m2);
+        return Double.compare(area2, area1);
     };
 
-    private void showAcceptedRejectedButton(boolean acceptedRejected) {}
+    private void showAcceptedRejectedButton() {}
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -763,12 +743,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.btnReject:
-                showAcceptedRejectedButton(false);
+                showAcceptedRejectedButton();
                 break;
 
             case R.id.btnAccept:
-                File file = new File(
-                        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "" + System.currentTimeMillis() + "_JDCameraX.jpg");
                 break;
         }
     }
