@@ -6,7 +6,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
@@ -16,7 +15,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.util.Size;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
@@ -46,31 +44,21 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.journaldev.androidcameraxopencv.enums.ScanHint;
 import com.journaldev.androidcameraxopencv.helpers.ImageUtils;
 import com.journaldev.androidcameraxopencv.helpers.ScannerConstants;
-import com.journaldev.androidcameraxopencv.libraries.Line;
-import com.journaldev.androidcameraxopencv.libraries.LinePolar;
 
 import org.jetbrains.annotations.NotNull;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
-import java.util.function.Function;
 
 import static android.view.View.GONE;
 import static java.lang.Integer.min;
@@ -239,9 +227,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         ImageAnalysis imageAnalysis = imageAnalysisBuilder.build();
 
         imageAnalysis.setAnalyzer(Executors.newSingleThreadExecutor(),
-            (image) -> {
-                analyze(image);
-            });
+                this::analyze);
 
         return imageAnalysis;
     }
@@ -267,7 +253,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         if(ScannerConstants.scanHint == ScanHint.CAPTURING_IMAGE) {
             ScannerConstants.analyzing = false;
-            new Handler(Looper.getMainLooper()).post(() -> new CountDownTimer(3000, 100) {
+            new Handler(Looper.getMainLooper()).post(() -> new CountDownTimer(2000, 100) {
                 public void onTick(long millisUntilFinished) {}
                 public void onFinish() {
                     ScannerConstants.captured_finish = true;
