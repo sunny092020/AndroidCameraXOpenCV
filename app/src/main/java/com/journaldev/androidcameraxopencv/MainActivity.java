@@ -67,9 +67,9 @@ import static java.lang.Math.abs;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private int REQUEST_CODE_PERMISSIONS = 101;
-    private final String[] REQUIRED_PERMISSIONS = new String[]{
-            "android.permission.CAMERA",
-            "android.permission.WRITE_EXTERNAL_STORAGE"
+    private final String[] REQUIRED_PERMISSIONS = new String[] {
+        "android.permission.CAMERA",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
     };
 
     PreviewView previewView;
@@ -152,21 +152,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 preview.setSurfaceProvider(
                         previewView.createSurfaceProvider());
 
-                frameLayout = findViewById(R.id.frameLayout);
-
-                // Gets the layout params that will allow you to resize the layout
-                ViewGroup.LayoutParams params = frameLayout.getLayoutParams();
-
-                DisplayMetrics displayMetrics = new DisplayMetrics();
-                getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-                int width = displayMetrics.widthPixels;
-
-                // Changes the height and width to the specified *pixels*
-                params.width = width;
-                params.height = width*4/3;
-
-                frameLayout.setLayoutParams(params);
-
+                setFrameLayoutRatio();
             } catch (InterruptedException | ExecutionException e) {
                 // Currently no exceptions thrown. cameraProviderFuture.get() should
                 // not block since the listener is being called, so no need to
@@ -175,40 +161,45 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }, ContextCompat.getMainExecutor(this));
     }
 
+    private void setFrameLayoutRatio() {
+        frameLayout = findViewById(R.id.frameLayout);
+
+        // Gets the layout params that will allow you to resize the layout
+        ViewGroup.LayoutParams params = frameLayout.getLayoutParams();
+
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        int width = displayMetrics.widthPixels;
+
+        // Changes the height and width to the specified *pixels*
+        params.width = width;
+        params.height = width*4/3;
+
+        frameLayout.setLayoutParams(params);
+    }
+
     private Preview setPreview() {
-        DisplayMetrics metrics = new DisplayMetrics();
-        previewView.getDisplay().getRealMetrics(metrics);
-        int screenAspectRatio = aspectRatio(metrics.widthPixels, metrics.heightPixels);
-
-        int rotation = previewView.getDisplay().getRotation();
-
         Preview.Builder previewBuilder = new Preview.Builder()
-                .setTargetAspectRatio(screenAspectRatio)
-                .setTargetRotation(rotation);
+                .setTargetAspectRatio(aspectRatio())
+                .setTargetRotation(previewView.getDisplay().getRotation());
 
         return previewBuilder.build();
     }
 
     private ImageCapture setImageCapture() {
-        DisplayMetrics metrics = new DisplayMetrics();
-        previewView.getDisplay().getRealMetrics(metrics);
-        int screenAspectRatio = aspectRatio(metrics.widthPixels, metrics.heightPixels);
-
-        int rotation = previewView.getDisplay().getRotation();
-
         ImageCapture.Builder imageCaptureBuilder = new ImageCapture.Builder()
                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
-                .setTargetAspectRatio(screenAspectRatio)
-                .setTargetRotation(rotation);
-        final ImageCapture imgCapture = imageCaptureBuilder.build();
-
-        btnCapture.setOnClickListener(v -> {});
-
-        return imgCapture;
+                .setTargetAspectRatio(aspectRatio())
+                .setTargetRotation(previewView.getDisplay().getRotation());
+        return imageCaptureBuilder.build();
     }
 
+    private int aspectRatio() {
+        DisplayMetrics metrics = new DisplayMetrics();
+        previewView.getDisplay().getRealMetrics(metrics);
 
-    private int aspectRatio(int width, int height) {
+        int width = metrics.widthPixels, height = metrics.heightPixels;
+
         double RATIO_4_3_VALUE = 4.0 / 3.0;
         double RATIO_16_9_VALUE = 16.0 / 9.0;
 
