@@ -6,18 +6,21 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.Size;
 import android.view.Menu;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -25,12 +28,12 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.camera.core.AspectRatio;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.Camera;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageCapture;
 import androidx.camera.core.ImageCaptureException;
-import androidx.camera.core.ImageProxy;
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
@@ -55,10 +58,6 @@ import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -72,6 +71,8 @@ import java.util.concurrent.Executors;
 import java.util.function.Function;
 
 import static android.view.View.GONE;
+import static java.lang.Integer.min;
+import static java.lang.Integer.max;
 import static java.lang.Math.abs;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -83,6 +84,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     PreviewView previewView;
     ImageView ivBitmap;
+    FrameLayout frameLayout;
     ImageCapture imageCapture;
     ImageAnalysis imageAnalysis;
     Preview preview;
@@ -163,6 +165,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 preview.setSurfaceProvider(
                         previewView.createSurfaceProvider());
 
+                frameLayout = findViewById(R.id.frameLayout);
+
+                // Gets the layout params that will allow you to resize the layout
+                ViewGroup.LayoutParams params = frameLayout.getLayoutParams();
+
+                DisplayMetrics displayMetrics = new DisplayMetrics();
+                getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+                int width = displayMetrics.widthPixels;
+
+                // Changes the height and width to the specified *pixels*
+                params.width = width;
+                params.height = width*4/3;
+
+                frameLayout.setLayoutParams(params);
+
             } catch (InterruptedException | ExecutionException e) {
                 // Currently no exceptions thrown. cameraProviderFuture.get() should
                 // not block since the listener is being called, so no need to
@@ -172,21 +189,47 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private Preview setPreview() {
-        Size screen = new Size(previewView.getWidth(), previewView.getHeight()); //size of the screen
-        Preview.Builder previewBuilder = new Preview.Builder().setTargetResolution(screen);
+        DisplayMetrics metrics = new DisplayMetrics();
+        previewView.getDisplay().getRealMetrics(metrics);
+        int screenAspectRatio = aspectRatio(metrics.widthPixels, metrics.heightPixels);
+
+        int rotation = previewView.getDisplay().getRotation();
+
+        Preview.Builder previewBuilder = new Preview.Builder()
+                .setTargetAspectRatio(screenAspectRatio)
+                .setTargetRotation(rotation);
+
         return previewBuilder.build();
     }
 
     private ImageCapture setImageCapture() {
-        ImageCapture.Builder imageCaptureBuilder = new ImageCapture.Builder().setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
-                .setTargetRotation(getWindowManager().getDefaultDisplay().getRotation());
+        DisplayMetrics metrics = new DisplayMetrics();
+        previewView.getDisplay().getRealMetrics(metrics);
+        int screenAspectRatio = aspectRatio(metrics.widthPixels, metrics.heightPixels);
 
+        int rotation = previewView.getDisplay().getRotation();
 
+        ImageCapture.Builder imageCaptureBuilder = new ImageCapture.Builder()
+                .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
+                .setTargetAspectRatio(screenAspectRatio)
+                .setTargetRotation(rotation);
         final ImageCapture imgCapture = imageCaptureBuilder.build();
 
         btnCapture.setOnClickListener(v -> {});
 
         return imgCapture;
+    }
+
+
+    private int aspectRatio(int width, int height) {
+        double RATIO_4_3_VALUE = 4.0 / 3.0;
+        double RATIO_16_9_VALUE = 16.0 / 9.0;
+
+        double previewRatio = (double) max(width, height) / min(width, height);
+        if (abs(previewRatio - RATIO_4_3_VALUE) <= abs(previewRatio - RATIO_16_9_VALUE)) {
+            return AspectRatio.RATIO_4_3;
+        }
+        return AspectRatio.RATIO_16_9;
     }
 
     private ImageAnalysis setImageAnalysis() {
@@ -196,7 +239,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         ImageAnalysis imageAnalysis = imageAnalysisBuilder.build();
 
-        File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/YOUR_DIRECTORY", "YOUR_IMAGE.jpg");
+        File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "CAPTURE.jpg");
         ImageCapture.OutputFileOptions.Builder outputFileOptionsBuilder =
                 new ImageCapture.OutputFileOptions.Builder(file);
 
@@ -225,20 +268,46 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     new Handler(Looper.getMainLooper()).post(() -> new CountDownTimer(3000, 100) {
                         public void onTick(long millisUntilFinished) {}
                         public void onFinish() {
+                            ScannerConstants.captured_finish = true;
                             imageCapture.takePicture(outputFileOptionsBuilder.build(), Executors.newSingleThreadExecutor(), new ImageCapture.OnImageSavedCallback(){
                                 @Override
                                 public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
-                                    Uri uri = outputFileResults.getSavedUri();
-                                    try {
-                                        InputStream ims = getContentResolver().openInputStream(uri);
-                                        ScannerConstants.captured_finish = true;
-                                        Bitmap bitmap1 = BitmapFactory.decodeStream(ims);
-                                        findContours(bitmap1);
+                                    Bitmap previewBitmap = previewView.getBitmap();
+
+                                    File mSaveBit = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "CAPTURE.jpg");
+                                    String filePath = mSaveBit.getPath();
+                                    Bitmap captureBitmap = BitmapFactory.decodeFile(filePath);
+
+                                    double h = (double) previewBitmap.getHeight()*captureBitmap.getHeight()/previewBitmap.getWidth();
+                                    Bitmap croppedBmp = Bitmap.createBitmap(captureBitmap, (int) ((captureBitmap.getWidth()-h)/2), 0, (int) h, captureBitmap.getHeight());
+                                    Bitmap rotated90croppedBmp = rotateImage(croppedBmp, 90);
+
+                                    double scaleX = (double) rotated90croppedBmp.getWidth()/previewBitmap.getWidth();
+                                    double scaleY = (double) rotated90croppedBmp.getHeight()/previewBitmap.getHeight();
+
+                                    MatOfPoint2f contour = findContours(previewBitmap);
+
+                                    if(contour == null) {
                                         image.close();
-                                        startCrop();
-                                    } catch (FileNotFoundException e) {
-                                        e.printStackTrace();
+                                        ScannerConstants.captured_finish = false;
+                                        ScannerConstants.analyzing = true;
+                                        return;
                                     }
+                                    List<Point> points = contour.toList();
+
+                                    Point[] scalePoints = new Point[4];
+
+                                    for(int i=0; i<4; i++) {
+                                        Point p = points.get(i);
+                                        scalePoints[i] = new Point(scaleX*p.x, scaleY*p.y);
+                                    }
+
+                                    MatOfPoint2f scaleContour = new MatOfPoint2f(scalePoints);
+
+                                    ScannerConstants.selectedImageBitmap = rotated90croppedBmp;
+                                    ScannerConstants.croptedPolygon = scaleContour;
+                                    image.close();
+                                    startCrop();
                                 }
                                 public void onError(@NotNull ImageCaptureException exception) {}
                             });
@@ -250,6 +319,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             });
 
         return imageAnalysis;
+    }
+
+    public Bitmap rotateImage(Bitmap source, float angle) {
+        Matrix matrix = new Matrix();
+        matrix.postRotate(angle);
+        return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(),
+                matrix, true);
     }
 
     Point computeIntersect(Line l1, Line l2) {
@@ -273,7 +349,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Imgproc.Canny(gray, canny, 255/3, 255);
     }
 
-    private void findContours(Bitmap bitmap) {
+    private MatOfPoint2f findContours(Bitmap bitmap) {
         clearPoints();
 
         Mat mat = new Mat();
@@ -309,13 +385,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         MatOfPoint2f contour = coverAllMethods4Contours(inputMats);
 
-        if(contour == null) return;
+        if(contour == null) return null;
 
         drawPoint(contour.toList());
 
         ScannerConstants.scanHint = ScanHint.CAPTURING_IMAGE;
-        ScannerConstants.selectedImageBitmap = bitmap;
-        ScannerConstants.croptedPolygon = contour;
+        return contour;
     }
 
     private MatOfPoint2f coverAllMethods4Contours(Mat[] inputMats) {
