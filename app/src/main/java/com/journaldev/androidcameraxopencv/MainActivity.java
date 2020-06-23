@@ -34,6 +34,7 @@ import androidx.camera.core.Camera;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageCapture;
 import androidx.camera.core.ImageCaptureException;
+import androidx.camera.core.ImageProxy;
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
@@ -237,88 +238,89 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         ImageAnalysis imageAnalysis = imageAnalysisBuilder.build();
 
+        imageAnalysis.setAnalyzer(Executors.newSingleThreadExecutor(),
+            (image) -> {
+                analyze(image);
+            });
+
+        return imageAnalysis;
+    }
+
+    private void analyze(ImageProxy image) {
+        if(ScannerConstants.captured_finish) {
+            image.close();
+            return;
+        }
+
+        Bitmap bitmap = previewView.getBitmap();
+        findContours(bitmap);
+
+        runOnUiThread(() -> {
+            displayHint(ScannerConstants.scanHint);
+            ivBitmap.setImageBitmap(overlay);
+        });
+
+        if(!ScannerConstants.analyzing) {
+            image.close();
+            return;
+        }
+
+        if(ScannerConstants.scanHint == ScanHint.CAPTURING_IMAGE) {
+            ScannerConstants.analyzing = false;
+            new Handler(Looper.getMainLooper()).post(() -> new CountDownTimer(3000, 100) {
+                public void onTick(long millisUntilFinished) {}
+                public void onFinish() {
+                    ScannerConstants.captured_finish = true;
+                    takePicture(image);
+                }
+            }.start());
+        }
+
+        image.close();
+    }
+
+    private void takePicture(ImageProxy image) {
         File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "CAPTURE.jpg");
         ImageCapture.OutputFileOptions.Builder outputFileOptionsBuilder =
                 new ImageCapture.OutputFileOptions.Builder(file);
 
-        imageAnalysis.setAnalyzer(Executors.newSingleThreadExecutor(),
-            (image) -> {
-                if(ScannerConstants.captured_finish) {
+        imageCapture.takePicture(outputFileOptionsBuilder.build(), Executors.newSingleThreadExecutor(), new ImageCapture.OnImageSavedCallback(){
+            @Override
+            public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
+                Bitmap previewBitmap = previewView.getBitmap();
+
+                File mSaveBit = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "CAPTURE.jpg");
+                String filePath = mSaveBit.getPath();
+                Bitmap captureBitmap = BitmapFactory.decodeFile(filePath);
+
+                mSaveBit.delete();
+
+                double h = (double) previewBitmap.getHeight()*captureBitmap.getHeight()/previewBitmap.getWidth();
+                Bitmap croppedBmp = Bitmap.createBitmap(captureBitmap, (int) ((captureBitmap.getWidth()-h)/2), 0, (int) h, captureBitmap.getHeight());
+                Bitmap rotated90croppedBmp = ImageUtils.rotateBitmap(croppedBmp, 90);
+
+
+                MatOfPoint2f contour = findContours(previewBitmap);
+
+                if(contour == null) {
                     image.close();
+                    ScannerConstants.captured_finish = false;
+                    ScannerConstants.analyzing = true;
                     return;
                 }
 
-                Bitmap bitmap = previewView.getBitmap();
-                findContours(bitmap);
+                double scaleX = (double) rotated90croppedBmp.getWidth()/previewBitmap.getWidth();
+                double scaleY = (double) rotated90croppedBmp.getHeight()/previewBitmap.getHeight();
 
-                runOnUiThread(() -> {
-                    displayHint(ScannerConstants.scanHint);
-                    ivBitmap.setImageBitmap(overlay);
-                });
+                MatOfPoint2f scaleContour = ImageUtils.scaleContour(contour, scaleX, scaleY);
 
-                if(!ScannerConstants.analyzing) {
-                    image.close();
-                    return;
-                }
-
-                if(ScannerConstants.scanHint == ScanHint.CAPTURING_IMAGE) {
-                    ScannerConstants.analyzing = false;
-                    new Handler(Looper.getMainLooper()).post(() -> new CountDownTimer(3000, 100) {
-                        public void onTick(long millisUntilFinished) {}
-                        public void onFinish() {
-                            ScannerConstants.captured_finish = true;
-                            imageCapture.takePicture(outputFileOptionsBuilder.build(), Executors.newSingleThreadExecutor(), new ImageCapture.OnImageSavedCallback(){
-                                @Override
-                                public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
-                                    Bitmap previewBitmap = previewView.getBitmap();
-
-                                    File mSaveBit = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "CAPTURE.jpg");
-                                    String filePath = mSaveBit.getPath();
-                                    Bitmap captureBitmap = BitmapFactory.decodeFile(filePath);
-
-                                    mSaveBit.delete();
-
-                                    double h = (double) previewBitmap.getHeight()*captureBitmap.getHeight()/previewBitmap.getWidth();
-                                    Bitmap croppedBmp = Bitmap.createBitmap(captureBitmap, (int) ((captureBitmap.getWidth()-h)/2), 0, (int) h, captureBitmap.getHeight());
-                                    Bitmap rotated90croppedBmp = ImageUtils.rotateBitmap(croppedBmp, 90);
-
-                                    double scaleX = (double) rotated90croppedBmp.getWidth()/previewBitmap.getWidth();
-                                    double scaleY = (double) rotated90croppedBmp.getHeight()/previewBitmap.getHeight();
-
-                                    MatOfPoint2f contour = findContours(previewBitmap);
-
-                                    if(contour == null) {
-                                        image.close();
-                                        ScannerConstants.captured_finish = false;
-                                        ScannerConstants.analyzing = true;
-                                        return;
-                                    }
-                                    List<Point> points = contour.toList();
-
-                                    Point[] scalePoints = new Point[4];
-
-                                    for(int i=0; i<4; i++) {
-                                        Point p = points.get(i);
-                                        scalePoints[i] = new Point(scaleX*p.x, scaleY*p.y);
-                                    }
-
-                                    MatOfPoint2f scaleContour = new MatOfPoint2f(scalePoints);
-
-                                    ScannerConstants.selectedImageBitmap = rotated90croppedBmp;
-                                    ScannerConstants.croptedPolygon = scaleContour;
-                                    image.close();
-                                    startCrop();
-                                }
-                                public void onError(@NotNull ImageCaptureException exception) {}
-                            });
-                        }
-                    }.start());
-                }
-
+                ScannerConstants.selectedImageBitmap = rotated90croppedBmp;
+                ScannerConstants.croptedPolygon = scaleContour;
                 image.close();
-            });
-
-        return imageAnalysis;
+                startCrop();
+            }
+            public void onError(@NotNull ImageCaptureException exception) {}
+        });
     }
 
     private MatOfPoint2f findContours(Bitmap bitmap) {

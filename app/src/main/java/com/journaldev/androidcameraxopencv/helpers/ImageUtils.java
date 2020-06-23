@@ -29,6 +29,19 @@ import static java.lang.Math.abs;
 
 public class ImageUtils {
 
+    public static MatOfPoint2f scaleContour(MatOfPoint2f contour, double scaleX, double scaleY) {
+        List<Point> points = contour.toList();
+
+        Point[] scalePoints = new Point[4];
+
+        for(int i=0; i<4; i++) {
+            Point p = points.get(i);
+            scalePoints[i] = new Point(scaleX*p.x, scaleY*p.y);
+        }
+
+        return new MatOfPoint2f(scalePoints);
+    }
+
     public static MatOfPoint2f coverAllMethods4Contours(Mat[] inputMats) {
         if((ScannerConstants.cacheFindContoursFun!=null) && (ScannerConstants.cacheMatIndex>=0)) {
             Mat localMat = inputMats[ScannerConstants.cacheMatIndex];
