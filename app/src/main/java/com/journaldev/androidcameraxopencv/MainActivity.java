@@ -341,6 +341,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         List<Mat> channels = new ArrayList<>();
 
         Core.split(hsv, channels);
+        hsv.release();
 
         Mat H = channels.get(0);
         Mat S = channels.get(1);
