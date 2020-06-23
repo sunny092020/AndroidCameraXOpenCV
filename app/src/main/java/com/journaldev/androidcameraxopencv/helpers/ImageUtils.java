@@ -82,14 +82,17 @@ public class ImageUtils {
         Mat dilateMat = new Mat();
 
         Imgproc.dilate(blurMat, dilateMat, kernel);
+        blurMat.release();
 
         Mat canny = new Mat();
         getCanny(dilateMat, canny);
+        dilateMat.release();
 
         // extract lines from the edge image
         Mat lines = new Mat();
 
         Imgproc.HoughLinesP(canny, lines, 1, Math.PI / 180, 70, 30, 10);
+        canny.release();
 
         HashMap<LinePolar, List<Line>> verticalLineMap = new HashMap<>();
         HashMap<LinePolar, List<Line>> horizontalLineMap = new HashMap<>();
@@ -141,7 +144,7 @@ public class ImageUtils {
             if(isExceedMat(contour.toList(), matWidth, matHeight)) return null;
 
             // break loop if the document is too far from the phone
-            double minS = mat.width()*mat.height()*0.3;
+            double minS =matWidth*matHeight*0.3;
             if(Imgproc.contourArea(contour) < minS) {
                 ScannerConstants.scanHint = ScanHint.MOVE_CLOSER;
                 return null;
@@ -178,19 +181,22 @@ public class ImageUtils {
         Mat medianBlur = new Mat();
 
         Imgproc.medianBlur(dilate, medianBlur, 1);
+        dilate.release();
 
         Mat adaptiveThreshold = new Mat();
 
         Imgproc.adaptiveThreshold(medianBlur, adaptiveThreshold, 255,Imgproc.ADAPTIVE_THRESH_MEAN_C,Imgproc.THRESH_BINARY,11, 1);
+        medianBlur.release();
 
         List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchyMat = new Mat();
 
         Imgproc.findContours(adaptiveThreshold, contours, hierarchyMat, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+        hierarchyMat.release();
 
         Collections.sort(contours, AreaDescendingComparator);
 
-        double minS = (mat.width()*mat.height())*0.3;
+        double minS = (matWidth*matHeight)*0.3;
 
         ScannerConstants.scanHint = ScanHint.NO_MESSAGE;
 
@@ -338,7 +344,6 @@ public class ImageUtils {
 //        for(Line l:lines) {
 //            ret = ret+l.distance();
 //        }
-
 
         List xs = new ArrayList();
         List ys = new ArrayList();

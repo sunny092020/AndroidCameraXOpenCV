@@ -336,6 +336,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         Mat hsv = new Mat();
         Imgproc.cvtColor(mat, hsv, Imgproc.COLOR_RGB2HSV);
+        mat.release();
 
         List<Mat> channels = new ArrayList<>();
 
@@ -358,6 +359,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Mat[] inputMats = {gray, H, S, V, notGray, notH, notS, notV};
 
         MatOfPoint2f contour = ImageUtils.coverAllMethods4Contours(inputMats);
+
+        for(Mat inputMat: inputMats) inputMat.release();
 
         if(contour == null) return null;
 
