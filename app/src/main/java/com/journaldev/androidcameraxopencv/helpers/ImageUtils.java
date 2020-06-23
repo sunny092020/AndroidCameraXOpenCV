@@ -45,7 +45,9 @@ public class ImageUtils {
     public static MatOfPoint2f coverAllMethods4Contours(Mat[] inputMats) {
         if((ScannerConstants.cacheFindContoursFun!=null) && (ScannerConstants.cacheMatIndex>=0)) {
             Mat localMat = inputMats[ScannerConstants.cacheMatIndex];
-            return ScannerConstants.cacheFindContoursFun.apply(localMat);
+
+            MatOfPoint2f ret = ScannerConstants.cacheFindContoursFun.apply(localMat);
+            if (ret != null) return ret;
         }
 
         List<Function<Mat, MatOfPoint2f>> functions = new ArrayList<>();
