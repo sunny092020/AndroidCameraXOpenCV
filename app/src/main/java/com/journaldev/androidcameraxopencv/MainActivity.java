@@ -43,6 +43,7 @@ import androidx.core.content.ContextCompat;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.journaldev.androidcameraxopencv.enums.ScanHint;
+import com.journaldev.androidcameraxopencv.helpers.ImageUtils;
 import com.journaldev.androidcameraxopencv.helpers.ScannerConstants;
 import com.journaldev.androidcameraxopencv.libraries.Line;
 import com.journaldev.androidcameraxopencv.libraries.LinePolar;
@@ -94,9 +95,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private TextView captureHintText;
     private LinearLayout captureHintLayout;
-
-    private Function <Mat, MatOfPoint2f> cacheFindContoursFun = null;
-    private int cacheMatIndex = -1;
 
     Bitmap overlay;
 
@@ -278,9 +276,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     String filePath = mSaveBit.getPath();
                                     Bitmap captureBitmap = BitmapFactory.decodeFile(filePath);
 
+                                    mSaveBit.delete();
+
                                     double h = (double) previewBitmap.getHeight()*captureBitmap.getHeight()/previewBitmap.getWidth();
                                     Bitmap croppedBmp = Bitmap.createBitmap(captureBitmap, (int) ((captureBitmap.getWidth()-h)/2), 0, (int) h, captureBitmap.getHeight());
-                                    Bitmap rotated90croppedBmp = rotateImage(croppedBmp, 90);
+                                    Bitmap rotated90croppedBmp = ImageUtils.rotateBitmap(croppedBmp, 90);
 
                                     double scaleX = (double) rotated90croppedBmp.getWidth()/previewBitmap.getWidth();
                                     double scaleY = (double) rotated90croppedBmp.getHeight()/previewBitmap.getHeight();
@@ -321,34 +321,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return imageAnalysis;
     }
 
-    public Bitmap rotateImage(Bitmap source, float angle) {
-        Matrix matrix = new Matrix();
-        matrix.postRotate(angle);
-        return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(),
-                matrix, true);
-    }
-
-    Point computeIntersect(Line l1, Line l2) {
-        double x1 = l1._p1.x, x2 = l1._p2.x, y1 = l1._p1.y, y2 = l1._p2.y;
-        double x3 = l2._p1.x, x4 = l2._p2.x, y3 = l2._p1.y, y4 = l2._p2.y;
-        double d = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
-        if (d != 0) {
-            Point pt = new Point();
-            pt.x= ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / d;
-            pt.y = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / d;
-            return pt;
-        }
-        return new Point(-1, -1);
-    }
-
-
-    private void getCanny(Mat gray, Mat canny) {
-        Mat thres = new Mat();
-//        double high_thres = 2*Imgproc.threshold(gray, thres, 0, 255, Imgproc.THRESH_BINARY + Imgproc.THRESH_OTSU),
-//                low_thres = high_thres/3;
-        Imgproc.Canny(gray, canny, 255/3, 255);
-    }
-
     private MatOfPoint2f findContours(Bitmap bitmap) {
         clearPoints();
 
@@ -383,7 +355,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         Mat[] inputMats = {gray, H, S, V, notGray, notH, notS, notV};
 
-        MatOfPoint2f contour = coverAllMethods4Contours(inputMats);
+        MatOfPoint2f contour = ImageUtils.coverAllMethods4Contours(inputMats);
 
         if(contour == null) return null;
 
@@ -391,312 +363,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         ScannerConstants.scanHint = ScanHint.CAPTURING_IMAGE;
         return contour;
-    }
-
-    private MatOfPoint2f coverAllMethods4Contours(Mat[] inputMats) {
-        if((cacheFindContoursFun!=null) && (cacheMatIndex>=0)) {
-            Mat localMat = inputMats[cacheMatIndex];
-            return cacheFindContoursFun.apply(localMat);
-        }
-
-        List<Function <Mat, MatOfPoint2f>> functions = new ArrayList<>();
-
-        // apply in this order
-        functions.add(this::adaptiveThreshold);
-        functions.add(this::houghLines);
-
-        for(Function <Mat, MatOfPoint2f> f:functions) {
-            int inputMatsIndex = 0;
-            for(Mat localMat: inputMats) {
-                MatOfPoint2f contour = f.apply(localMat);
-                if(contour!=null) {
-                    cacheFindContoursFun = f;
-                    cacheMatIndex = inputMatsIndex;
-                    return contour;
-                }
-                inputMatsIndex++;
-            }
-        }
-        return null;
-    }
-
-    private MatOfPoint2f houghLines(Mat mat) {
-        Mat blurMat = new Mat();
-        Imgproc.GaussianBlur(mat, blurMat, new org.opencv.core.Size(5, 5), 0);
-
-        // Preparing the kernel matrix object
-        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT,
-                new  org.opencv.core.Size(1, 1));
-
-        Mat dilateMat = new Mat();
-
-        Imgproc.dilate(blurMat, dilateMat, kernel);
-
-        Mat canny = new Mat();
-        getCanny(dilateMat, canny);
-
-        // extract lines from the edge image
-        Mat lines = new Mat();
-
-        Imgproc.HoughLinesP(canny, lines, 1, Math.PI / 180, 70, 30, 10);
-
-        HashMap<LinePolar, List<Line>> verticalLineMap = new HashMap<>();
-        HashMap<LinePolar, List<Line>> horizontalLineMap = new HashMap<>();
-
-        for (int i = 0; i < lines.rows(); i++) {
-            double[] v = lines.get(i, 0);
-
-            double delta_x = v[0] - v[2], delta_y = v[1] - v[3];
-
-            Line l = new Line(new Point(v[0], v[1]), new Point(v[2], v[3]));
-            LinePolar pl = l.toLinePolar();
-
-            if (pl._theta > 10 && pl._theta < 80 ) continue;
-
-            if (pl._theta < -10 && pl._theta > -80 ) continue;
-
-            // put horizontal lines and vertical lines respectively
-            if (abs(delta_x) > abs(delta_y)) {
-                putToLineMap(horizontalLineMap, l);
-            } else {
-                putToLineMap(verticalLineMap, l);
-            }
-
-        }
-
-        List<Map.Entry<LinePolar, List<Line>>> horizontalLineMapValsList = sortLineMap(horizontalLineMap);
-        List<Map.Entry<LinePolar, List<Line>>> verticalLineMapValsList = sortLineMap(verticalLineMap);
-
-        List<Line> documentHorizontalEdges = getDocumentHorizontalEdges(horizontalLineMapValsList);
-        List<Line> documentVerticalEdges = getDocumentVerticalEdges(verticalLineMapValsList);
-
-        if(documentHorizontalEdges.size()==2&&documentVerticalEdges.size()==2) {
-            Line l1 = documentHorizontalEdges.get(0);
-            Line l3 = documentHorizontalEdges.get(1);
-
-            Line l2 = documentVerticalEdges.get(0);
-            Line l4 = documentVerticalEdges.get(1);
-
-            Point p1 = computeIntersect(l1, l2);
-            Point p2 = computeIntersect(l2, l3);
-            Point p3 = computeIntersect(l3, l4);
-            Point p4 = computeIntersect(l4, l1);
-
-            Point[] points ={p1, p2, p3, p4};
-
-            MatOfPoint2f contour =  new MatOfPoint2f(points);
-
-            // break loop if points are in the edge of the frame
-            if(isExceedMat(contour.toList())) return null;
-
-            // break loop if the document is too far from the phone
-            double minS = mat.width()*mat.height()*0.3;
-            if(Imgproc.contourArea(contour) < minS) {
-                ScannerConstants.scanHint = ScanHint.MOVE_CLOSER;
-                return null;
-            }
-
-            return contour;
-        }
-
-        return null;
-    }
-
-    private MatOfPoint2f adaptiveThreshold(Mat mat) {
-        // Preparing the kernel matrix object
-        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT,
-                new  org.opencv.core.Size(3, 3));
-
-        Mat dilate = new Mat();
-        Imgproc.dilate(mat, dilate, kernel);
-
-        Mat medianBlur = new Mat();
-
-        Imgproc.medianBlur(dilate, medianBlur, 1);
-
-        Mat adaptiveThreshold = new Mat();
-
-        Imgproc.adaptiveThreshold(medianBlur, adaptiveThreshold, 255,Imgproc.ADAPTIVE_THRESH_MEAN_C,Imgproc.THRESH_BINARY,11, 1);
-
-        List<MatOfPoint> contours = new ArrayList<>();
-        Mat hierarchyMat = new Mat();
-
-        Imgproc.findContours(adaptiveThreshold, contours, hierarchyMat, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-
-        Collections.sort(contours, AreaDescendingComparator);
-
-        double minS = (mat.width()*mat.height())*0.3;
-
-        ScannerConstants.scanHint = ScanHint.NO_MESSAGE;
-
-        for(MatOfPoint c : contours){
-            MatOfPoint2f contour = new MatOfPoint2f(c.toArray());
-
-            double length  = Imgproc.arcLength(contour,true);
-            Imgproc.approxPolyDP(contour, contour,0.02*length,true);
-
-            // break loop if it is not quad
-            if(contour.total() != 4) break;
-
-            // break loop if points are in the edge of the frame
-            if(isExceedMat(contour.toList())) break;
-
-            // break loop if the document is too far from the phone
-            if(Imgproc.contourArea(contour) < minS) {
-                ScannerConstants.scanHint = ScanHint.MOVE_CLOSER;
-                break;
-            }
-
-            return contour;
-        }
-        return null;
-    }
-
-    private void putToLineMap(HashMap<LinePolar, List<Line>> lineMap, Line line) {
-        LinePolar lp = line.toLinePolar();
-
-        LinePolar oldAverage=null, newAverage;
-        List<Line> lines = null;
-
-        boolean isNewBucket = true;
-
-        for (Map.Entry<LinePolar, List<Line>> entry : lineMap.entrySet()) {
-            LinePolar averageLp = entry.getKey();
-            double deltaTheta = averageLp.deltaTheta(lp);
-            double deltaR = averageLp.deltaR(lp);
-            if((deltaTheta < 1) && (deltaR < 2)) {
-                isNewBucket = false;
-                oldAverage = averageLp;
-                lines = entry.getValue();
-                lines.add(line);
-                break;
-            }
-        }
-
-        if (isNewBucket) {
-            List<Line> newLines = new ArrayList<>();
-            newLines.add(line);
-            lineMap.put(lp, newLines);
-        } else {
-            lineMap.remove(oldAverage);
-            newAverage = LinePolar.average(lines);
-            lineMap.put(newAverage, lines);
-        }
-    }
-
-    private List<Line> getDocumentHorizontalEdges(List<Map.Entry<LinePolar, List<Line>>> horizontalLineMapValsList) {
-        if(horizontalLineMapValsList.size()<2) return new ArrayList<>();
-        List<Line> ret = new ArrayList<>();
-        LinePolar firstEdgePolar = horizontalLineMapValsList.get(0).getKey();
-        double maxDistance = 0;
-        List<Line> secondBucket = new ArrayList<>();
-
-        for (Map.Entry<LinePolar, List<Line>> entry: horizontalLineMapValsList) {
-            LinePolar key = entry.getKey();
-            if(key.deltaTheta(firstEdgePolar) < 2) {
-                double deltaR = key.deltaR(firstEdgePolar);
-                if(deltaR > maxDistance ) {
-                    maxDistance = deltaR;
-                    secondBucket = entry.getValue();
-                }
-            }
-        }
-
-        List<Line> firstBucket = horizontalLineMapValsList.get(0).getValue();
-
-        ret.add(LinePolar.averageLine(firstBucket));
-
-        if(maxDistance > Objects.requireNonNull(previewView.getBitmap()).getHeight()*0.5) {
-            ret.add(LinePolar.averageLine(secondBucket));
-        }
-
-        return ret;
-    }
-
-    private List<Line> getDocumentVerticalEdges(List<Map.Entry<LinePolar, List<Line>>> verticalLineMapValsList) {
-        if(verticalLineMapValsList.size()<2) return new ArrayList<>();
-        List<Line> ret = new ArrayList<>();
-        LinePolar firstEdgePolar = verticalLineMapValsList.get(0).getKey();
-        double maxDistance = 0;
-
-        List<Line> secondBucket = new ArrayList<>();
-
-        for (Map.Entry<LinePolar, List<Line>> entry: verticalLineMapValsList) {
-            LinePolar key = entry.getKey();
-            double deltaTheta = key.deltaTheta(firstEdgePolar);
-
-            if(deltaTheta < 2 || deltaTheta > 178) {
-                double deltaR = key.deltaR(firstEdgePolar);
-                if(deltaR > maxDistance ) {
-                    maxDistance = deltaR;
-                    secondBucket = entry.getValue();
-                }
-            }
-        }
-
-        List<Line> firstBucket = verticalLineMapValsList.get(0).getValue();
-        ret.add(LinePolar.averageLine(firstBucket));
-        if(maxDistance > Objects.requireNonNull(previewView.getBitmap()).getWidth()*0.5) {
-            ret.add(LinePolar.averageLine(secondBucket));
-        }
-        return ret;
-    }
-
-    private List<Map.Entry<LinePolar, List<Line>>> sortLineMap(HashMap<LinePolar, List<Line>> lineMap) {
-        Comparator<Map.Entry> distanceComparator = (o1, o2) -> {
-            List<Line> linesByPl1 = (List<Line>) o1.getValue();
-            List<Line> linesByPl2 = (List<Line>) o2.getValue();
-
-            double maxDistance1 = maxDistance(linesByPl1);
-            double maxDistance2 = maxDistance(linesByPl2);
-
-            return Double.compare(maxDistance2, maxDistance1);
-        };
-
-        Set<Map.Entry<LinePolar, List<Line>>> lineMapVals = lineMap.entrySet();
-
-        List<Map.Entry<LinePolar, List<Line>>> lineMapValsList = new ArrayList<Map.Entry<LinePolar, List<Line>>>(lineMapVals);
-        Collections.sort(lineMapValsList, distanceComparator);
-
-        return lineMapValsList;
-    }
-
-    private double maxDistance(List<Line> lines) {
-        double ret;
-
-//        for(Line l:lines) {
-//            ret = ret+l.distance();
-//        }
-
-
-        List xs = new ArrayList();
-        List ys = new ArrayList();
-
-        for(Line line: lines) {
-            xs.add(line._p1.x);
-            xs.add(line._p2.x);
-            ys.add(line._p1.y);
-            ys.add(line._p2.y);
-        }
-
-
-        Comparator xyComparator = (o1, o2) -> {
-            double xy1 = (double)o1;
-            double xy2 = (double)o2;
-            return Double.compare(xy1, xy2);
-        };
-
-        Collections.sort(xs, xyComparator);
-        double xmin = (double) xs.get(0),
-                xmax = (double) xs.get(xs.size()-1);
-
-        Collections.sort(ys, xyComparator);
-        double ymin = (double) ys.get(0),
-                ymax = (double) ys.get(ys.size()-1);
-
-        ret = Math. sqrt((xmax-xmin)*(xmax-xmin) + (ymax-ymin)*(ymax-ymin));
-
-        return ret;
     }
 
     public void displayHint(ScanHint scanHint) {
@@ -730,21 +396,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private boolean isExceedMat(List<Point> points) {
-        double screenWidth = Objects.requireNonNull(previewView.getBitmap()).getWidth();
-        double screenHeight = previewView.getBitmap().getHeight();
-
-        for(Point p : points){
-            double rateX = p.x/screenWidth;
-            double rateY = p.y/screenHeight;
-            if (rateX < 0.01) return true;
-            if (rateX > 0.99) return true;
-            if (rateY < 0.01) return true;
-            if (rateY > 0.99) return true;
-        }
-        return false;
-    }
-
     private void clearPoints() {
         overlay = Bitmap.createBitmap(previewView.getWidth(), previewView.getHeight(), Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(overlay);
@@ -776,12 +427,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         startActivityForResult(cropIntent, 1234);
         finish();
     }
-
-    private static Comparator<MatOfPoint> AreaDescendingComparator = (m1, m2) -> {
-        double area1 = Imgproc.contourArea(m1);
-        double area2 = Imgproc.contourArea(m2);
-        return Double.compare(area2, area1);
-    };
 
     private void showAcceptedRejectedButton() {}
 
