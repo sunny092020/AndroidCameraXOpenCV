@@ -270,15 +270,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 File mSaveBit = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "CAPTURE.jpg");
                 String filePath = mSaveBit.getPath();
                 Bitmap captureBitmap = BitmapFactory.decodeFile(filePath);
-
                 mSaveBit.delete();
 
                 double h = (double) previewBitmap.getHeight()*captureBitmap.getHeight()/previewBitmap.getWidth();
                 Bitmap croppedBmp = Bitmap.createBitmap(captureBitmap, (int) ((captureBitmap.getWidth()-h)/2), 0, (int) h, captureBitmap.getHeight());
                 Bitmap rotated90croppedBmp = VisionUtils.rotateBitmap(croppedBmp, 90);
 
-
-                MatOfPoint2f contour = findContours(previewBitmap);
+                MatOfPoint2f contour = findContours(rotated90croppedBmp);
 
                 if(contour == null) {
                     image.close();
@@ -287,11 +285,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     return;
                 }
 
-                double scale = (double) rotated90croppedBmp.getWidth()/previewBitmap.getWidth();
-                MatOfPoint2f scaleContour = MathUtils.scaleRectangle(contour, scale);
-
                 ScannerConstants.selectedImageBitmap = rotated90croppedBmp;
-                ScannerConstants.croptedPolygon = scaleContour;
+                ScannerConstants.croptedPolygon = contour;
                 image.close();
                 startCrop();
             }
