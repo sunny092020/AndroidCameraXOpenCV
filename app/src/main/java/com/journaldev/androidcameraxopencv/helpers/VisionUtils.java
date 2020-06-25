@@ -27,7 +27,7 @@ import java.util.function.Function;
 
 import static java.lang.Math.abs;
 
-public class ImageUtils {
+public class VisionUtils {
 
     public static MatOfPoint2f scaleContour(MatOfPoint2f contour, double scaleX, double scaleY) {
         List<Point> points = contour.toList();
@@ -53,8 +53,8 @@ public class ImageUtils {
         List<Function<Mat, MatOfPoint2f>> functions = new ArrayList<>();
 
         // apply in this order
-        functions.add(ImageUtils::adaptiveThreshold);
-        functions.add(ImageUtils::houghLines);
+        functions.add(VisionUtils::adaptiveThreshold);
+        functions.add(VisionUtils::houghLines);
 
         for(Function <Mat, MatOfPoint2f> f:functions) {
             int inputMatsIndex = 0;
@@ -75,11 +75,11 @@ public class ImageUtils {
         double matWidth = mat.width(), matHeight = mat.height();
 
         Mat blurMat = new Mat();
-        Imgproc.GaussianBlur(mat, blurMat, new org.opencv.core.Size(5, 5), 0);
+        Imgproc.GaussianBlur(mat, blurMat, new org.opencv.core.Size(3, 3), 0);
 
         // Preparing the kernel matrix object
         Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT,
-                new  org.opencv.core.Size(1, 1));
+                new  org.opencv.core.Size(3, 3));
 
         Mat dilateMat = new Mat();
 
@@ -243,7 +243,7 @@ public class ImageUtils {
             LinePolar averageLp = entry.getKey();
             double deltaTheta = averageLp.deltaTheta(lp);
             double deltaR = averageLp.deltaR(lp);
-            if((deltaTheta < 1) && (deltaR < 2)) {
+            if((deltaTheta < 0.001) && (deltaR < 0.001)) {
                 isNewBucket = false;
                 oldAverage = averageLp;
                 lines = entry.getValue();
@@ -393,9 +393,8 @@ public class ImageUtils {
 
     private static void getCanny(Mat gray, Mat canny) {
         Mat thres = new Mat();
-//        double high_thres = 2*Imgproc.threshold(gray, thres, 0, 255, Imgproc.THRESH_BINARY + Imgproc.THRESH_OTSU),
-//                low_thres = high_thres/3;
-        Imgproc.Canny(gray, canny, 255/3, 255);
+        double lowThres = 85, highthres = lowThres*3;
+        Imgproc.Canny(gray, canny, lowThres, highthres);
     }
 
     public static Bitmap rotateBitmap(Bitmap original, int angle) {

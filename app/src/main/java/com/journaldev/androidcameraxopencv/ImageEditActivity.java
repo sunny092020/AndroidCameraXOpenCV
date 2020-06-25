@@ -29,14 +29,6 @@ public class ImageEditActivity extends AppCompatActivity {
         imageView = findViewById(R.id.imageView);
         imageView.setImageBitmap(ScannerConstants.cropImageBitmap);
         scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
-
-        String filename = Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_PICTURES) + "CAPTURE.jpg";
-        try (FileOutputStream out = new FileOutputStream(filename)) {
-            ScannerConstants.cropImageBitmap.compress(Bitmap.CompressFormat.JPEG, 99, out); // bmp is your Bitmap instance
-            // PNG is a lossless format, the compression factor (100) is ignored
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     public boolean onTouchEvent(MotionEvent motionEvent) {

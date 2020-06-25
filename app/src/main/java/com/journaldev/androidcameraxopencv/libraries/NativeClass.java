@@ -11,7 +11,7 @@ package com.journaldev.androidcameraxopencv.libraries;
 
 import android.graphics.Bitmap;
 
-import com.journaldev.androidcameraxopencv.helpers.ImageUtils;
+import com.journaldev.androidcameraxopencv.helpers.VisionUtils;
 import com.journaldev.androidcameraxopencv.helpers.MathUtils;
 
 import org.opencv.core.Core;
@@ -44,8 +44,8 @@ public class NativeClass {
         PerspectiveTransformation perspective = new PerspectiveTransformation();
         MatOfPoint2f rectangle = new MatOfPoint2f();
         rectangle.fromArray(new Point(x1, y1), new Point(x2, y2), new Point(x3, y3), new Point(x4, y4));
-        Mat dstMat = perspective.transform(ImageUtils.bitmapToMat(bitmap), rectangle);
-        return ImageUtils.matToBitmap(dstMat);
+        Mat dstMat = perspective.transform(VisionUtils.bitmapToMat(bitmap), rectangle);
+        return VisionUtils.matToBitmap(dstMat);
     }
 
     private static Comparator<MatOfPoint2f> AreaDescendingComparator = new Comparator<MatOfPoint2f>() {
@@ -59,7 +59,7 @@ public class NativeClass {
 
     public MatOfPoint2f getPoint(Bitmap bitmap) {
 
-        Mat src = ImageUtils.bitmapToMat(bitmap);
+        Mat src = VisionUtils.bitmapToMat(bitmap);
 
         // Downscale image for better performance.
         double ratio = DOWNSCALE_IMAGE_SIZE / Math.max(src.width(), src.height());

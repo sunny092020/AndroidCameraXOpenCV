@@ -42,7 +42,7 @@ import androidx.core.content.ContextCompat;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.journaldev.androidcameraxopencv.enums.ScanHint;
-import com.journaldev.androidcameraxopencv.helpers.ImageUtils;
+import com.journaldev.androidcameraxopencv.helpers.VisionUtils;
 import com.journaldev.androidcameraxopencv.helpers.ScannerConstants;
 
 import org.jetbrains.annotations.NotNull;
@@ -274,7 +274,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 double h = (double) previewBitmap.getHeight()*captureBitmap.getHeight()/previewBitmap.getWidth();
                 Bitmap croppedBmp = Bitmap.createBitmap(captureBitmap, (int) ((captureBitmap.getWidth()-h)/2), 0, (int) h, captureBitmap.getHeight());
-                Bitmap rotated90croppedBmp = ImageUtils.rotateBitmap(croppedBmp, 90);
+                Bitmap rotated90croppedBmp = VisionUtils.rotateBitmap(croppedBmp, 90);
 
 
                 MatOfPoint2f contour = findContours(previewBitmap);
@@ -289,7 +289,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 double scaleX = (double) rotated90croppedBmp.getWidth()/previewBitmap.getWidth();
                 double scaleY = (double) rotated90croppedBmp.getHeight()/previewBitmap.getHeight();
 
-                MatOfPoint2f scaleContour = ImageUtils.scaleContour(contour, scaleX, scaleY);
+                MatOfPoint2f scaleContour = VisionUtils.scaleContour(contour, scaleX, scaleY);
 
                 ScannerConstants.selectedImageBitmap = rotated90croppedBmp;
                 ScannerConstants.croptedPolygon = scaleContour;
@@ -336,7 +336,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         Mat[] inputMats = {gray, H, S, V, notGray, notH, notS, notV};
 
-        MatOfPoint2f contour = ImageUtils.coverAllMethods4Contours(inputMats);
+        MatOfPoint2f contour = VisionUtils.coverAllMethods4Contours(inputMats);
 
         for(Mat inputMat: inputMats) inputMat.release();
 
