@@ -14,6 +14,7 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
@@ -28,19 +29,6 @@ import java.util.function.Function;
 import static java.lang.Math.abs;
 
 public class VisionUtils {
-
-    public static MatOfPoint2f scaleContour(MatOfPoint2f contour, double scaleX, double scaleY) {
-        List<Point> points = contour.toList();
-
-        Point[] scalePoints = new Point[4];
-
-        for(int i=0; i<4; i++) {
-            Point p = points.get(i);
-            scalePoints[i] = new Point(scaleX*p.x, scaleY*p.y);
-        }
-
-        return new MatOfPoint2f(scalePoints);
-    }
 
     public static MatOfPoint2f coverAllMethods4Contours(Mat[] inputMats) {
         if((ScannerConstants.cacheFindContoursFun!=null) && (ScannerConstants.cacheMatIndex>=0)) {
@@ -414,6 +402,13 @@ public class VisionUtils {
         Bitmap bitmap = Bitmap.createBitmap(mat.cols(), mat.rows(), Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(mat, bitmap);
         return bitmap;
+    }
+
+    public static Mat downscaleMat(Mat src, double ratio) {
+        Size downscaledSize = new Size(src.width() * ratio, src.height() * ratio);
+        Mat downscaled = new Mat(downscaledSize, src.type());
+        Imgproc.resize(src, downscaled, downscaledSize);
+        return downscaled;
     }
 
 }

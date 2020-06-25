@@ -42,6 +42,7 @@ import androidx.core.content.ContextCompat;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.journaldev.androidcameraxopencv.enums.ScanHint;
+import com.journaldev.androidcameraxopencv.helpers.MathUtils;
 import com.journaldev.androidcameraxopencv.helpers.VisionUtils;
 import com.journaldev.androidcameraxopencv.helpers.ScannerConstants;
 
@@ -286,10 +287,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     return;
                 }
 
-                double scaleX = (double) rotated90croppedBmp.getWidth()/previewBitmap.getWidth();
-                double scaleY = (double) rotated90croppedBmp.getHeight()/previewBitmap.getHeight();
-
-                MatOfPoint2f scaleContour = VisionUtils.scaleContour(contour, scaleX, scaleY);
+                double scale = (double) rotated90croppedBmp.getWidth()/previewBitmap.getWidth();
+                MatOfPoint2f scaleContour = MathUtils.scaleRectangle(contour, scale);
 
                 ScannerConstants.selectedImageBitmap = rotated90croppedBmp;
                 ScannerConstants.croptedPolygon = scaleContour;
@@ -301,10 +300,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private MatOfPoint2f findContours(Bitmap bitmap) {
+
         clearPoints();
 
-        Mat mat = new Mat();
-        Utils.bitmapToMat(bitmap, mat);
+        Mat src = new Mat();
+        Utils.bitmapToMat(bitmap, src);
+
+        double DOWNSCALE_IMAGE_SIZE = 600f;
+
+        // Downscale image for better performance.
+        double ratio = DOWNSCALE_IMAGE_SIZE / Math.max(src.width(), src.height());
+
+        Mat mat = VisionUtils.downscaleMat(src, ratio);
 
         /* get four outline edges of the document */
         // get edges of the image
@@ -342,10 +349,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         if(contour == null) return null;
 
-        drawPoint(contour.toList());
+        MatOfPoint2f upScaleContour = MathUtils.scaleRectangle(contour, 1f / ratio);
+
+        drawPoint(upScaleContour.toList());
 
         ScannerConstants.scanHint = ScanHint.CAPTURING_IMAGE;
-        return contour;
+        return upScaleContour;
     }
 
     public void displayHint(ScanHint scanHint) {
