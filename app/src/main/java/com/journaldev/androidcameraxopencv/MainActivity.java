@@ -87,6 +87,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private LinearLayout captureHintLayout;
 
     public Bitmap overlay;
+    public Paint drawPaint;
 
     static {
         if (!OpenCVLoader.initDebug())
@@ -115,6 +116,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         captureHintText = findViewById(R.id.capture_hint_text);
 
         previewView = findViewById(R.id.preview_view);
+
+        int paintColor = Color.RED;
+
+        // Setup paint with color and stroke styles
+        drawPaint = new Paint();
+        drawPaint.setColor(paintColor);
+        drawPaint.setAntiAlias(true);
+        drawPaint.setStrokeWidth(5);
+        drawPaint.setStyle(Paint.Style.STROKE);
+        drawPaint.setStrokeJoin(Paint.Join.ROUND);
+        drawPaint.setStrokeCap(Paint.Cap.ROUND);
 
         if (allPermissionsGranted()) {
             startCamera();
@@ -390,17 +402,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private  void drawPoint(List<Point> points) {
-        int paintColor = Color.RED;
-
-        // Setup paint with color and stroke styles
-        Paint drawPaint = new Paint();
-        drawPaint.setColor(paintColor);
-        drawPaint.setAntiAlias(true);
-        drawPaint.setStrokeWidth(5);
-        drawPaint.setStyle(Paint.Style.STROKE);
-        drawPaint.setStrokeJoin(Paint.Join.ROUND);
-        drawPaint.setStrokeCap(Paint.Cap.ROUND);
-
         overlay = Bitmap.createBitmap(previewView.getWidth(), previewView.getHeight(), Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(overlay);
 

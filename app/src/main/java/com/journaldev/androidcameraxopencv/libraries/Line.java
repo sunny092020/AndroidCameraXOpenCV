@@ -1,5 +1,6 @@
 package com.journaldev.androidcameraxopencv.libraries;
 
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.util.Log;
@@ -19,7 +20,8 @@ public class Line {
         _center = new Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
     }
 
-    public void draw(Canvas canvas, Paint drawPaint) {
+    public void draw(Bitmap bitmap, Paint drawPaint) {
+        Canvas canvas = new Canvas(bitmap);
         canvas.drawLine((float) _p1.x, (float)_p1.y,(float) _p2.x, (float) _p2.y, drawPaint );
     }
 
