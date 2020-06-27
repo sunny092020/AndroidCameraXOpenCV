@@ -86,7 +86,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView captureHintText;
     private LinearLayout captureHintLayout;
 
-    Bitmap overlay;
+    public Bitmap overlay;
 
     static {
         if (!OpenCVLoader.initDebug())
@@ -338,7 +338,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         Mat[] inputMats = {gray, H, S, V, notGray, notH, notS, notV};
 
-        MatOfPoint2f contour = VisionUtils.coverAllMethods4Contours(inputMats);
+        MatOfPoint2f contour = VisionUtils.coverAllMethods4Contours(inputMats, this);
 
         for(Mat inputMat: inputMats) inputMat.release();
 

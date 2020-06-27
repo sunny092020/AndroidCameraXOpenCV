@@ -1,5 +1,6 @@
 package com.journaldev.androidcameraxopencv.helpers;
 
+import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 
@@ -24,30 +25,31 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static java.lang.Math.abs;
 
 public class VisionUtils {
 
-    public static MatOfPoint2f coverAllMethods4Contours(Mat[] inputMats) {
+    public static MatOfPoint2f coverAllMethods4Contours(Mat[] inputMats, Activity activity) {
         if((ScannerConstants.cacheFindContoursFun!=null) && (ScannerConstants.cacheMatIndex>=0)) {
             Mat localMat = inputMats[ScannerConstants.cacheMatIndex];
 
-            MatOfPoint2f ret = ScannerConstants.cacheFindContoursFun.apply(localMat);
+            MatOfPoint2f ret = ScannerConstants.cacheFindContoursFun.apply(localMat, activity);
             if (ret != null) return ret;
         }
 
-        List<Function<Mat, MatOfPoint2f>> functions = new ArrayList<>();
+        List<BiFunction<Mat, Activity, MatOfPoint2f>> functions = new ArrayList<>();
 
         // apply in this order
         functions.add(VisionUtils::adaptiveThreshold);
         functions.add(VisionUtils::houghLines);
 
-        for(Function <Mat, MatOfPoint2f> f:functions) {
+        for(BiFunction <Mat, Activity, MatOfPoint2f> f:functions) {
             int inputMatsIndex = 0;
             for(Mat localMat: inputMats) {
-                MatOfPoint2f contour = f.apply(localMat);
+                MatOfPoint2f contour = f.apply(localMat, activity);
                 if(contour!=null) {
                     ScannerConstants.cacheFindContoursFun = f;
                     ScannerConstants.cacheMatIndex = inputMatsIndex;
@@ -59,7 +61,7 @@ public class VisionUtils {
         return null;
     }
 
-    private static MatOfPoint2f houghLines(Mat mat) {
+    private static MatOfPoint2f houghLines(Mat mat, Activity activity) {
         double matWidth = mat.width(), matHeight = mat.height();
 
         Mat blurMat = new Mat();
@@ -158,7 +160,7 @@ public class VisionUtils {
         return false;
     }
 
-    private static MatOfPoint2f adaptiveThreshold(Mat mat) {
+    private static MatOfPoint2f adaptiveThreshold(Mat mat, Activity activity) {
         double matWidth = mat.width(), matHeight = mat.height();
 
         // Preparing the kernel matrix object
