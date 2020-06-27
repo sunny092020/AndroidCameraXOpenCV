@@ -233,7 +233,7 @@ public class VisionUtils {
             LinePolar averageLp = entry.getKey();
             double deltaTheta = averageLp.deltaTheta(lp);
             double deltaR = averageLp.deltaR(lp);
-            if((deltaTheta < 0.001) && (deltaR < 0.001)) {
+            if((deltaTheta == 0) && (deltaR == 0)) {
                 isNewBucket = false;
                 oldAverage = averageLp;
                 lines = entry.getValue();
