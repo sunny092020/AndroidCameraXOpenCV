@@ -1,18 +1,9 @@
-/*
- * *
- *  * Created by Ali YÜCE on 3/2/20 11:18 PM
- *  * https://github.com/mayuce/
- *  * Copyright (c) 2020 . All rights reserved.
- *  * Last modified 3/2/20 11:10 PM
- *
- */
-
-package com.journaldev.androidcameraxopencv.libraries;
+package com.ami.icamdocscanner.libraries;
 
 import android.graphics.Bitmap;
 
-import com.journaldev.androidcameraxopencv.helpers.VisionUtils;
-import com.journaldev.androidcameraxopencv.helpers.MathUtils;
+import com.ami.icamdocscanner.helpers.VisionUtils;
+import com.ami.icamdocscanner.helpers.MathUtils;
 
 import org.opencv.core.Core;
 import org.opencv.core.CvType;

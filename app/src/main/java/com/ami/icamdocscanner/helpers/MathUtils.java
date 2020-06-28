@@ -1,4 +1,4 @@
-package com.journaldev.androidcameraxopencv.helpers;
+package com.ami.icamdocscanner.helpers;
 
 import org.opencv.core.CvType;
 import org.opencv.core.MatOfPoint;

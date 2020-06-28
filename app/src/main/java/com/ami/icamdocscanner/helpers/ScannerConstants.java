@@ -1,16 +1,14 @@
-package com.journaldev.androidcameraxopencv.helpers;
+package com.ami.icamdocscanner.helpers;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
 
-import com.journaldev.androidcameraxopencv.enums.ScanHint;
+import com.ami.icamdocscanner.enums.ScanHint;
 
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 public class ScannerConstants {
     public static boolean analyzing = true;

@@ -1,7 +1,7 @@
-package com.journaldev.androidcameraxopencv;
+package com.ami.icamdocscanner;
 
-import com.journaldev.androidcameraxopencv.libraries.Line;
-import com.journaldev.androidcameraxopencv.libraries.LinePolar;
+import com.ami.icamdocscanner.libraries.Line;
+import com.ami.icamdocscanner.libraries.LinePolar;
 
 import org.junit.Test;
 import org.opencv.core.Point;

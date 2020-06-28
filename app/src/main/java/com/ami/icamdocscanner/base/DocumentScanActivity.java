@@ -1,20 +1,10 @@
-/*
- * *
- *  * Created by Ali YÜCE on 3/2/20 11:18 PM
- *  * https://github.com/mayuce/
- *  * Copyright (c) 2020 . All rights reserved.
- *  * Last modified 3/2/20 11:10 PM
- *
- */
-
-package com.journaldev.androidcameraxopencv.base;
+package com.ami.icamdocscanner.base;
 
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -22,10 +12,10 @@ import android.widget.ImageView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.journaldev.androidcameraxopencv.R;
-import com.journaldev.androidcameraxopencv.helpers.ScannerConstants;
-import com.journaldev.androidcameraxopencv.libraries.NativeClass;
-import com.journaldev.androidcameraxopencv.libraries.PolygonView;
+import com.ami.icamdocscanner.R;
+import com.ami.icamdocscanner.helpers.ScannerConstants;
+import com.ami.icamdocscanner.libraries.NativeClass;
+import com.ami.icamdocscanner.libraries.PolygonView;
 
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;

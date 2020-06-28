@@ -1,4 +1,4 @@
-package com.journaldev.androidcameraxopencv;
+package com.ami.icamdocscanner;
 
 import android.content.pm.PackageManager;
 import android.content.Intent;
@@ -41,10 +41,11 @@ import androidx.core.content.ContextCompat;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.journaldev.androidcameraxopencv.enums.ScanHint;
-import com.journaldev.androidcameraxopencv.helpers.MathUtils;
-import com.journaldev.androidcameraxopencv.helpers.VisionUtils;
-import com.journaldev.androidcameraxopencv.helpers.ScannerConstants;
+import com.ami.icamdocscanner.R;
+import com.ami.icamdocscanner.enums.ScanHint;
+import com.ami.icamdocscanner.helpers.MathUtils;
+import com.ami.icamdocscanner.helpers.VisionUtils;
+import com.ami.icamdocscanner.helpers.ScannerConstants;
 
 import org.jetbrains.annotations.NotNull;
 import org.opencv.android.OpenCVLoader;

@@ -1,4 +1,4 @@
-package com.journaldev.androidcameraxopencv;
+package com.ami.icamdocscanner;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -9,7 +9,6 @@ import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
 import android.os.Bundle;
 import android.os.Environment;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -20,10 +19,11 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-import com.journaldev.androidcameraxopencv.base.CropperErrorType;
-import com.journaldev.androidcameraxopencv.base.DocumentScanActivity;
-import com.journaldev.androidcameraxopencv.helpers.ScannerConstants;
-import com.journaldev.androidcameraxopencv.libraries.PolygonView;
+import com.ami.icamdocscanner.base.DocumentScanActivity;
+import com.ami.icamdocscanner.R;
+import com.ami.icamdocscanner.base.CropperErrorType;
+import com.ami.icamdocscanner.helpers.ScannerConstants;
+import com.ami.icamdocscanner.libraries.PolygonView;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;

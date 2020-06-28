@@ -1,4 +1,4 @@
-package com.journaldev.androidcameraxopencv.libraries;
+package com.ami.icamdocscanner.libraries;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -13,7 +13,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.Magnifier;
 
-import com.journaldev.androidcameraxopencv.R;
+import com.ami.icamdocscanner.R;
 
 import java.util.ArrayList;
 import java.util.HashMap;

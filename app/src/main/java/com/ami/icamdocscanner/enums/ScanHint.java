@@ -1,4 +1,4 @@
-package com.journaldev.androidcameraxopencv.enums;
+package com.ami.icamdocscanner.enums;
 
 /**
  * Enum that defines receipt detection messages

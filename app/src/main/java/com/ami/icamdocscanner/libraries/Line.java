@@ -1,11 +1,8 @@
-package com.journaldev.androidcameraxopencv.libraries;
+package com.ami.icamdocscanner.libraries;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.util.Log;
-
-import com.journaldev.androidcameraxopencv.MainActivity;
 
 import org.opencv.core.Point;
 

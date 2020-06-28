@@ -1,4 +1,4 @@
-package com.journaldev.androidcameraxopencv.libraries;
+package com.ami.icamdocscanner.libraries;
 
 import org.opencv.core.Point;
 

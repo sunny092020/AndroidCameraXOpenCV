@@ -1,20 +1,14 @@
-package com.journaldev.androidcameraxopencv;
+package com.ami.icamdocscanner;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.os.Environment;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
-import android.view.View;
 import android.widget.ImageView;
-import android.os.Environment;
 
-import com.journaldev.androidcameraxopencv.helpers.ScannerConstants;
-
-import java.io.FileOutputStream;
-import java.io.IOException;
+import com.ami.icamdocscanner.R;
+import com.ami.icamdocscanner.helpers.ScannerConstants;
 
 public class ImageEditActivity extends AppCompatActivity {
     private ScaleGestureDetector scaleGestureDetector;

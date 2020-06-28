@@ -1,4 +1,4 @@
-package com.journaldev.androidcameraxopencv;
+package com.ami.icamdocscanner;
 
 import android.content.Context;
 
@@ -22,6 +22,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("com.journaldev.androidcameraxopencv", appContext.getPackageName());
+        assertEquals("com.ami.icamdocscanner", appContext.getPackageName());
     }
 }

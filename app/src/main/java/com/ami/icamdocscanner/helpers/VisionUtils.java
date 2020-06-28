@@ -1,12 +1,12 @@
-package com.journaldev.androidcameraxopencv.helpers;
+package com.ami.icamdocscanner.helpers;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 
-import com.journaldev.androidcameraxopencv.enums.ScanHint;
-import com.journaldev.androidcameraxopencv.libraries.Line;
-import com.journaldev.androidcameraxopencv.libraries.LinePolar;
+import com.ami.icamdocscanner.enums.ScanHint;
+import com.ami.icamdocscanner.libraries.Line;
+import com.ami.icamdocscanner.libraries.LinePolar;
 
 import org.opencv.android.Utils;
 import org.opencv.core.CvType;
@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import static java.lang.Math.abs;
 
