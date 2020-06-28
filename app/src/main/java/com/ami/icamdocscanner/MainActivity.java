@@ -85,7 +85,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Preview preview;
     Camera camera;
 
-    FloatingActionButton btnCapture, btnOk, btnCancel;
+    FloatingActionButton btnCapture;
 
     private TextView captureHintText;
     private LinearLayout captureHintLayout;
@@ -106,14 +106,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
         btnCapture = findViewById(R.id.btnCapture);
-        btnOk = findViewById(R.id.btnAccept);
-        btnCancel = findViewById(R.id.btnReject);
-
-        btnOk.setOnClickListener(this);
-        btnCancel.setOnClickListener(this);
-
         ivBitmap = findViewById(R.id.ivBitmap);
 
         captureHintLayout = findViewById(R.id.capture_hint_layout);
@@ -437,8 +430,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         finish();
     }
 
-    private void showAcceptedRejectedButton() {}
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
 
@@ -469,15 +460,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.btnReject:
-                showAcceptedRejectedButton();
-                break;
-
-            case R.id.btnAccept:
-                break;
-        }
-    }
+    public void onClick(View v) {}
 
 }
