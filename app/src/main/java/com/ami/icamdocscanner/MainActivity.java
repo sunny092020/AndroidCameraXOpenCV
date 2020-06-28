@@ -1,7 +1,7 @@
 package com.ami.icamdocscanner;
 
-import android.content.pm.PackageManager;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -27,25 +27,28 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.AspectRatio;
-import androidx.camera.core.CameraSelector;
 import androidx.camera.core.Camera;
+import androidx.camera.core.CameraSelector;
+import androidx.camera.core.FocusMeteringAction;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageCapture;
 import androidx.camera.core.ImageCaptureException;
 import androidx.camera.core.ImageProxy;
+import androidx.camera.core.MeteringPoint;
+import androidx.camera.core.MeteringPointFactory;
 import androidx.camera.core.Preview;
+import androidx.camera.core.SurfaceOrientedMeteringPointFactory;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.ami.icamdocscanner.R;
 import com.ami.icamdocscanner.enums.ScanHint;
 import com.ami.icamdocscanner.helpers.MathUtils;
-import com.ami.icamdocscanner.helpers.VisionUtils;
 import com.ami.icamdocscanner.helpers.ScannerConstants;
+import com.ami.icamdocscanner.helpers.VisionUtils;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import org.jetbrains.annotations.NotNull;
 import org.opencv.android.OpenCVLoader;
@@ -63,8 +66,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
 import static android.view.View.GONE;
-import static java.lang.Integer.min;
 import static java.lang.Integer.max;
+import static java.lang.Integer.min;
 import static java.lang.Math.abs;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -118,14 +121,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         previewView = findViewById(R.id.preview_view);
 
-        int paintColor = Color.RED;
-
         // Setup paint with color and stroke styles
         drawPaint = new Paint();
-        drawPaint.setColor(paintColor);
+        drawPaint.setColor(Color.parseColor("#ff59a9ff"));
         drawPaint.setAntiAlias(true);
         drawPaint.setStrokeWidth(5);
-        drawPaint.setStyle(Paint.Style.STROKE);
+        drawPaint.setStyle(Paint.Style.FILL_AND_STROKE);
         drawPaint.setStrokeJoin(Paint.Join.ROUND);
         drawPaint.setStrokeCap(Paint.Cap.ROUND);
 
@@ -173,6 +174,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 // handle InterruptedException.
             }
         }, ContextCompat.getMainExecutor(this));
+    }
+
+    private void setAutoFocus() {
+        float width = (float) previewView.getWidth();
+        float height = (float)previewView.getHeight();
+
+        float centerWidth = width / 2;
+        float centerHeight = height / 2;
+
+        MeteringPointFactory factory = new SurfaceOrientedMeteringPointFactory(
+                width, height);
+
+        MeteringPoint centerPoint = factory.createPoint(centerWidth, centerHeight, 1);
+        camera.getCameraControl().startFocusAndMetering(
+            new FocusMeteringAction.Builder(
+                    centerPoint,
+                    FocusMeteringAction.FLAG_AF
+            ).build());
     }
 
     private void setFrameLayoutRatio() {
@@ -258,6 +277,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         if(ScannerConstants.scanHint == ScanHint.CAPTURING_IMAGE) {
             ScannerConstants.analyzing = false;
+            setAutoFocus();
             new Handler(Looper.getMainLooper()).post(() -> new CountDownTimer(2000, 100) {
                 public void onTick(long millisUntilFinished) {}
                 public void onFinish() {
