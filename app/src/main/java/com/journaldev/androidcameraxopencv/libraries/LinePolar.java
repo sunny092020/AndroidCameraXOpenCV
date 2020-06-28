@@ -1,9 +1,5 @@
 package com.journaldev.androidcameraxopencv.libraries;
 
-import android.util.Log;
-
-import com.journaldev.androidcameraxopencv.MainActivity;
-
 import org.opencv.core.Point;
 
 import java.util.List;
