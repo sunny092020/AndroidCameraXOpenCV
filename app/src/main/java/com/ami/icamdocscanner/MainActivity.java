@@ -23,7 +23,6 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -91,7 +90,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     ImageButton btnCapture, btnAutoCapture;
 
     private TextView captureHintText;
-    private LinearLayout captureHintLayout;
     Context context;
 
     public Bitmap overlay;
@@ -132,7 +130,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         ivBitmap = findViewById(R.id.ivBitmap);
 
-        captureHintLayout = findViewById(R.id.capture_hint_layout);
         captureHintText = findViewById(R.id.capture_hint_text);
 
         previewView = findViewById(R.id.preview_view);
@@ -429,7 +426,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void displayHint(ScanHint scanHint) {
-        captureHintLayout.setVisibility(View.VISIBLE);
+        captureHintText.setVisibility(View.VISIBLE);
         switch (scanHint) {
             case MOVE_CLOSER:
                 captureHintText.setText(getResources().getString(R.string.move_closer));
@@ -447,7 +444,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 captureHintText.setText(getResources().getString(R.string.hold_still));
                 break;
             case NO_MESSAGE:
-                captureHintLayout.setVisibility(GONE);
+                captureHintText.setVisibility(GONE);
                 break;
             default:
                 break;

@@ -35,6 +35,15 @@
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <TextView
+            android:id="@+id/capture_hint_text"
+            android:textColor="#FFFFFF"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="@drawable/borders"
+            android:textSize="@dimen/text_size_14" />
+
     </FrameLayout>
 
     <ImageButton
@@ -60,24 +69,5 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent" />
-
-    <LinearLayout
-        android:id="@+id/capture_hint_layout"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_gravity="center"
-        android:gravity="center"
-        tools:layout_editor_absoluteX="0dp"
-        tools:layout_editor_absoluteY="40dp">
-
-        <TextView
-            android:id="@+id/capture_hint_text"
-            android:textColor="#FFFFFF"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/borders"
-            android:textSize="@dimen/text_size_14" />
-    </LinearLayout>
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>
