@@ -1,6 +1,9 @@
 package com.ami.icamdocscanner;
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -46,6 +49,7 @@ import androidx.core.content.ContextCompat;
 
 import com.ami.icamdocscanner.enums.ScanHint;
 import com.ami.icamdocscanner.helpers.MathUtils;
+import com.ami.icamdocscanner.helpers.Preferences;
 import com.ami.icamdocscanner.helpers.ScannerConstants;
 import com.ami.icamdocscanner.helpers.VisionUtils;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -86,10 +90,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Preview preview;
     Camera camera;
 
-    ImageButton btnCapture;
+    ImageButton btnCapture, btnAutoCapture;
 
     private TextView captureHintText;
     private LinearLayout captureHintLayout;
+    Context context;
 
     public Bitmap overlay;
     public Paint drawPaint;
@@ -108,6 +113,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
 
         btnCapture = findViewById(R.id.btnCapture);
+        btnAutoCapture = findViewById(R.id.btnAutoCapture);
+
+        context = this;
+        btnAutoCapture.setOnClickListener(v -> {
+            Activity activity = (Activity) context;
+            if(Preferences.getAutoCapture(activity)) {
+                btnAutoCapture.setImageResource(R.drawable.ic_auto_disable);
+                Preferences.setAutoCapture(activity, false);
+                clearPoints();
+                displayHint(ScanHint.NO_MESSAGE);
+            } else {
+                btnAutoCapture.setImageResource(R.drawable.ic_auto_enable);
+                Preferences.setAutoCapture(activity, true);
+            }
+        });
+
         ivBitmap = findViewById(R.id.ivBitmap);
 
         captureHintLayout = findViewById(R.id.capture_hint_layout);
@@ -123,6 +144,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         drawPaint.setStyle(Paint.Style.FILL_AND_STROKE);
         drawPaint.setStrokeJoin(Paint.Join.ROUND);
         drawPaint.setStrokeCap(Paint.Cap.ROUND);
+
+        if(Preferences.getAutoCapture(this)) {
+            btnAutoCapture.setImageResource(R.drawable.ic_auto_enable);
+        } else {
+            btnAutoCapture.setImageResource(R.drawable.ic_auto_disable);
+        }
 
         if (allPermissionsGranted()) {
             startCamera();
@@ -251,6 +278,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void analyze(ImageProxy image) {
+        if(!Preferences.getAutoCapture(this)) {
+            image.close();
+            return;
+        }
         if(ScannerConstants.captured_finish) {
             image.close();
             return;

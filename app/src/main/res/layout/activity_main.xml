@@ -37,7 +37,7 @@
     </FrameLayout>
 
     <ImageButton
-        android:id="@+id/auto_capture"
+        android:id="@+id/btnAutoCapture"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_marginLeft="84dp"
