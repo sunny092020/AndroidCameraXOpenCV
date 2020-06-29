@@ -93,7 +93,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Context context;
 
     public Bitmap overlay;
-    public Paint drawPaint;
+    public Paint fillPaint, strokePaint;
 
     static {
         if (!OpenCVLoader.initDebug())
@@ -129,19 +129,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
 
         ivBitmap = findViewById(R.id.ivBitmap);
-
         captureHintText = findViewById(R.id.capture_hint_text);
-
         previewView = findViewById(R.id.preview_view);
-
-        // Setup paint with color and stroke styles
-        drawPaint = new Paint();
-        drawPaint.setColor(Color.parseColor("#ff59a9ff"));
-        drawPaint.setAntiAlias(true);
-        drawPaint.setStrokeWidth(5);
-        drawPaint.setStyle(Paint.Style.FILL_AND_STROKE);
-        drawPaint.setStrokeJoin(Paint.Join.ROUND);
-        drawPaint.setStrokeCap(Paint.Cap.ROUND);
 
         if(Preferences.getAutoCapture(this)) {
             btnAutoCapture.setImageResource(R.drawable.ic_auto_enable);
@@ -149,11 +138,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             btnAutoCapture.setImageResource(R.drawable.ic_auto_disable);
         }
 
+        setupPaint();
+
         if (allPermissionsGranted()) {
             startCamera();
         } else {
             ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
         }
+    }
+
+    private void setupPaint() {
+        // Setup paint with color and stroke styles
+        fillPaint = new Paint();
+        fillPaint.setColor(Color.parseColor("#ff59a9ff"));
+        fillPaint.setStyle(Paint.Style.FILL);
+
+        strokePaint = new Paint();
+        strokePaint.setColor(Color.parseColor("#FFFFFF"));
+        strokePaint.setStrokeWidth(5);
+        strokePaint.setStyle(Paint.Style.STROKE);
     }
 
     private void startCamera() {
@@ -462,7 +465,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Canvas canvas = new Canvas(overlay);
 
         for (Point p : points) {
-            canvas.drawCircle((float) p.x, (float)p.y, 30, drawPaint);
+            canvas.drawCircle((float) p.x, (float)p.y, 30, fillPaint);
+            canvas.drawCircle((float) p.x, (float)p.y, 30, strokePaint);
         }
     }
 

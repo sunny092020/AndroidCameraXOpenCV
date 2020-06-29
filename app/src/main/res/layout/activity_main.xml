@@ -42,6 +42,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:background="@drawable/borders"
+            android:visibility="gone"
             android:textSize="@dimen/text_size_14" />
 
     </FrameLayout>
