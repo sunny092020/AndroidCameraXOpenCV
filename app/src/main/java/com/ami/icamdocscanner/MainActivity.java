@@ -122,9 +122,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if(Preferences.getAutoCapture(activity)) {
                 btnAutoCapture.setImageResource(R.drawable.ic_auto_disable);
                 Preferences.setAutoCapture(activity, false);
+                displayHint("Auto capture: Off");
             } else {
                 btnAutoCapture.setImageResource(R.drawable.ic_auto_enable);
                 Preferences.setAutoCapture(activity, true);
+                displayHint("Auto capture: On");
             }
         });
 
@@ -421,6 +423,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         ScannerConstants.scanHint = ScanHint.CAPTURING_IMAGE;
         return upScaleContour;
+    }
+
+    public void displayHint(String text) {
+        captureHintText.setVisibility(View.VISIBLE);
+        captureHintText.setText(text);
     }
 
     public void displayHint(ScanHint scanHint) {
