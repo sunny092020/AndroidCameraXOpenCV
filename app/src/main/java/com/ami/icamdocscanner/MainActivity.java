@@ -433,23 +433,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (scanHint) {
             case MOVE_CLOSER:
                 captureHintText.setText(getResources().getString(R.string.move_closer));
-                captureHintLayout.setBackground(getResources().getDrawable(R.drawable.hint_white));
                 break;
             case MOVE_AWAY:
                 captureHintText.setText(getResources().getString(R.string.move_away));
-                captureHintLayout.setBackground(getResources().getDrawable(R.drawable.hint_red));
                 break;
             case ADJUST_ANGLE:
                 captureHintText.setText(getResources().getString(R.string.adjust_angle));
-                captureHintLayout.setBackground(getResources().getDrawable(R.drawable.hint_red));
                 break;
             case FIND_RECT:
                 captureHintText.setText(getResources().getString(R.string.finding_rect));
-                captureHintLayout.setBackground(getResources().getDrawable(R.drawable.hint_white));
                 break;
             case CAPTURING_IMAGE:
                 captureHintText.setText(getResources().getString(R.string.hold_still));
-                captureHintLayout.setBackground(getResources().getDrawable(R.drawable.hint_green));
                 break;
             case NO_MESSAGE:
                 captureHintLayout.setVisibility(GONE);
