@@ -340,11 +340,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Bitmap previewBitmap = previewView.getBitmap();
 
                 File mSaveBit = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "CAPTURE.jpg");
-                if(!mSaveBit.exists()) {
-                    ScannerConstants.captured_finish = false;
-                    ScannerConstants.analyzing = true;
-                    return;
-                }
 
                 String filePath = mSaveBit.getPath();
                 Bitmap captureBitmap = BitmapFactory.decodeFile(filePath);
