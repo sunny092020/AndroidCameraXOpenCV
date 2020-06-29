@@ -3,7 +3,6 @@ package com.ami.icamdocscanner;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -52,7 +51,6 @@ import com.ami.icamdocscanner.helpers.MathUtils;
 import com.ami.icamdocscanner.helpers.Preferences;
 import com.ami.icamdocscanner.helpers.ScannerConstants;
 import com.ami.icamdocscanner.helpers.VisionUtils;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.jetbrains.annotations.NotNull;
@@ -113,6 +111,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
 
         btnCapture = findViewById(R.id.btnCapture);
+        btnCapture.setOnClickListener(v -> {
+            setAutoFocus();
+            takePicture();
+        });
+
         btnAutoCapture = findViewById(R.id.btnAutoCapture);
 
         context = this;
@@ -286,7 +289,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
 
-        Log.d("captured_finish", Boolean.toString(ScannerConstants.captured_finish));
         if(ScannerConstants.captured_finish) {
             image.close();
             return;
@@ -311,14 +313,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             new Handler(Looper.getMainLooper()).post(() -> new CountDownTimer(3000, 100) {
                 public void onTick(long millisUntilFinished) {}
                 public void onFinish() {
+                    image.close();
                     ScannerConstants.captured_finish = true;
                     if(!Preferences.getAutoCapture((Activity) context)) {
-                        image.close();
                         ScannerConstants.captured_finish = false;
                         ScannerConstants.analyzing = true;
                         return;
                     }
-                    takePicture(image);
+                    takePicture();
                 }
             }.start());
         }
@@ -326,7 +328,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         image.close();
     }
 
-    private void takePicture(ImageProxy image) {
+    private void takePicture() {
         File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "CAPTURE.jpg");
         ImageCapture.OutputFileOptions.Builder outputFileOptionsBuilder =
                 new ImageCapture.OutputFileOptions.Builder(file);
@@ -337,6 +339,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Bitmap previewBitmap = previewView.getBitmap();
 
                 File mSaveBit = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "CAPTURE.jpg");
+                if(!mSaveBit.exists()) {
+                    ScannerConstants.captured_finish = false;
+                    ScannerConstants.analyzing = true;
+                    return;
+                }
+
                 String filePath = mSaveBit.getPath();
                 Bitmap captureBitmap = BitmapFactory.decodeFile(filePath);
                 mSaveBit.delete();
@@ -348,7 +356,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 MatOfPoint2f contour = findContours(rotated90croppedBmp);
 
                 if(contour == null) {
-                    image.close();
                     ScannerConstants.captured_finish = false;
                     ScannerConstants.analyzing = true;
                     return;
@@ -356,7 +363,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 ScannerConstants.selectedImageBitmap = rotated90croppedBmp;
                 ScannerConstants.croptedPolygon = contour;
-                image.close();
                 startCrop();
             }
             public void onError(@NotNull ImageCaptureException exception) {}
