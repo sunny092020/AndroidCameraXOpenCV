@@ -121,8 +121,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if(Preferences.getAutoCapture(activity)) {
                 btnAutoCapture.setImageResource(R.drawable.ic_auto_disable);
                 Preferences.setAutoCapture(activity, false);
-                clearPoints();
-                displayHint(ScanHint.NO_MESSAGE);
             } else {
                 btnAutoCapture.setImageResource(R.drawable.ic_auto_enable);
                 Preferences.setAutoCapture(activity, true);
@@ -280,8 +278,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void analyze(ImageProxy image) {
         if(!Preferences.getAutoCapture(this)) {
             image.close();
+            runOnUiThread(() -> {
+                displayHint(ScanHint.NO_MESSAGE);
+                clearPoints();
+                ivBitmap.setImageBitmap(overlay);
+            });
             return;
         }
+
+        Log.d("captured_finish", Boolean.toString(ScannerConstants.captured_finish));
         if(ScannerConstants.captured_finish) {
             image.close();
             return;
@@ -303,10 +308,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if(ScannerConstants.scanHint == ScanHint.CAPTURING_IMAGE) {
             ScannerConstants.analyzing = false;
             setAutoFocus();
-            new Handler(Looper.getMainLooper()).post(() -> new CountDownTimer(2000, 100) {
+            new Handler(Looper.getMainLooper()).post(() -> new CountDownTimer(3000, 100) {
                 public void onTick(long millisUntilFinished) {}
                 public void onFinish() {
                     ScannerConstants.captured_finish = true;
+                    if(!Preferences.getAutoCapture((Activity) context)) {
+                        image.close();
+                        ScannerConstants.captured_finish = false;
+                        ScannerConstants.analyzing = true;
+                        return;
+                    }
                     takePicture(image);
                 }
             }.start());
