@@ -17,7 +17,6 @@ public class ScannerConstants {
     public static Bitmap selectedImageBitmap;
     public static Bitmap cropImageBitmap;
     public static ScanHint scanHint = ScanHint.NO_MESSAGE;
-    public static boolean saveStorage=false;
 
     public static BiFunction<Mat, Activity, MatOfPoint2f> cacheFindContoursFun = null;
     public static int cacheMatIndex = -1;
