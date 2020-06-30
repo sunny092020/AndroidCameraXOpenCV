@@ -345,6 +345,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         image.close();
     }
 
+    private MatOfPoint2f findContours(Bitmap bitmap) {
+        clearPoints();
+        MatOfPoint2f contour = VisionUtils.findContours(bitmap, this);
+
+        if(contour == null) return null;
+
+        drawPoint(contour.toList());
+        return contour;
+    }
+
     private void takePicture() {
         File capturedImg = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "CAPTURE.jpg");
         ImageCapture.OutputFileOptions.Builder outputFileOptionsBuilder =
@@ -354,7 +364,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
                 Bitmap rotated90croppedBmp = cropCapturedImage(capturedImg);
-                MatOfPoint2f contour = findContours(rotated90croppedBmp);
+                MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, (Activity) context);
 
                 if(contour == null) return;
                 startCrop(rotated90croppedBmp, contour);
@@ -372,7 +382,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
                 Bitmap rotated90croppedBmp = cropCapturedImage(capturedImg);
-                MatOfPoint2f contour = findContours(rotated90croppedBmp);
+                MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, (Activity) context);
 
                 // proceed to cropping screen even no contour found
                 if(contour == null) {
@@ -407,16 +417,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         double h = (double) previewBitmap.getHeight()*captureBitmap.getHeight()/previewBitmap.getWidth();
         Bitmap croppedBmp = Bitmap.createBitmap(captureBitmap, (int) ((captureBitmap.getWidth()-h)/2), 0, (int) h, captureBitmap.getHeight());
         return  VisionUtils.rotateBitmap(croppedBmp, 90);
-    }
-
-    private MatOfPoint2f findContours(Bitmap bitmap) {
-        clearPoints();
-        MatOfPoint2f contour = VisionUtils.findContours(bitmap, this);
-
-        if(contour == null) return null;
-
-        drawPoint(contour.toList());
-        return contour;
     }
 
     public void displayHint(String text) {
