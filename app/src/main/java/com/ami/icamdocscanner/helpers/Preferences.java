@@ -19,8 +19,7 @@ public class Preferences {
     }
 
     private static SharedPreferences getSharedPreferences(Activity activity) {
-        SharedPreferences sharedPref = activity.getSharedPreferences(
+        return activity.getSharedPreferences(
                 activity.getString(R.string.preference_file_key), Context.MODE_PRIVATE);
-        return sharedPref;
     }
 }

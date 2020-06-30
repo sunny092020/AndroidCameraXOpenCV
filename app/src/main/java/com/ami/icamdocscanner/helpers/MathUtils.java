@@ -32,7 +32,7 @@ public class MathUtils {
 
     public static MatOfPoint2f scaleRectangle(MatOfPoint2f original, double scale) {
         List<Point> originalPoints = original.toList();
-        List<Point> resultPoints = new ArrayList<Point>();
+        List<Point> resultPoints = new ArrayList<>();
 
         for (Point point : originalPoints) {
             resultPoints.add(new Point(point.x * scale, point.y * scale));

@@ -39,12 +39,10 @@ public class NativeClass {
         return VisionUtils.matToBitmap(dstMat);
     }
 
-    private static Comparator<MatOfPoint2f> AreaDescendingComparator = new Comparator<MatOfPoint2f>() {
-        public int compare(MatOfPoint2f m1, MatOfPoint2f m2) {
-            double area1 = Imgproc.contourArea(m1);
-            double area2 = Imgproc.contourArea(m2);
-            return (int) Math.ceil(area2 - area1);
-        }
+    private static Comparator<MatOfPoint2f> AreaDescendingComparator = (m1, m2) -> {
+        double area1 = Imgproc.contourArea(m1);
+        double area2 = Imgproc.contourArea(m2);
+        return (int) Math.ceil(area2 - area1);
     };
 
 
@@ -64,8 +62,7 @@ public class NativeClass {
         }
         Collections.sort(rectangles, AreaDescendingComparator);
         MatOfPoint2f largestRectangle = rectangles.get(0);
-        MatOfPoint2f result = MathUtils.scaleRectangle(largestRectangle, 1f / ratio);
-        return result;
+        return MathUtils.scaleRectangle(largestRectangle, 1f / ratio);
     }
 
     //public native float[] getPoints(Bitmap bitmap);

@@ -428,7 +428,6 @@ public class VisionUtils {
 
 
     private static void getCanny(Mat gray, Mat canny) {
-        Mat thres = new Mat();
         double lowThres = 85, highthres = lowThres*3;
         Imgproc.Canny(gray, canny, lowThres, highthres);
     }

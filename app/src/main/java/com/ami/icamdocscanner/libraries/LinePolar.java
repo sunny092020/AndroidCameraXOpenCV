@@ -14,30 +14,6 @@ public class LinePolar {
         _r = r;
     }
 
-    public Line toLine() {
-        if(_theta == 0) {
-            return new Line(new Point(_r, 0), new Point(_r, 1));
-        }
-
-        if(_theta == 90) {
-            return new Line(new Point(0, _r), new Point(1, _r));
-        }
-
-        if(_theta == -90) {
-            return new Line(new Point(0, _r*(-1)), new Point(2, _r*(-1)));
-        }
-
-
-        double x0 = _r/Math.sin(_theta);
-        double y0 = _r/Math.cos(_theta);
-
-//        Log.d("theta", Double.toString(_theta));
-//        Log.d("r", Double.toString(_r));
-//        Log.d("x0", Double.toString(x0));
-//        Log.d("y0", Double.toString(y0));
-        return new Line(new Point(x0, 0), new Point(0, y0));
-    }
-
     public int hashCode() {
         return Objects.hash(getSigFields());
     }

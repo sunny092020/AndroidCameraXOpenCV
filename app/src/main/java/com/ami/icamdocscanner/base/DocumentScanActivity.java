@@ -48,7 +48,7 @@ public abstract class DocumentScanActivity extends AppCompatActivity {
 
     protected abstract void hideProgressBar();
 
-    protected abstract void showError(CropperErrorType errorType);
+    protected abstract void showError();
 
     protected abstract Bitmap getBitmapImage();
 
@@ -57,7 +57,7 @@ public abstract class DocumentScanActivity extends AppCompatActivity {
         for (int i = 1; i <= 4; i++) {
             MatOfPoint2f point2f = nativeClass.getPoint(tempBitmap);
             if (point2f == null) {
-                tempBitmap = rotateBitmap(tempBitmap, 90 * i);
+                tempBitmap = rotateBitmap(tempBitmap);
             } else {
                 selectedImage = tempBitmap.copy(selectedImage.getConfig(), true);
                 break;
@@ -65,7 +65,7 @@ public abstract class DocumentScanActivity extends AppCompatActivity {
         }
     }
 
-    protected Bitmap rotateBitmap(Bitmap source, float angle) {
+    protected Bitmap rotateBitmap(Bitmap source) {
         return  source;
 //        Matrix matrix = new Matrix();
 //        matrix.postRotate(angle);
@@ -102,7 +102,7 @@ public abstract class DocumentScanActivity extends AppCompatActivity {
 
         Bitmap tempBitmap = ((BitmapDrawable) getImageView().getDrawable()).getBitmap();
 
-        Map<Integer, PointF> pointFs = null;
+        Map<Integer, PointF> pointFs;
         try {
             pointFs = getEdgePoints(tempBitmap);
 
@@ -139,7 +139,7 @@ public abstract class DocumentScanActivity extends AppCompatActivity {
             float y4 = (Objects.requireNonNull(points.get(3)).y) * yRatio;
             return nativeClass.getScannedBitmap(selectedImage, x1, y1, x2, y2, x3, y3, x4, y4);
         } catch (Exception e) {
-            showError(CropperErrorType.CROP_ERROR);
+            showError();
             return null;
         }
     }
@@ -150,10 +150,9 @@ public abstract class DocumentScanActivity extends AppCompatActivity {
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), m, true);
     }
 
-    private Map<Integer, PointF> getEdgePoints(Bitmap tempBitmap) throws Exception {
+    private Map<Integer, PointF> getEdgePoints(Bitmap tempBitmap) {
         List<PointF> pointFs = getContourEdgePoints();
-        Map<Integer, PointF> orderedPoints = orderedValidEdgePoints(tempBitmap, pointFs);
-        return orderedPoints;
+        return orderedValidEdgePoints(tempBitmap, pointFs);
     }
 
     private List<PointF> getContourEdgePoints() {
@@ -165,7 +164,7 @@ public abstract class DocumentScanActivity extends AppCompatActivity {
 
         float kx = (float) getHolderImageCrop().getWidth()/selectedImage.getWidth();
         float ky = (float) getHolderImageCrop().getHeight()/selectedImage.getHeight();
-        float k = ((kx>ky) ? ky : kx);
+        float k = (Math.min(kx, ky));
 
         for (int i = 0; i < points.size(); i++) {
             result.add(new PointF(((float) points.get(i).x*k), ((float) points.get(i).y*k)));

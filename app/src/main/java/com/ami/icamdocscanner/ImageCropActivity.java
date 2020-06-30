@@ -2,13 +2,8 @@ package com.ami.icamdocscanner;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.ColorMatrix;
-import android.graphics.ColorMatrixColorFilter;
-import android.graphics.Paint;
 import android.os.Bundle;
-import android.os.Environment;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -19,35 +14,22 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-import com.ami.icamdocscanner.base.DocumentScanActivity;
-import com.ami.icamdocscanner.R;
 import com.ami.icamdocscanner.base.CropperErrorType;
+import com.ami.icamdocscanner.base.DocumentScanActivity;
 import com.ami.icamdocscanner.helpers.ScannerConstants;
 import com.ami.icamdocscanner.libraries.PolygonView;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
-
-import io.reactivex.Observable;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.schedulers.Schedulers;
 
 public class ImageCropActivity extends DocumentScanActivity {
 
     private FrameLayout holderImageCrop;
     private ImageView imageView;
     private PolygonView polygonView;
-    private boolean isInverted;
     private ProgressBar progressBar;
     private Bitmap cropImage;
-    private OnClickListener btnImageEnhanceClick = new OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            showProgressBar();
+    private OnClickListener btnImageEnhanceClick = v -> {
+        showProgressBar();
 
-            toEditImage();
+        toEditImage();
 
 //            disposable.add(
 //                    Observable.fromCallable(() -> {
@@ -71,7 +53,6 @@ public class ImageCropActivity extends DocumentScanActivity {
 //                                }
 //                            })
 //            );
-        }
     };
 
     private  void toEditImage() {
@@ -81,12 +62,6 @@ public class ImageCropActivity extends DocumentScanActivity {
         finish();
     }
 
-    private OnClickListener btnRebase = v -> {
-        cropImage = ScannerConstants.selectedImageBitmap.copy(ScannerConstants.selectedImageBitmap.getConfig(), true);
-        isInverted = false;
-        startCropping();
-    };
-
     private OnClickListener btnCloseClick = v -> {
         ScannerConstants.resetCaptureState();
         Intent intent = new Intent(this, MainActivity.class);
@@ -94,58 +69,12 @@ public class ImageCropActivity extends DocumentScanActivity {
         finish();
     };
 
-    private OnClickListener btnInvertColor = new OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            showProgressBar();
-            disposable.add(
-                    Observable.fromCallable(() -> {
-                        invertColor();
-                        return false;
-                    })
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe((result) -> {
-                                hideProgressBar();
-                                Bitmap scaledBitmap = scaledBitmap(cropImage, holderImageCrop.getWidth(), holderImageCrop.getHeight());
-                                imageView.setImageBitmap(scaledBitmap);
-                            })
-            );
-        }
-    };
-    private OnClickListener onRotateClick = new OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            showProgressBar();
-            disposable.add(
-                    Observable.fromCallable(() -> {
-                        if (isInverted)
-                            invertColor();
-                        cropImage = rotateBitmap(cropImage, 90);
-                        return false;
-                    })
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe((result) -> {
-                                hideProgressBar();
-                                startCropping();
-                            })
-            );
-        }
-    };
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_image_crop);
         cropImage = ScannerConstants.selectedImageBitmap;
-        isInverted = false;
-        if (ScannerConstants.selectedImageBitmap != null)
-            initView();
-        else {
-//            Toast.makeText(this, ScannerConstants.imageError, Toast.LENGTH_LONG).show();
-//            finish();
-        }
+        initView();
     }
 
     @Override
@@ -178,12 +107,8 @@ public class ImageCropActivity extends DocumentScanActivity {
     }
 
     @Override
-    protected void showError(CropperErrorType errorType) {
-        switch (errorType) {
-            case CROP_ERROR:
-                Toast.makeText(this, ScannerConstants.cropError, Toast.LENGTH_LONG).show();
-                break;
-        }
+    protected void showError() {
+        Toast.makeText(this, ScannerConstants.cropError, Toast.LENGTH_LONG).show();
     }
 
     @Override
@@ -220,40 +145,4 @@ public class ImageCropActivity extends DocumentScanActivity {
         startCropping();
     }
 
-    private void invertColor() {
-        if (!isInverted) {
-            Bitmap bmpMonochrome = Bitmap.createBitmap(cropImage.getWidth(), cropImage.getHeight(), Bitmap.Config.ARGB_8888);
-            Canvas canvas = new Canvas(bmpMonochrome);
-            ColorMatrix ma = new ColorMatrix();
-            ma.setSaturation(0);
-            Paint paint = new Paint();
-            paint.setColorFilter(new ColorMatrixColorFilter(ma));
-            canvas.drawBitmap(cropImage, 0, 0, paint);
-            cropImage = bmpMonochrome.copy(bmpMonochrome.getConfig(), true);
-        } else {
-            cropImage = cropImage.copy(cropImage.getConfig(), true);
-        }
-        isInverted = !isInverted;
-    }
-
-    private String saveToInternalStorage(Bitmap bitmapImage) {
-        File directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
-        String imageFileName = "cropped_" + timeStamp + ".png";
-        File mypath = new File(directory, imageFileName);
-        FileOutputStream fos = null;
-        try {
-            fos = new FileOutputStream(mypath);
-            bitmapImage.compress(Bitmap.CompressFormat.PNG, 100, fos);
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                fos.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        return directory.getAbsolutePath();
-    }
 }
