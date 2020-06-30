@@ -15,6 +15,7 @@ import android.os.CountDownTimer;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
@@ -109,7 +110,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
 
         btnCapture = findViewById(R.id.btnCapture);
+
+        // TODO : click no immediate response from the app
         btnCapture.setOnClickListener(v -> {
+            Log.d("############", "############");
+            Log.d("elapsed", Double.toString(SystemClock.elapsedRealtime() - ScannerConstants.lastCaptureTime));
+
+            // preventing double, using threshold of 1000 ms
+            if (SystemClock.elapsedRealtime() - ScannerConstants.lastCaptureTime <= 3000){
+                return;
+            }
+            ScannerConstants.lastCaptureTime = SystemClock.elapsedRealtime();
+
             setAutoFocus();
             takePictureManual();
         });
@@ -291,12 +303,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
 
-        if(ScannerConstants.captured_finish) {
+        Bitmap bitmap = previewView.getBitmap();
+
+        // sometimes, it continues to find contours when transiting
+        // to other screen, so bitmap is null
+        if(bitmap== null) {
             image.close();
             return;
         }
-
-        Bitmap bitmap = previewView.getBitmap();
         findContours(bitmap);
 
         runOnUiThread(() -> {
@@ -304,24 +318,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             ivBitmap.setImageBitmap(overlay);
         });
 
-        if(!ScannerConstants.analyzing) {
+//        Log.d("############", "############");
+//        Log.d("elapsed", Double.toString(SystemClock.elapsedRealtime() - ScannerConstants.lastCaptureTime));
+        // preventing double, using threshold of 1000 ms
+        if (SystemClock.elapsedRealtime() - ScannerConstants.lastCaptureTime <= 3000) {
             image.close();
             return;
         }
 
         if(ScannerConstants.scanHint == ScanHint.CAPTURING_IMAGE) {
-            ScannerConstants.analyzing = false;
+            ScannerConstants.lastCaptureTime = SystemClock.elapsedRealtime();
             setAutoFocus();
             new Handler(Looper.getMainLooper()).post(() -> new CountDownTimer(3000, 100) {
                 public void onTick(long millisUntilFinished) {}
                 public void onFinish() {
                     image.close();
-                    ScannerConstants.captured_finish = true;
-                    if(!Preferences.getAutoCapture((Activity) context)) {
-                        ScannerConstants.captured_finish = false;
-                        ScannerConstants.analyzing = true;
-                        return;
-                    }
+                    if(!Preferences.getAutoCapture((Activity) context)) return;
                     takePicture();
                 }
             }.start());
@@ -330,7 +342,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         image.close();
     }
 
-    // TODO: multiple threads call this function concurrently causes error
     private void takePicture() {
         File capturedImg = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "CAPTURE.jpg");
         ImageCapture.OutputFileOptions.Builder outputFileOptionsBuilder =
@@ -342,11 +353,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Bitmap rotated90croppedBmp = cropCapturedImage(capturedImg);
                 MatOfPoint2f contour = findContours(rotated90croppedBmp);
 
-                if(contour == null) {
-                    ScannerConstants.captured_finish = false;
-                    ScannerConstants.analyzing = true;
-                    return;
-                }
+                if(contour == null) return;
                 startCrop(rotated90croppedBmp, contour);
             }
             public void onError(@NotNull ImageCaptureException exception) {}

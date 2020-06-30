@@ -11,8 +11,8 @@ import org.opencv.core.MatOfPoint2f;
 import java.util.function.BiFunction;
 
 public class ScannerConstants {
-    public static boolean analyzing = true;
-    public static boolean captured_finish = false;
+    public static long lastCaptureTime = 0;
+
     public static MatOfPoint2f croptedPolygon;
     public static Bitmap selectedImageBitmap;
     public static Bitmap cropImageBitmap;
@@ -28,9 +28,7 @@ public class ScannerConstants {
 
     // retake image, back to main activity from crop activity
     public static void resetCaptureState() {
-        ScannerConstants.analyzing = true;
-        ScannerConstants.captured_finish = false;
-        ScannerConstants.scanHint = ScanHint.NO_MESSAGE;
+        scanHint = ScanHint.NO_MESSAGE;
         croptedPolygon = null;
         selectedImageBitmap = null;
         cropImageBitmap = null;
