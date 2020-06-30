@@ -1,14 +1,10 @@
 package com.ami.icamdocscanner.helpers;
 
-import android.app.Activity;
 import android.graphics.Bitmap;
 
 import com.ami.icamdocscanner.enums.ScanHint;
 
-import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint2f;
-
-import java.util.function.BiFunction;
 
 public class ScannerConstants {
     public static long lastCaptureTime = 0;
