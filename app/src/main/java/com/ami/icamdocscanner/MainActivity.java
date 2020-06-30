@@ -130,6 +130,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 // make "Auto capture: Off" last 1 seconds
                 new Handler().postDelayed(() -> {
+                    // set text to "" to make way for other hint
                     captureHintText.setText("");
                     captureHintText.setVisibility(View.INVISIBLE);
                 }, 1000);
@@ -137,6 +138,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 btnAutoCapture.setImageResource(R.drawable.ic_auto_enable);
                 Preferences.setAutoCapture(activity, true);
                 displayHint("Auto capture: On");
+                // make "Auto capture: On" last 1 seconds
+                new Handler().postDelayed(() -> {
+                    // set text to "" to make way for other hint
+                    captureHintText.setText("");
+                    captureHintText.setVisibility(View.INVISIBLE);
+                }, 1000);
+
             }
         });
 
@@ -420,6 +428,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void displayHint(String text) {
         if(captureHintText.getText() == "Auto capture: Off") return;
+        if(captureHintText.getText() == "Auto capture: On") return;
         captureHintText.setVisibility(View.VISIBLE);
         captureHintText.setText(text);
     }
