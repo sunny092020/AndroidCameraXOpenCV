@@ -106,15 +106,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         btnCapture = findViewById(R.id.btnCapture);
 
-        // TODO : click no immediate response from the app
+        // TODO : turn on/off auto, then cannot capture immediately
         btnCapture.setOnClickListener(v -> {
             Log.d("btnCapture", "btnCapture");
 
             // preventing double, using threshold of 1000 ms
             if (lastCaptureEarly()){
+                displayHint("Wait a second, then press capture again");
                 return;
             }
             lastCaptureTime = SystemClock.elapsedRealtime();
+            displayHint("Capturing");
             takePictureManual();
         });
 
@@ -431,6 +433,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void displayHint(String text) {
+        if(text == "Auto capture: Off") {
+            captureHintText.setVisibility(View.VISIBLE);
+            captureHintText.setText(text);
+            return;
+        }
+        if(text == "Auto capture: On") {
+            captureHintText.setVisibility(View.VISIBLE);
+            captureHintText.setText(text);
+            return;
+        }
+
         if(captureHintText.getText() == "Auto capture: Off") return;
         if(captureHintText.getText() == "Auto capture: On") return;
         captureHintText.setVisibility(View.VISIBLE);
