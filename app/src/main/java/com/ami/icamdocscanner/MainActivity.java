@@ -111,7 +111,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnCapture = findViewById(R.id.btnCapture);
         btnCapture.setOnClickListener(v -> {
             setAutoFocus();
-            takePicture();
+            takePictureManual();
         });
 
         btnAutoCapture = findViewById(R.id.btnAutoCapture);
@@ -332,25 +332,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     // TODO: multiple threads call this function concurrently causes error
     private void takePicture() {
-        File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "CAPTURE.jpg");
+        File capturedImg = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "CAPTURE.jpg");
         ImageCapture.OutputFileOptions.Builder outputFileOptionsBuilder =
-                new ImageCapture.OutputFileOptions.Builder(file);
+                new ImageCapture.OutputFileOptions.Builder(capturedImg);
 
-        imageCapture.takePicture(outputFileOptionsBuilder.build(), Executors.newSingleThreadExecutor(), new ImageCapture.OnImageSavedCallback(){
+        imageCapture.takePicture(outputFileOptionsBuilder.build(), Executors.newSingleThreadExecutor(), new ImageCapture.OnImageSavedCallback() {
             @Override
             public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
-                Bitmap previewBitmap = previewView.getBitmap();
-
-                File mSaveBit = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "CAPTURE.jpg");
-
-                String filePath = mSaveBit.getPath();
-                Bitmap captureBitmap = BitmapFactory.decodeFile(filePath);
-                mSaveBit.delete();
-
-                double h = (double) previewBitmap.getHeight()*captureBitmap.getHeight()/previewBitmap.getWidth();
-                Bitmap croppedBmp = Bitmap.createBitmap(captureBitmap, (int) ((captureBitmap.getWidth()-h)/2), 0, (int) h, captureBitmap.getHeight());
-                Bitmap rotated90croppedBmp = VisionUtils.rotateBitmap(croppedBmp, 90);
-
+                Bitmap rotated90croppedBmp = cropCapturedImage(capturedImg);
                 MatOfPoint2f contour = findContours(rotated90croppedBmp);
 
                 if(contour == null) {
@@ -358,13 +347,56 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     ScannerConstants.analyzing = true;
                     return;
                 }
-
-                ScannerConstants.selectedImageBitmap = rotated90croppedBmp;
-                ScannerConstants.croptedPolygon = contour;
-                startCrop();
+                startCrop(rotated90croppedBmp, contour);
             }
             public void onError(@NotNull ImageCaptureException exception) {}
         });
+    }
+
+    private void takePictureManual() {
+        File capturedImg = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "CAPTURE_MANUAL.jpg");
+        ImageCapture.OutputFileOptions.Builder outputFileOptionsBuilder =
+                new ImageCapture.OutputFileOptions.Builder(capturedImg);
+
+        imageCapture.takePicture(outputFileOptionsBuilder.build(), Executors.newSingleThreadExecutor(), new ImageCapture.OnImageSavedCallback() {
+            @Override
+            public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
+                Bitmap rotated90croppedBmp = cropCapturedImage(capturedImg);
+                MatOfPoint2f contour = findContours(rotated90croppedBmp);
+
+                // proceed to cropping screen even no contour found
+                if(contour == null) {
+                    int originW = rotated90croppedBmp.getWidth();
+                    int originH = rotated90croppedBmp.getHeight();
+                    contour = dummyContour(originW, originH);
+                }
+                startCrop(rotated90croppedBmp, contour);
+            }
+            public void onError(@NotNull ImageCaptureException exception) {}
+        });
+    }
+
+    private MatOfPoint2f dummyContour(int width, int height) {
+        MatOfPoint2f contour = new MatOfPoint2f();
+        List<Point> cornerPoints = new ArrayList<>();
+
+        cornerPoints.add(new Point((float)width/5, (float)height/5));
+        cornerPoints.add(new Point((float)width*4/5, (float)height/5));
+        cornerPoints.add(new Point((float)width/5, (float)height*4/5));
+        cornerPoints.add(new Point((float)width*4/5, (float)height*4/5));
+        contour.fromList(cornerPoints);
+        return contour;
+    }
+
+    private Bitmap cropCapturedImage(File file) {
+        Bitmap previewBitmap = previewView.getBitmap();
+        String filePath = file.getPath();
+        Bitmap captureBitmap = BitmapFactory.decodeFile(filePath);
+        file.delete();
+
+        double h = (double) previewBitmap.getHeight()*captureBitmap.getHeight()/previewBitmap.getWidth();
+        Bitmap croppedBmp = Bitmap.createBitmap(captureBitmap, (int) ((captureBitmap.getWidth()-h)/2), 0, (int) h, captureBitmap.getHeight());
+        return  VisionUtils.rotateBitmap(croppedBmp, 90);
     }
 
     private MatOfPoint2f findContours(Bitmap bitmap) {
@@ -472,7 +504,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private void startCrop() {
+    private void startCrop(Bitmap rotated90croppedBmp, MatOfPoint2f contour) {
+        ScannerConstants.selectedImageBitmap = rotated90croppedBmp;
+        ScannerConstants.croptedPolygon = contour;
+
         Intent cropIntent = new Intent(this, ImageCropActivity.class);
         startActivityForResult(cropIntent, 1234);
         finish();
