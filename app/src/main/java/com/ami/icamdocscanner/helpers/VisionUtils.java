@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 
-import com.ami.icamdocscanner.enums.ScanHint;
 import com.ami.icamdocscanner.libraries.Line;
 import com.ami.icamdocscanner.libraries.LinePolar;
 
@@ -31,6 +30,8 @@ import java.util.function.BiFunction;
 import static java.lang.Math.abs;
 
 public class VisionUtils {
+    private final static double MIN_WIDTH=0.55, MIN_HEIGHT = 0.55;
+
     public static MatOfPoint2f findContours(Bitmap bitmap, Activity activity) {
 
         Mat src = new Mat();
@@ -186,11 +187,8 @@ public class VisionUtils {
             if(isExceedMat(contour.toList(), matWidth, matHeight)) return null;
 
             // break loop if the document is too far from the phone
-            double minS =matWidth*matHeight*0.3;
-            if(Imgproc.contourArea(contour) < minS) {
-                ScannerConstants.scanHint = ScanHint.MOVE_CLOSER;
-                return null;
-            }
+            double minS =matWidth*matHeight*MIN_WIDTH*MIN_HEIGHT;
+            if(Imgproc.contourArea(contour) < minS) return null;
 
             return contour;
         }
@@ -238,9 +236,7 @@ public class VisionUtils {
 
         Collections.sort(contours, AreaDescendingComparator);
 
-        double minS = (matWidth*matHeight)*0.3;
-
-        ScannerConstants.scanHint = ScanHint.NO_MESSAGE;
+        double minS = (matWidth*matHeight)*MIN_WIDTH*MIN_HEIGHT;
 
         for(MatOfPoint c : contours){
             MatOfPoint2f contour = new MatOfPoint2f(c.toArray());
@@ -255,10 +251,7 @@ public class VisionUtils {
             if(isExceedMat(contour.toList(), matWidth, matHeight)) break;
 
             // break loop if the document is too far from the phone
-            if(Imgproc.contourArea(contour) < minS) {
-                ScannerConstants.scanHint = ScanHint.MOVE_CLOSER;
-                break;
-            }
+            if(Imgproc.contourArea(contour) < minS) break;
 
             return contour;
         }
@@ -325,7 +318,7 @@ public class VisionUtils {
 
         ret.add(LinePolar.averageLine(firstBucket));
 
-        if(maxDistance > matHeight*0.5) {
+        if(maxDistance > matHeight*MIN_HEIGHT) {
             ret.add(LinePolar.averageLine(secondBucket));
         }
 
@@ -355,7 +348,7 @@ public class VisionUtils {
 
         List<Line> firstBucket = verticalLineMapValsList.get(0).getValue();
         ret.add(LinePolar.averageLine(firstBucket));
-        if(maxDistance > matWidth*0.5) {
+        if(maxDistance > matWidth*MIN_WIDTH) {
             ret.add(LinePolar.averageLine(secondBucket));
         }
         return ret;
@@ -439,7 +432,7 @@ public class VisionUtils {
 
     public static Bitmap rotateBitmap(Bitmap original, int angle) {
         Matrix matrix = new Matrix();
-        matrix.postRotate(90);
+        matrix.postRotate(angle);
         return Bitmap.createBitmap(original, 0, 0, original.getWidth(), original.getHeight(), matrix, true);
     }
 
