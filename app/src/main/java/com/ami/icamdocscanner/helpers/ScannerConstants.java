@@ -7,8 +7,6 @@ import com.ami.icamdocscanner.enums.ScanHint;
 import org.opencv.core.MatOfPoint2f;
 
 public class ScannerConstants {
-    public static long lastCaptureTime = 0;
-
     public static MatOfPoint2f croptedPolygon;
     public static Bitmap selectedImageBitmap;
     public static Bitmap cropImageBitmap;

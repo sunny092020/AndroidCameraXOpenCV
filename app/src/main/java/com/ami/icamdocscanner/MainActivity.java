@@ -91,6 +91,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public Bitmap overlay;
     public Paint fillPaint, strokePaint;
 
+    private static long lastCaptureTime = 0;
+
     static {
         if (!OpenCVLoader.initDebug())
             Log.d("ERROR", "Unable to load OpenCV");
@@ -109,13 +111,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // TODO : click no immediate response from the app
         btnCapture.setOnClickListener(v -> {
             Log.d("############", "############");
-            Log.d("elapsed", Double.toString(SystemClock.elapsedRealtime() - ScannerConstants.lastCaptureTime));
+            Log.d("elapsed", Double.toString(SystemClock.elapsedRealtime() - lastCaptureTime));
 
             // preventing double, using threshold of 1000 ms
-            if (SystemClock.elapsedRealtime() - ScannerConstants.lastCaptureTime <= 3000){
+            if (SystemClock.elapsedRealtime() - lastCaptureTime <= 3000){
                 return;
             }
-            ScannerConstants.lastCaptureTime = SystemClock.elapsedRealtime();
+            lastCaptureTime = SystemClock.elapsedRealtime();
 
             setAutoFocus();
             takePictureManual();
@@ -317,13 +319,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        Log.d("############", "############");
 //        Log.d("elapsed", Double.toString(SystemClock.elapsedRealtime() - ScannerConstants.lastCaptureTime));
         // preventing double, using threshold of 1000 ms
-        if (SystemClock.elapsedRealtime() - ScannerConstants.lastCaptureTime <= 3000) {
+        if (SystemClock.elapsedRealtime() - lastCaptureTime <= 3000) {
             image.close();
             return;
         }
 
         if(ScannerConstants.scanHint == ScanHint.CAPTURING_IMAGE) {
-            ScannerConstants.lastCaptureTime = SystemClock.elapsedRealtime();
+            lastCaptureTime = SystemClock.elapsedRealtime();
             setAutoFocus();
             new Handler(Looper.getMainLooper()).post(() -> new CountDownTimer(3000, 100) {
                 public void onTick(long millisUntilFinished) {}
