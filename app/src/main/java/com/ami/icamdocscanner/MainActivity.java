@@ -313,6 +313,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         findContours(bitmap);
 
+        // display hint text and hint 4 corner points
         runOnUiThread(() -> {
             displayHint(ScannerConstants.scanHint);
             ivBitmap.setImageBitmap(overlay);
