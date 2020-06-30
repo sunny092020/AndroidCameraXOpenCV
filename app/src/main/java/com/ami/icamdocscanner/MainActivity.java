@@ -293,7 +293,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if(!Preferences.getAutoCapture(this)) {
             image.close();
             runOnUiThread(() -> {
-                displayHint(ScanHint.NO_MESSAGE);
+                captureHintText.setVisibility(GONE);
                 clearPoints();
                 ivBitmap.setImageBitmap(overlay);
             });
@@ -308,13 +308,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             image.close();
             return;
         }
-        findContours(bitmap);
 
-        // display hint text and hint 4 corner points
-        runOnUiThread(() -> {
-            displayHint(ScannerConstants.scanHint);
-            ivBitmap.setImageBitmap(overlay);
-        });
+        MatOfPoint2f contour = findContours(bitmap);
+        if(contour==null) {
+            runOnUiThread(() -> {
+                displayHint("No document");
+                ivBitmap.setImageBitmap(overlay);
+            });
+        }
+        else {
+            runOnUiThread(() -> {
+                displayHint("Hold firmly. Capturing image...");
+                ivBitmap.setImageBitmap(overlay);
+            });
+        }
 
 //        Log.d("############", "############");
 //        Log.d("elapsed", Double.toString(SystemClock.elapsedRealtime() - ScannerConstants.lastCaptureTime));
@@ -324,18 +331,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
 
-        if(ScannerConstants.scanHint == ScanHint.CAPTURING_IMAGE) {
-            lastCaptureTime = SystemClock.elapsedRealtime();
-            setAutoFocus();
-            new Handler(Looper.getMainLooper()).post(() -> new CountDownTimer(3000, 100) {
-                public void onTick(long millisUntilFinished) {}
-                public void onFinish() {
-                    image.close();
-                    if(!Preferences.getAutoCapture((Activity) context)) return;
-                    takePicture();
-                }
-            }.start());
-        }
+        lastCaptureTime = SystemClock.elapsedRealtime();
+        setAutoFocus();
+        new Handler(Looper.getMainLooper()).post(() -> new CountDownTimer(3000, 100) {
+            public void onTick(long millisUntilFinished) {}
+            public void onFinish() {
+                image.close();
+                if(!Preferences.getAutoCapture((Activity) context)) return;
+                takePicture();
+            }
+        }.start());
 
         image.close();
     }
@@ -411,39 +416,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if(contour == null) return null;
 
         drawPoint(contour.toList());
-        ScannerConstants.scanHint = ScanHint.CAPTURING_IMAGE;
         return contour;
     }
 
     public void displayHint(String text) {
         captureHintText.setVisibility(View.VISIBLE);
         captureHintText.setText(text);
-    }
-
-    public void displayHint(ScanHint scanHint) {
-        captureHintText.setVisibility(View.VISIBLE);
-        switch (scanHint) {
-            case MOVE_CLOSER:
-                captureHintText.setText(getResources().getString(R.string.move_closer));
-                break;
-            case MOVE_AWAY:
-                captureHintText.setText(getResources().getString(R.string.move_away));
-                break;
-            case ADJUST_ANGLE:
-                captureHintText.setText(getResources().getString(R.string.adjust_angle));
-                break;
-            case FIND_RECT:
-                captureHintText.setText(getResources().getString(R.string.finding_rect));
-                break;
-            case CAPTURING_IMAGE:
-                captureHintText.setText(getResources().getString(R.string.hold_still));
-                break;
-            case NO_MESSAGE:
-                captureHintText.setVisibility(GONE);
-                break;
-            default:
-                break;
-        }
     }
 
     private void clearPoints() {

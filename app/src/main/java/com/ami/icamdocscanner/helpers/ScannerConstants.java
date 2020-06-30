@@ -1,16 +1,12 @@
 package com.ami.icamdocscanner.helpers;
 
 import android.graphics.Bitmap;
-
-import com.ami.icamdocscanner.enums.ScanHint;
-
 import org.opencv.core.MatOfPoint2f;
 
 public class ScannerConstants {
     public static MatOfPoint2f croptedPolygon;
     public static Bitmap selectedImageBitmap;
     public static Bitmap cropImageBitmap;
-    public static ScanHint scanHint = ScanHint.NO_MESSAGE;
 
     public static String cropText="Crop",backText="Retake",
             imageError="No images selected, please try again.",
@@ -19,7 +15,6 @@ public class ScannerConstants {
 
     // retake image, back to main activity from crop activity
     public static void resetCaptureState() {
-        scanHint = ScanHint.NO_MESSAGE;
         croptedPolygon = null;
         selectedImageBitmap = null;
         cropImageBitmap = null;
