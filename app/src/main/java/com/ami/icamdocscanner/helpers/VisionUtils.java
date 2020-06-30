@@ -32,6 +32,9 @@ import static java.lang.Math.abs;
 public class VisionUtils {
     private final static double MIN_WIDTH=0.55, MIN_HEIGHT = 0.55;
 
+    private static BiFunction<Mat, Activity, MatOfPoint2f> cacheFindContoursFun = null;
+    private static int cacheMatIndex = -1;
+
     public static MatOfPoint2f findContours(Bitmap bitmap, Activity activity) {
 
         Mat src = new Mat();
@@ -84,10 +87,10 @@ public class VisionUtils {
     }
 
     public static MatOfPoint2f coverAllMethods4Contours(Mat[] inputMats, Activity activity) {
-        if((ScannerConstants.cacheFindContoursFun!=null) && (ScannerConstants.cacheMatIndex>=0)) {
-            Mat localMat = inputMats[ScannerConstants.cacheMatIndex];
+        if((cacheFindContoursFun!=null) && (cacheMatIndex>=0)) {
+            Mat localMat = inputMats[cacheMatIndex];
 
-            MatOfPoint2f ret = ScannerConstants.cacheFindContoursFun.apply(localMat, activity);
+            MatOfPoint2f ret = cacheFindContoursFun.apply(localMat, activity);
             if (ret != null) return ret;
         }
 
@@ -102,8 +105,8 @@ public class VisionUtils {
             for(Mat localMat: inputMats) {
                 MatOfPoint2f contour = f.apply(localMat, activity);
                 if(contour!=null) {
-                    ScannerConstants.cacheFindContoursFun = f;
-                    ScannerConstants.cacheMatIndex = inputMatsIndex;
+                    cacheFindContoursFun = f;
+                    cacheMatIndex = inputMatsIndex;
                     return contour;
                 }
                 inputMatsIndex++;

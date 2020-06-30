@@ -18,9 +18,6 @@ public class ScannerConstants {
     public static Bitmap cropImageBitmap;
     public static ScanHint scanHint = ScanHint.NO_MESSAGE;
 
-    public static BiFunction<Mat, Activity, MatOfPoint2f> cacheFindContoursFun = null;
-    public static int cacheMatIndex = -1;
-
     public static String cropText="Crop",backText="Retake",
             imageError="No images selected, please try again.",
             cropError="You have not selected a valid field. Please correct it until the lines turn blue.";
