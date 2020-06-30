@@ -110,11 +110,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         // TODO : click no immediate response from the app
         btnCapture.setOnClickListener(v -> {
-            Log.d("############", "############");
-            Log.d("elapsed", Double.toString(SystemClock.elapsedRealtime() - lastCaptureTime));
-
             // preventing double, using threshold of 1000 ms
-            if (SystemClock.elapsedRealtime() - lastCaptureTime <= 3000){
+            if (!lastCaptureExceeded()){
                 return;
             }
             lastCaptureTime = SystemClock.elapsedRealtime();
@@ -132,6 +129,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 btnAutoCapture.setImageResource(R.drawable.ic_auto_disable);
                 Preferences.setAutoCapture(activity, false);
                 displayHint("Auto capture: Off");
+
+                // make "Auto capture: Off" last 1 seconds
+                new Handler().postDelayed(() -> {
+                    captureHintText.setText("");
+                    captureHintText.setVisibility(View.INVISIBLE);
+                }, 1000);
             } else {
                 btnAutoCapture.setImageResource(R.drawable.ic_auto_enable);
                 Preferences.setAutoCapture(activity, true);
@@ -293,14 +296,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if(!Preferences.getAutoCapture(this)) {
             image.close();
             runOnUiThread(() -> {
-                captureHintText.setVisibility(GONE);
+                // clearPoints draw canvas, so we need to set overlay to ivBitmap
                 clearPoints();
                 ivBitmap.setImageBitmap(overlay);
             });
             return;
         }
 
-        Bitmap bitmap = previewView.getBitmap();
+        Bitmap bitmap=null;
+        try {
+            bitmap= previewView.getBitmap();
+        } catch (Exception e) {
+            // some time surface invalid error happened
+            e.printStackTrace();
+        }
 
         // sometimes, it continues to find contours when transiting
         // to other screen, so bitmap is null
@@ -309,31 +318,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
 
-        MatOfPoint2f contour = findContours(bitmap);
+        MatOfPoint2f contour = VisionUtils.findContours(bitmap, this);
         if(contour==null) {
-            runOnUiThread(() -> {
-                displayHint("No document");
-                ivBitmap.setImageBitmap(overlay);
-            });
+            runOnUiThread(() -> displayHint("No document"));
         }
         else {
             runOnUiThread(() -> {
+                drawPoint(contour.toList());
                 displayHint("Hold firmly. Capturing image...");
+
+                // drawPoint draw canvas, so we need to set overlay to ivBitmap
                 ivBitmap.setImageBitmap(overlay);
             });
         }
 
-//        Log.d("############", "############");
-//        Log.d("elapsed", Double.toString(SystemClock.elapsedRealtime() - ScannerConstants.lastCaptureTime));
         // preventing double, using threshold of 1000 ms
-        if (SystemClock.elapsedRealtime() - lastCaptureTime <= 3000) {
+        if (!lastCaptureExceeded()) {
             image.close();
             return;
         }
 
         lastCaptureTime = SystemClock.elapsedRealtime();
         setAutoFocus();
-        new Handler(Looper.getMainLooper()).post(() -> new CountDownTimer(3000, 100) {
+        new Handler(Looper.getMainLooper()).post(() -> new CountDownTimer(2000, 100) {
             public void onTick(long millisUntilFinished) {}
             public void onFinish() {
                 image.close();
@@ -345,14 +352,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         image.close();
     }
 
-    private MatOfPoint2f findContours(Bitmap bitmap) {
-        clearPoints();
-        MatOfPoint2f contour = VisionUtils.findContours(bitmap, this);
-
-        if(contour == null) return null;
-
-        drawPoint(contour.toList());
-        return contour;
+    private boolean lastCaptureExceeded() {
+        return (SystemClock.elapsedRealtime() - lastCaptureTime) > 2000;
     }
 
     private void takePicture() {
@@ -420,6 +421,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void displayHint(String text) {
+        if(captureHintText.getText() == "Auto capture: Off") return;
         captureHintText.setVisibility(View.VISIBLE);
         captureHintText.setText(text);
     }
