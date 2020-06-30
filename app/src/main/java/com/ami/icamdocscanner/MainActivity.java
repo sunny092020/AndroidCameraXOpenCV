@@ -408,61 +408,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private MatOfPoint2f findContours(Bitmap bitmap) {
-
         clearPoints();
-
-        Mat src = new Mat();
-        Utils.bitmapToMat(bitmap, src);
-
-        double DOWNSCALE_IMAGE_SIZE = 600f;
-
-        // Downscale image for better performance.
-        double ratio = DOWNSCALE_IMAGE_SIZE / Math.max(src.width(), src.height());
-
-        Mat mat = VisionUtils.downscaleMat(src, ratio);
-
-        /* get four outline edges of the document */
-        // get edges of the image
-        Mat gray = new Mat();
-        Imgproc.cvtColor(mat, gray, Imgproc.COLOR_RGB2GRAY);
-
-        Mat hsv = new Mat();
-        Imgproc.cvtColor(mat, hsv, Imgproc.COLOR_RGB2HSV);
-        mat.release();
-
-        List<Mat> channels = new ArrayList<>();
-
-        Core.split(hsv, channels);
-        hsv.release();
-
-        Mat H = channels.get(0);
-        Mat S = channels.get(1);
-        Mat V = channels.get(2);
-
-        Mat notGray = new Mat();
-        Mat notH = new Mat();
-        Mat notS = new Mat();
-        Mat notV = new Mat();
-
-        Core.bitwise_not(gray, notGray);
-        Core.bitwise_not(H, notH);
-        Core.bitwise_not(S, notS);
-        Core.bitwise_not(V, notV);
-
-        Mat[] inputMats = {gray, H, S, V, notGray, notH, notS, notV};
-
-        MatOfPoint2f contour = VisionUtils.coverAllMethods4Contours(inputMats, this);
-
-        for(Mat inputMat: inputMats) inputMat.release();
+        MatOfPoint2f contour = VisionUtils.findContours(bitmap, this);
 
         if(contour == null) return null;
 
-        MatOfPoint2f upScaleContour = MathUtils.scaleRectangle(contour, 1f / ratio);
-
-        drawPoint(upScaleContour.toList());
-
+        drawPoint(contour.toList());
         ScannerConstants.scanHint = ScanHint.CAPTURING_IMAGE;
-        return upScaleContour;
+        return contour;
     }
 
     public void displayHint(String text) {

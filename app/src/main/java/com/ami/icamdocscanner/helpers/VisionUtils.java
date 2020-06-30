@@ -9,6 +9,7 @@ import com.ami.icamdocscanner.libraries.Line;
 import com.ami.icamdocscanner.libraries.LinePolar;
 
 import org.opencv.android.Utils;
+import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
@@ -30,6 +31,56 @@ import java.util.function.BiFunction;
 import static java.lang.Math.abs;
 
 public class VisionUtils {
+    public static MatOfPoint2f findContours(Bitmap bitmap, Activity activity) {
+
+        Mat src = new Mat();
+        Utils.bitmapToMat(bitmap, src);
+
+        double DOWNSCALE_IMAGE_SIZE = 600f;
+
+        // Downscale image for better performance.
+        double ratio = DOWNSCALE_IMAGE_SIZE / Math.max(src.width(), src.height());
+
+        Mat mat = VisionUtils.downscaleMat(src, ratio);
+
+        /* get four outline edges of the document */
+        // get edges of the image
+        Mat gray = new Mat();
+        Imgproc.cvtColor(mat, gray, Imgproc.COLOR_RGB2GRAY);
+
+        Mat hsv = new Mat();
+        Imgproc.cvtColor(mat, hsv, Imgproc.COLOR_RGB2HSV);
+        mat.release();
+
+        List<Mat> channels = new ArrayList<>();
+
+        Core.split(hsv, channels);
+        hsv.release();
+
+        Mat H = channels.get(0);
+        Mat S = channels.get(1);
+        Mat V = channels.get(2);
+
+        Mat notGray = new Mat();
+        Mat notH = new Mat();
+        Mat notS = new Mat();
+        Mat notV = new Mat();
+
+        Core.bitwise_not(gray, notGray);
+        Core.bitwise_not(H, notH);
+        Core.bitwise_not(S, notS);
+        Core.bitwise_not(V, notV);
+
+        Mat[] inputMats = {gray, H, S, V, notGray, notH, notS, notV};
+
+        MatOfPoint2f contour = coverAllMethods4Contours(inputMats, activity);
+
+        for(Mat inputMat: inputMats) inputMat.release();
+
+        if(contour == null) return null;
+
+        return MathUtils.scaleRectangle(contour, 1f / ratio);
+    }
 
     public static MatOfPoint2f coverAllMethods4Contours(Mat[] inputMats, Activity activity) {
         if((ScannerConstants.cacheFindContoursFun!=null) && (ScannerConstants.cacheMatIndex>=0)) {
