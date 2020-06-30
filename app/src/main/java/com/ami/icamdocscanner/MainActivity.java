@@ -108,13 +108,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         // TODO : click no immediate response from the app
         btnCapture.setOnClickListener(v -> {
+            Log.d("btnCapture", "btnCapture");
+
             // preventing double, using threshold of 1000 ms
-            if (!lastCaptureExceeded()){
+            if (lastCaptureEarly()){
                 return;
             }
             lastCaptureTime = SystemClock.elapsedRealtime();
-
-            setAutoFocus();
             takePictureManual();
         });
 
@@ -339,7 +339,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         // preventing double, using threshold of 1000 ms
-        if (!lastCaptureExceeded()) {
+        if (lastCaptureEarly()) {
             image.close();
             return;
         }
@@ -358,8 +358,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         image.close();
     }
 
-    private boolean lastCaptureExceeded() {
-        return (SystemClock.elapsedRealtime() - lastCaptureTime) > 2000;
+    private boolean lastCaptureEarly() {
+        Log.d("lastCaptureTime", Long.toString(lastCaptureTime));
+        Log.d("SystemClock", Long.toString(SystemClock.elapsedRealtime()));
+        Log.d("delta", Long.toString(SystemClock.elapsedRealtime() - lastCaptureTime));
+        return (SystemClock.elapsedRealtime() - lastCaptureTime) <= 2000;
     }
 
     private void takePicture() {
@@ -381,6 +384,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void takePictureManual() {
+        Log.d("takePictureManual", "takePictureManual");
         File capturedImg = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "CAPTURE_MANUAL.jpg");
         ImageCapture.OutputFileOptions.Builder outputFileOptionsBuilder =
                 new ImageCapture.OutputFileOptions.Builder(capturedImg);
