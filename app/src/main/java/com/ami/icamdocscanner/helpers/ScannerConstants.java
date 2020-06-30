@@ -4,7 +4,7 @@ import android.graphics.Bitmap;
 import org.opencv.core.MatOfPoint2f;
 
 public class ScannerConstants {
-    public static MatOfPoint2f croptedPolygon;
+    public static MatOfPoint2f croppedPolygon;
     public static Bitmap selectedImageBitmap;
     public static Bitmap cropImageBitmap;
 
@@ -15,7 +15,7 @@ public class ScannerConstants {
 
     // retake image, back to main activity from crop activity
     public static void resetCaptureState() {
-        croptedPolygon = null;
+        croppedPolygon = null;
         selectedImageBitmap = null;
         cropImageBitmap = null;
     }

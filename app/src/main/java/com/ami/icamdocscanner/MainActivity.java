@@ -442,7 +442,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void startCrop(Bitmap rotated90croppedBmp, MatOfPoint2f contour) {
         ScannerConstants.selectedImageBitmap = rotated90croppedBmp;
-        ScannerConstants.croptedPolygon = contour;
+        ScannerConstants.croppedPolygon = contour;
 
         Intent cropIntent = new Intent(this, ImageCropActivity.class);
         startActivityForResult(cropIntent, 1234);

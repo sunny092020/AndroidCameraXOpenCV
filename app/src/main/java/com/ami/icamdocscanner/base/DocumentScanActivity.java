@@ -156,7 +156,7 @@ public abstract class DocumentScanActivity extends AppCompatActivity {
     }
 
     private List<PointF> getContourEdgePoints() {
-        MatOfPoint2f point2f = ScannerConstants.croptedPolygon;
+        MatOfPoint2f point2f = ScannerConstants.croppedPolygon;
         if (point2f == null)
             point2f = new MatOfPoint2f();
         List<Point> points = Arrays.asList(point2f.toArray());
