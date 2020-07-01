@@ -112,7 +112,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if (lastManualCaptureEarly()){
                 return;
             }
-            markCaptureTime();
+            markManualCaptureTime();
             displayHint("Hold firmly. Capturing image...");
 
             setAutoFocus();
@@ -362,9 +362,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         int previewBitmapH = bitmap.getHeight();
 
         new Handler(Looper.getMainLooper()).post(() -> new CountDownTimer(2000, 100) {
-            public void onTick(long millisUntilFinished) {}
+            public void onTick(long millisUntilFinished) {
+                if(lastManualCaptureEarly()) cancel();
+            }
             public void onFinish() {
-//                Log.d("auto", "onFinish");
+                Log.d("auto", "onFinish");
                 if(!Preferences.getAutoCapture((Activity) context)) return;
                 takePicture(previewBitmapW, previewBitmapH);
             }
@@ -391,6 +393,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void markAutoCaptureTime() {
         lastAutoCaptureTime = SystemClock.elapsedRealtime();
+    }
+
+    private void markManualCaptureTime() {
+        lastManualCaptureTime = SystemClock.elapsedRealtime();
     }
 
     private void resetManualCaptureTime() {
@@ -511,6 +517,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void startCrop(Bitmap rotated90croppedBmp, MatOfPoint2f contour) {
+        Log.d("startCrop", "startCrop");
         ScannerConstants.selectedImageBitmap = rotated90croppedBmp;
         ScannerConstants.croppedPolygon = contour;
 
