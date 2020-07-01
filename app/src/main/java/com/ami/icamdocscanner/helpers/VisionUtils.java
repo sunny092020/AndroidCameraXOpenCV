@@ -3,6 +3,8 @@ package com.ami.icamdocscanner.helpers;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
+import android.graphics.PointF;
+import android.graphics.RectF;
 
 import com.ami.icamdocscanner.libraries.Line;
 import com.ami.icamdocscanner.libraries.LinePolar;
@@ -456,6 +458,21 @@ public class VisionUtils {
         Mat downscaled = new Mat(downscaledSize, src.type());
         Imgproc.resize(src, downscaled, downscaledSize);
         return downscaled;
+    }
+
+    public static Bitmap scaledBitmap(Bitmap bitmap, int width, int height) {
+        Matrix m = new Matrix();
+        m.setRectToRect(new RectF(0, 0, bitmap.getWidth(), bitmap.getHeight()), new RectF(0, 0, width, height), Matrix.ScaleToFit.CENTER);
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), m, true);
+    }
+
+    public static Map<Integer, PointF> getOutlinePoints(Bitmap tempBitmap) {
+        Map<Integer, PointF> outlinePoints = new HashMap<>();
+        outlinePoints.put(0, new PointF(0, 0));
+        outlinePoints.put(1, new PointF(tempBitmap.getWidth(), 0));
+        outlinePoints.put(2, new PointF(0, tempBitmap.getHeight()));
+        outlinePoints.put(3, new PointF(tempBitmap.getWidth(), tempBitmap.getHeight()));
+        return outlinePoints;
     }
 
 }
