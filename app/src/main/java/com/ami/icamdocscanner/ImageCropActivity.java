@@ -44,7 +44,6 @@ public class ImageCropActivity extends AppCompatActivity {
     private ImageView imageView;
     private PolygonView polygonView;
     private ProgressBar progressBar;
-    private Bitmap cropImage;
 
     protected CompositeDisposable disposable = new CompositeDisposable();
     private Bitmap selectedImage;
@@ -73,7 +72,7 @@ public class ImageCropActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_image_crop);
-        cropImage = ScannerConstants.selectedImageBitmap;
+        selectedImage = ScannerConstants.selectedImageBitmap;
         initView();
     }
 
@@ -150,7 +149,6 @@ public class ImageCropActivity extends AppCompatActivity {
     }
 
     private void startCropping() {
-        selectedImage = cropImage;
         setProgressBar(true);
         disposable.add(Observable.fromCallable(() -> {
                     setImageRotation();
