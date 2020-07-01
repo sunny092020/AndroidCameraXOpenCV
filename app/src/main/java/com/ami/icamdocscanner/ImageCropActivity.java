@@ -14,7 +14,6 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-import com.ami.icamdocscanner.base.CropperErrorType;
 import com.ami.icamdocscanner.base.DocumentScanActivity;
 import com.ami.icamdocscanner.helpers.ScannerConstants;
 import com.ami.icamdocscanner.libraries.PolygonView;
