@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public Bitmap overlay;
     public Paint fillPaint, strokePaint;
 
-    private static long lastCaptureTime = 0;
+    private static long lastManualCaptureTime = 0, lastAutoCaptureTime = 0;
 
     static {
         if (!OpenCVLoader.initDebug())
@@ -109,10 +109,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Log.d("btnCapture", "btnCapture");
 
             // preventing double, using threshold of 1000 ms
-            if (lastCaptureEarly()){
+            if (lastManualCaptureEarly()){
                 return;
             }
-            lastCaptureTime = SystemClock.elapsedRealtime();
+            markCaptureTime();
             displayHint("Capturing...");
 
             Bitmap lastFrameBitmap = previewView.getBitmap();
@@ -133,7 +133,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 btnAutoCapture.setImageResource(R.drawable.ic_auto_disable);
                 Preferences.setAutoCapture(activity, false);
                 displayHint("Auto capture: Off");
-                lastCaptureTime = 0;
+                resetManualCaptureTime();
 
                 // make "Auto capture: Off" last 1 seconds
             } else {
@@ -356,7 +356,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         if(Preferences.getAutoCapture((Activity) context)) {
-            lastCaptureTime = SystemClock.elapsedRealtime();
+            markAutoCaptureTime();
         }
 
         setAutoFocus();
@@ -375,8 +375,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         image.close();
     }
 
+    private boolean lastManualCaptureEarly() {
+        return (SystemClock.elapsedRealtime() - lastManualCaptureTime) <= 2000;
+    }
+
     private boolean lastCaptureEarly() {
-        return (SystemClock.elapsedRealtime() - lastCaptureTime) <= 2000;
+        return (SystemClock.elapsedRealtime() - lastAutoCaptureTime) <= 2000
+                && (SystemClock.elapsedRealtime() - lastManualCaptureTime) <= 2000;
+    }
+
+    private void markCaptureTime() {
+        lastAutoCaptureTime = SystemClock.elapsedRealtime();
+        lastManualCaptureTime = SystemClock.elapsedRealtime();
+    }
+
+    private void markAutoCaptureTime() {
+        lastAutoCaptureTime = SystemClock.elapsedRealtime();
+    }
+
+    private void resetManualCaptureTime() {
+        lastManualCaptureTime = 0;
     }
 
     private void takePicture(int previewBitmapW, int previewBitmapH) {
