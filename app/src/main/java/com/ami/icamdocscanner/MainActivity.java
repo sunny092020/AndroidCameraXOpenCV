@@ -130,15 +130,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Preferences.setAutoCapture(activity, false);
                 displayHint("Auto capture: Off");
                 resetManualCaptureTime();
-
-                // make "Auto capture: Off" last 1 seconds
             } else {
                 btnAutoCapture.setImageResource(R.drawable.ic_auto_enable);
                 Preferences.setAutoCapture(activity, true);
                 displayHint("Auto capture: On");
-                // make "Auto capture: On" last 1 seconds
-
             }
+            // make "Auto capture: On/Off" last 1 seconds
             new Handler().postDelayed(() -> {
                 // set text to "" to make way for other hint
                 captureHintText.setText("");
