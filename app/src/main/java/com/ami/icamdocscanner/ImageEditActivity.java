@@ -5,8 +5,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 import com.ami.icamdocscanner.R;
@@ -32,6 +35,7 @@ public class ImageEditActivity extends AppCompatActivity {
     private ScaleGestureDetector scaleGestureDetector;
     private float mScaleFactor = 1.0f;
     private ImageView imageView;
+    FrameLayout frameLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +45,8 @@ public class ImageEditActivity extends AppCompatActivity {
         imageView = findViewById(R.id.imageView);
         imageView.setImageBitmap(ScannerConstants.cropImageBitmap);
         scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
+
+        setFrameLayoutRatio();
 
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         ScannerConstants.cropImageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
@@ -72,6 +78,23 @@ public class ImageEditActivity extends AppCompatActivity {
         // step 5: we close the document
         document.close();
 
+    }
+
+    private void setFrameLayoutRatio() {
+        frameLayout = findViewById(R.id.frameLayout);
+
+        // Gets the layout params that will allow you to resize the layout
+        ViewGroup.LayoutParams params = frameLayout.getLayoutParams();
+
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        int width = displayMetrics.widthPixels;
+
+        // Changes the height and width to the specified *pixels*
+        params.width = width;
+        params.height = width*4/3;
+
+        frameLayout.setLayoutParams(params);
     }
 
     public boolean onTouchEvent(MotionEvent motionEvent) {
