@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public Bitmap overlay;
     public Paint fillPaint, strokePaint;
 
-    private static long lastManualCaptureTime = 0, lastAutoCaptureTime = 0;
+    private static long lastManualCaptureTime, lastAutoCaptureTime;
 
     static {
         if (!OpenCVLoader.initDebug())
@@ -159,6 +159,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         setupPaint();
+
+        resetCaptureTime();
 
         if (allPermissionsGranted()) {
             startCamera();
@@ -362,6 +364,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         new Handler(Looper.getMainLooper()).post(() -> new CountDownTimer(2000, 100) {
             public void onTick(long millisUntilFinished) {}
             public void onFinish() {
+//                Log.d("auto", "onFinish");
                 if(!Preferences.getAutoCapture((Activity) context)) return;
                 takePicture(previewBitmapW, previewBitmapH);
             }
@@ -370,12 +373,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private boolean lastManualCaptureEarly() {
-        return (SystemClock.elapsedRealtime() - lastManualCaptureTime) <= 2000;
+        return (SystemClock.elapsedRealtime() - lastManualCaptureTime) <= 12000000;
     }
 
     private boolean lastCaptureEarly() {
-        return (SystemClock.elapsedRealtime() - lastAutoCaptureTime) <= 2000
-                && (SystemClock.elapsedRealtime() - lastManualCaptureTime) <= 2000;
+        Log.d("SystemClock.elapsedRealtime()", Long.toString(SystemClock.elapsedRealtime()));
+        Log.d("lastAutoCaptureTime", Long.toString(lastAutoCaptureTime));
+        Log.d("delta auto", Long.toString(SystemClock.elapsedRealtime() - lastAutoCaptureTime));
+        return (((SystemClock.elapsedRealtime() - lastAutoCaptureTime) <= 12000000)
+                || ((SystemClock.elapsedRealtime() - lastManualCaptureTime) <= 12000000));
     }
 
     private void markCaptureTime() {
@@ -391,7 +397,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         lastManualCaptureTime = 0;
     }
 
+    private void resetCaptureTime() {
+        lastManualCaptureTime = 0;
+        lastAutoCaptureTime = 0;
+
+        Log.d("resetCaptureTime", "resetCaptureTime");
+    }
+
     private void takePicture(int previewBitmapW, int previewBitmapH) {
+        Log.d("takePictureAuto", "takePictureAuto");
         File capturedImg = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "CAPTURE.jpg");
         ImageCapture.OutputFileOptions.Builder outputFileOptionsBuilder =
                 new ImageCapture.OutputFileOptions.Builder(capturedImg);
@@ -402,7 +416,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Bitmap rotated90croppedBmp = cropCapturedImage(capturedImg, previewBitmapW, previewBitmapH);
                 MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, (Activity) context);
 
-                if(contour == null) return;
+                if(contour == null) {
+                    resetCaptureTime();
+                    return;
+                }
                 startCrop(rotated90croppedBmp, contour);
             }
             public void onError(@NotNull ImageCaptureException exception) {}
@@ -410,6 +427,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void takePictureManual() {
+        Log.d("takePictureManual", "takePictureManual");
         File capturedImg = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "CAPTURE_MANUAL.jpg");
         ImageCapture.OutputFileOptions.Builder outputFileOptionsBuilder =
                 new ImageCapture.OutputFileOptions.Builder(capturedImg);
@@ -448,6 +466,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private Bitmap cropCapturedImage(File file, int previewBitmapW, int previewBitmapH) {
+        Log.d("cropCapturedImage", "cropCapturedImage");
         String filePath = file.getPath();
         Bitmap captureBitmap = BitmapFactory.decodeFile(filePath);
         file.delete();
