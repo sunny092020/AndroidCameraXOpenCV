@@ -24,6 +24,8 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -89,6 +91,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public Bitmap overlay;
     public Paint fillPaint, strokePaint;
 
+    private ProgressBar progressBar;
+
     private static long lastCaptureTime = 0;
 
     static {
@@ -116,7 +120,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
             lastCaptureTime = SystemClock.elapsedRealtime();
             displayHint("Capturing");
-            takePictureManual();
+
+            Bitmap bitmap = previewView.getBitmap();
+            int previewBitmapW = bitmap.getWidth();
+            int previewBitmapH = bitmap.getHeight();
+
+            takePictureManual(previewBitmapW, previewBitmapH);
         });
 
         btnAutoCapture = findViewById(R.id.btnAutoCapture);
@@ -347,12 +356,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         setAutoFocus();
+        int previewBitmapW = bitmap.getWidth();
+        int previewBitmapH = bitmap.getHeight();
         new Handler(Looper.getMainLooper()).post(() -> new CountDownTimer(2000, 100) {
             public void onTick(long millisUntilFinished) {}
             public void onFinish() {
                 image.close();
                 if(!Preferences.getAutoCapture((Activity) context)) return;
-                takePicture();
+                takePicture(previewBitmapW, previewBitmapH);
             }
         }.start());
 
@@ -366,7 +377,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return (SystemClock.elapsedRealtime() - lastCaptureTime) <= 2000;
     }
 
-    private void takePicture() {
+    private void takePicture(int previewBitmapW, int previewBitmapH) {
         File capturedImg = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "CAPTURE.jpg");
         ImageCapture.OutputFileOptions.Builder outputFileOptionsBuilder =
                 new ImageCapture.OutputFileOptions.Builder(capturedImg);
@@ -374,7 +385,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         imageCapture.takePicture(outputFileOptionsBuilder.build(), Executors.newSingleThreadExecutor(), new ImageCapture.OnImageSavedCallback() {
             @Override
             public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
-                Bitmap rotated90croppedBmp = cropCapturedImage(capturedImg);
+                Bitmap rotated90croppedBmp = cropCapturedImage(capturedImg, previewBitmapW, previewBitmapH);
                 MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, (Activity) context);
 
                 if(contour == null) return;
@@ -384,7 +395,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
     }
 
-    private void takePictureManual() {
+    private void takePictureManual(int previewBitmapW, int previewBitmapH) {
         Log.d("takePictureManual", "takePictureManual");
         File capturedImg = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "CAPTURE_MANUAL.jpg");
         ImageCapture.OutputFileOptions.Builder outputFileOptionsBuilder =
@@ -393,7 +404,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         imageCapture.takePicture(outputFileOptionsBuilder.build(), Executors.newSingleThreadExecutor(), new ImageCapture.OnImageSavedCallback() {
             @Override
             public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
-                Bitmap rotated90croppedBmp = cropCapturedImage(capturedImg);
+                Bitmap rotated90croppedBmp = cropCapturedImage(capturedImg, previewBitmapW, previewBitmapH);
                 MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, (Activity) context);
 
                 // proceed to cropping screen even no contour found
@@ -420,24 +431,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return contour;
     }
 
-    private Bitmap cropCapturedImage(File file) {
-        Bitmap previewBitmap = previewView.getBitmap();
+    private Bitmap cropCapturedImage(File file, int previewBitmapW, int previewBitmapH) {
         String filePath = file.getPath();
         Bitmap captureBitmap = BitmapFactory.decodeFile(filePath);
         file.delete();
 
-        double h = (double) previewBitmap.getHeight()*captureBitmap.getHeight()/previewBitmap.getWidth();
+        double h = (double) previewBitmapH*captureBitmap.getHeight()/previewBitmapW;
         Bitmap croppedBmp = Bitmap.createBitmap(captureBitmap, (int) ((captureBitmap.getWidth()-h)/2), 0, (int) h, captureBitmap.getHeight());
         return  VisionUtils.rotateBitmap(croppedBmp, 90);
     }
 
     public void displayHint(String text) {
-        if(text == "Auto capture: Off") {
+        if(text.equalsIgnoreCase("Auto capture: Off")) {
             captureHintText.setVisibility(View.VISIBLE);
             captureHintText.setText(text);
             return;
         }
-        if(text == "Auto capture: On") {
+        if(text.equalsIgnoreCase("Auto capture: On")) {
             captureHintText.setVisibility(View.VISIBLE);
             captureHintText.setText(text);
             return;
@@ -474,6 +484,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         finish();
     }
 
+    protected void showProgressBar() {
+        progressBar.setVisibility(View.VISIBLE);
+    }
+
+    protected void hideProgressBar() {
+        progressBar.setVisibility(View.GONE);
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
 
@@ -505,5 +523,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {}
+
 
 }
