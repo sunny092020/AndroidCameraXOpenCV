@@ -113,14 +113,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 return;
             }
             markCaptureTime();
-            displayHint("Capturing...");
+            displayHint("Hold firmly. Capturing image...");
 
-            Bitmap lastFrameBitmap = previewView.getBitmap();
-            int previewBitmapW = lastFrameBitmap.getWidth();
-            int previewBitmapH = lastFrameBitmap.getHeight();
             setAutoFocus();
-            freezePreview(lastFrameBitmap);
-            takePictureManual(previewBitmapW, previewBitmapH);
+            takePictureManual();
         });
 
         btnAutoCapture = findViewById(R.id.btnAutoCapture);
@@ -366,12 +362,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         new Handler(Looper.getMainLooper()).post(() -> new CountDownTimer(2000, 100) {
             public void onTick(long millisUntilFinished) {}
             public void onFinish() {
-                image.close();
                 if(!Preferences.getAutoCapture((Activity) context)) return;
                 takePicture(previewBitmapW, previewBitmapH);
             }
         }.start());
-
         image.close();
     }
 
@@ -415,7 +409,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
     }
 
-    private void takePictureManual(int previewBitmapW, int previewBitmapH) {
+    private void takePictureManual() {
         File capturedImg = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "CAPTURE_MANUAL.jpg");
         ImageCapture.OutputFileOptions.Builder outputFileOptionsBuilder =
                 new ImageCapture.OutputFileOptions.Builder(capturedImg);
@@ -423,6 +417,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         imageCapture.takePicture(outputFileOptionsBuilder.build(), Executors.newSingleThreadExecutor(), new ImageCapture.OnImageSavedCallback() {
             @Override
             public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
+                Bitmap previewBitmap = previewView.getBitmap();
+                runOnUiThread(() -> freezePreview(previewBitmap));
+                int previewBitmapW = previewBitmap.getWidth(), previewBitmapH = previewBitmap.getHeight();
                 Bitmap rotated90croppedBmp = cropCapturedImage(capturedImg, previewBitmapW, previewBitmapH);
                 MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, (Activity) context);
 
