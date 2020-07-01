@@ -112,7 +112,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             // preventing double, using threshold of 1000 ms
             if (lastCaptureEarly()){
-                displayHint("Wait a second, then press capture again");
                 return;
             }
             lastCaptureTime = SystemClock.elapsedRealtime();
@@ -125,29 +124,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         context = this;
         btnAutoCapture.setOnClickListener(v -> {
             Activity activity = (Activity) context;
+            // set text to "" to make way for other hint
             if(Preferences.getAutoCapture(activity)) {
                 btnAutoCapture.setImageResource(R.drawable.ic_auto_disable);
                 Preferences.setAutoCapture(activity, false);
                 displayHint("Auto capture: Off");
+                lastCaptureTime = 0;
 
                 // make "Auto capture: Off" last 1 seconds
-                new Handler().postDelayed(() -> {
-                    // set text to "" to make way for other hint
-                    captureHintText.setText("");
-                    captureHintText.setVisibility(View.INVISIBLE);
-                }, 1000);
             } else {
                 btnAutoCapture.setImageResource(R.drawable.ic_auto_enable);
                 Preferences.setAutoCapture(activity, true);
                 displayHint("Auto capture: On");
                 // make "Auto capture: On" last 1 seconds
-                new Handler().postDelayed(() -> {
-                    // set text to "" to make way for other hint
-                    captureHintText.setText("");
-                    captureHintText.setVisibility(View.INVISIBLE);
-                }, 1000);
 
             }
+            new Handler().postDelayed(() -> {
+                // set text to "" to make way for other hint
+                captureHintText.setText("");
+                captureHintText.setVisibility(View.INVISIBLE);
+            }, 1000);
         });
 
         ivBitmap = findViewById(R.id.ivBitmap);
@@ -327,18 +323,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         MatOfPoint2f contour = VisionUtils.findContours(bitmap, this);
-        if(contour==null) {
-            runOnUiThread(() -> displayHint("No document"));
-        }
-        else {
-            runOnUiThread(() -> {
+
+        runOnUiThread(() -> {
+            if(contour==null) {
+                clearPoints();
+                displayHint("No document");
+            } else {
                 drawPoint(contour.toList());
                 displayHint("Hold firmly. Capturing image...");
-
-                // drawPoint draw canvas, so we need to set overlay to ivBitmap
-                ivBitmap.setImageBitmap(overlay);
-            });
-        }
+            }
+            // drawPoint draw canvas, so we need to set overlay to ivBitmap
+            ivBitmap.setImageBitmap(overlay);
+        });
 
         // preventing double, using threshold of 1000 ms
         if (lastCaptureEarly()) {
@@ -346,7 +342,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
 
-        lastCaptureTime = SystemClock.elapsedRealtime();
+        if(Preferences.getAutoCapture((Activity) context)) {
+            lastCaptureTime = SystemClock.elapsedRealtime();
+        }
+
         setAutoFocus();
         new Handler(Looper.getMainLooper()).post(() -> new CountDownTimer(2000, 100) {
             public void onTick(long millisUntilFinished) {}
