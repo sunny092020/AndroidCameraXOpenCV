@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.PointF;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -21,7 +22,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.ami.icamdocscanner.helpers.ScannerConstants;
 import com.ami.icamdocscanner.helpers.VisionUtils;
-import com.ami.icamdocscanner.libraries.NativeClass;
 import com.ami.icamdocscanner.libraries.PolygonView;
 
 import org.opencv.core.MatOfPoint2f;
@@ -47,7 +47,6 @@ public class ImageCropActivity extends AppCompatActivity {
 
     protected CompositeDisposable disposable = new CompositeDisposable();
     private Bitmap selectedImage;
-    private NativeClass nativeClass = new NativeClass();
 
     private OnClickListener btnImageEnhanceClick = v -> {
         showProgressBar();
@@ -118,27 +117,7 @@ public class ImageCropActivity extends AppCompatActivity {
         btnClose.setBackgroundColor(Color.parseColor(ScannerConstants.backColor));
         btnImageCrop.setOnClickListener(btnImageEnhanceClick);
         btnClose.setOnClickListener(btnCloseClick);
-        startCropping();
-    }
-
-    private void setImageRotation() {
-        Bitmap tempBitmap = selectedImage.copy(selectedImage.getConfig(), true);
-        for (int i = 1; i <= 4; i++) {
-            MatOfPoint2f point2f = nativeClass.getPoint(tempBitmap);
-            if (point2f == null) {
-                tempBitmap = rotateBitmap(tempBitmap);
-            } else {
-                selectedImage = tempBitmap.copy(selectedImage.getConfig(), true);
-                break;
-            }
-        }
-    }
-
-    private Bitmap rotateBitmap(Bitmap source) {
-        return  source;
-//        Matrix matrix = new Matrix();
-//        matrix.postRotate(angle);
-//        return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
+        drawPolygonAsync();
     }
 
     private void setProgressBar(boolean isShow) {
@@ -148,23 +127,21 @@ public class ImageCropActivity extends AppCompatActivity {
             hideProgressBar();
     }
 
-    private void startCropping() {
+    private void drawPolygonAsync() {
         setProgressBar(true);
         disposable.add(Observable.fromCallable(() -> {
-                    setImageRotation();
                     return false;
                 })
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe((result) -> {
-                            initializeCropping();
+                            drawPolygon();
                             setProgressBar(false);
                         })
         );
     }
 
-
-    private void initializeCropping() {
+    private void drawPolygon() {
         Bitmap scaledBitmap = VisionUtils.scaledBitmap(selectedImage, holderImageCrop.getWidth(), holderImageCrop.getHeight());
         imageView.setImageBitmap(scaledBitmap);
 
@@ -205,7 +182,7 @@ public class ImageCropActivity extends AppCompatActivity {
             float y2 = (Objects.requireNonNull(points.get(1)).y) * yRatio;
             float y3 = (Objects.requireNonNull(points.get(2)).y) * yRatio;
             float y4 = (Objects.requireNonNull(points.get(3)).y) * yRatio;
-            return nativeClass.getScannedBitmap(selectedImage, x1, y1, x2, y2, x3, y3, x4, y4);
+            return VisionUtils.getScannedBitmap(selectedImage, x1, y1, x2, y2, x3, y3, x4, y4);
         } catch (Exception e) {
             showError();
             return null;

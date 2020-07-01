@@ -106,8 +106,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         btnCapture = findViewById(R.id.btnCapture);
         btnCapture.setOnClickListener(v -> {
-            Log.d("btnCapture", "btnCapture");
-
             // preventing double, using threshold of 1000 ms
             if (lastManualCaptureEarly()){
                 return;
@@ -363,7 +361,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if(lastManualCaptureEarly()) cancel();
             }
             public void onFinish() {
-                Log.d("auto", "onFinish");
                 if(!Preferences.getAutoCapture((Activity) context)) return;
                 takePicture(previewBitmapW, previewBitmapH);
             }
@@ -376,9 +373,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private boolean lastCaptureEarly() {
-        Log.d("SystemClock.elapsedRealtime()", Long.toString(SystemClock.elapsedRealtime()));
-        Log.d("lastAutoCaptureTime", Long.toString(lastAutoCaptureTime));
-        Log.d("delta auto", Long.toString(SystemClock.elapsedRealtime() - lastAutoCaptureTime));
         return (((SystemClock.elapsedRealtime() - lastAutoCaptureTime) <= 12000000)
                 || ((SystemClock.elapsedRealtime() - lastManualCaptureTime) <= 12000000));
     }
@@ -398,12 +392,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void resetCaptureTime() {
         lastManualCaptureTime = 0;
         lastAutoCaptureTime = 0;
-
-        Log.d("resetCaptureTime", "resetCaptureTime");
     }
 
     private void takePicture(int previewBitmapW, int previewBitmapH) {
-        Log.d("takePictureAuto", "takePictureAuto");
         File capturedImg = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "CAPTURE.jpg");
         ImageCapture.OutputFileOptions.Builder outputFileOptionsBuilder =
                 new ImageCapture.OutputFileOptions.Builder(capturedImg);
@@ -425,7 +416,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void takePictureManual() {
-        Log.d("takePictureManual", "takePictureManual");
         File capturedImg = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "CAPTURE_MANUAL.jpg");
         ImageCapture.OutputFileOptions.Builder outputFileOptionsBuilder =
                 new ImageCapture.OutputFileOptions.Builder(capturedImg);
@@ -464,7 +454,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private Bitmap cropCapturedImage(File file, int previewBitmapW, int previewBitmapH) {
-        Log.d("cropCapturedImage", "cropCapturedImage");
         String filePath = file.getPath();
         Bitmap captureBitmap = BitmapFactory.decodeFile(filePath);
         file.delete();
@@ -509,7 +498,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void startCrop(Bitmap rotated90croppedBmp, MatOfPoint2f contour) {
-        Log.d("startCrop", "startCrop");
         ScannerConstants.selectedImageBitmap = rotated90croppedBmp;
         ScannerConstants.croppedPolygon = contour;
 
@@ -549,6 +537,4 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {}
-
-
 }
