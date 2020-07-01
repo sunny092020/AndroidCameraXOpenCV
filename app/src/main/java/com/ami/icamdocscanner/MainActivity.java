@@ -385,7 +385,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return (((SystemClock.elapsedRealtime() - lastAutoCaptureTime) <= 12000000)
                 || ((SystemClock.elapsedRealtime() - lastManualCaptureTime) <= 12000000));
     }
-    
+
     private void markAutoCaptureTime() {
         lastAutoCaptureTime = SystemClock.elapsedRealtime();
     }
