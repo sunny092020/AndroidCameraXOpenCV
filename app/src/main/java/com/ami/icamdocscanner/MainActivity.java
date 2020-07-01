@@ -24,8 +24,6 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -76,7 +74,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     };
 
     PreviewView previewView;
-    ImageView ivBitmap;
+    ImageView ivBitmap, capturedView;
     FrameLayout frameLayout;
     ImageCapture imageCapture;
     ImageAnalysis imageAnalysis;
@@ -90,8 +88,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public Bitmap overlay;
     public Paint fillPaint, strokePaint;
-
-    private ProgressBar progressBar;
 
     private static long lastCaptureTime = 0;
 
@@ -109,8 +105,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
 
         btnCapture = findViewById(R.id.btnCapture);
-
-        // TODO : turn on/off auto, then cannot capture immediately
         btnCapture.setOnClickListener(v -> {
             Log.d("btnCapture", "btnCapture");
 
@@ -119,12 +113,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 return;
             }
             lastCaptureTime = SystemClock.elapsedRealtime();
-            displayHint("Capturing");
+            displayHint("Capturing...");
 
-            Bitmap bitmap = previewView.getBitmap();
-            int previewBitmapW = bitmap.getWidth();
-            int previewBitmapH = bitmap.getHeight();
-
+            Bitmap lastFrameBitmap = previewView.getBitmap();
+            int previewBitmapW = lastFrameBitmap.getWidth();
+            int previewBitmapH = lastFrameBitmap.getHeight();
+            setAutoFocus();
+            freezePreview(lastFrameBitmap);
             takePictureManual(previewBitmapW, previewBitmapH);
         });
 
@@ -156,6 +151,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
 
         ivBitmap = findViewById(R.id.ivBitmap);
+        capturedView = findViewById(R.id.capturedView);
+
         captureHintText = findViewById(R.id.capture_hint_text);
         previewView = findViewById(R.id.preview_view);
 
@@ -172,6 +169,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } else {
             ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
         }
+    }
+
+    private void freezePreview(Bitmap lastFrameBitmap) {
+        previewView.setVisibility(View.INVISIBLE);
+        ivBitmap.setVisibility(View.INVISIBLE);
+        capturedView.setVisibility(View.VISIBLE);
+        capturedView.setImageBitmap(lastFrameBitmap);
     }
 
     private void setupPaint() {
@@ -358,6 +362,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setAutoFocus();
         int previewBitmapW = bitmap.getWidth();
         int previewBitmapH = bitmap.getHeight();
+
         new Handler(Looper.getMainLooper()).post(() -> new CountDownTimer(2000, 100) {
             public void onTick(long millisUntilFinished) {}
             public void onFinish() {
@@ -371,9 +376,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private boolean lastCaptureEarly() {
-        Log.d("lastCaptureTime", Long.toString(lastCaptureTime));
-        Log.d("SystemClock", Long.toString(SystemClock.elapsedRealtime()));
-        Log.d("delta", Long.toString(SystemClock.elapsedRealtime() - lastCaptureTime));
         return (SystemClock.elapsedRealtime() - lastCaptureTime) <= 2000;
     }
 
@@ -396,7 +398,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void takePictureManual(int previewBitmapW, int previewBitmapH) {
-        Log.d("takePictureManual", "takePictureManual");
         File capturedImg = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "CAPTURE_MANUAL.jpg");
         ImageCapture.OutputFileOptions.Builder outputFileOptionsBuilder =
                 new ImageCapture.OutputFileOptions.Builder(capturedImg);
@@ -482,14 +483,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Intent cropIntent = new Intent(this, ImageCropActivity.class);
         startActivityForResult(cropIntent, 1234);
         finish();
-    }
-
-    protected void showProgressBar() {
-        progressBar.setVisibility(View.VISIBLE);
-    }
-
-    protected void hideProgressBar() {
-        progressBar.setVisibility(View.GONE);
     }
 
     @Override
