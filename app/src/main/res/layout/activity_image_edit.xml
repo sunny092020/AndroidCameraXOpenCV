@@ -28,60 +28,63 @@
 
     </FrameLayout>
 
-    <LinearLayout
-        android:id="@+id/rotateBtn"
+    <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:weightSum="8"
-        android:layout_gravity="center_horizontal"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintBottom_toBottomOf="parent">
 
-        <ImageView
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_gravity="center_horizontal"
-            android:layout_weight="7"
-            app:srcCompat="@drawable/ic_crop"/>
-
-        <TextView
-            android:layout_width="51dp"
+        <LinearLayout
+            android:id="@+id/rotateBtn"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_margin="1dp"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="Crop"
-            android:textColor="#FFFFFF"/>
-    </LinearLayout>
+            android:orientation="vertical"
+            android:weightSum="8"
+            android:layout_alignParentLeft="true">
 
-    <LinearLayout
-        android:id="@+id/cropBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:weightSum="8"
-        android:layout_gravity="center_horizontal"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_weight="7"
+                app:srcCompat="@drawable/ic_crop"/>
 
-        <ImageView
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_gravity="center_horizontal"
-            android:layout_weight="7"
-            app:srcCompat="@drawable/ic_rotate"/>
+            <TextView
+                android:layout_width="51dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="1dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="Crop"
+                android:textColor="#FFFFFF"/>
+        </LinearLayout>
 
-        <TextView
-            android:layout_width="51dp"
+        <LinearLayout
+            android:id="@+id/cropBtn"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_margin="1dp"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="Rotate"
-            android:textColor="#FFFFFF" />
-    </LinearLayout>
+            android:orientation="vertical"
+            android:weightSum="8"
+            android:layout_alignParentRight="true">
+
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_weight="7"
+                app:srcCompat="@drawable/ic_rotate"/>
+
+            <TextView
+                android:layout_width="51dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="1dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="Rotate"
+                android:textColor="#FFFFFF" />
+        </LinearLayout>
+
+    </RelativeLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
