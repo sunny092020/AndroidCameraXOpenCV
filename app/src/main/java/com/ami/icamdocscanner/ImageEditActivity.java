@@ -9,6 +9,7 @@ import android.view.ScaleGestureDetector;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -29,7 +30,10 @@ public class ImageEditActivity extends AppCompatActivity {
     private ScaleGestureDetector scaleGestureDetector;
     private float mScaleFactor = 1.0f;
     private ImageView imageView;
-    FrameLayout frameLayout;
+    private FrameLayout frameLayout;
+
+    ImageView imgOrigin, imgGray, imgEnhance, imgBw;
+    LinearLayout btnCrop, btnRotate, btnDone;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +47,9 @@ public class ImageEditActivity extends AppCompatActivity {
         setFrameLayoutRatio();
 
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
+
+        if(ScannerConstants.cropImageBitmap == null) return;
+
         ScannerConstants.cropImageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
         byte[] byteArr = stream.toByteArray();
 
