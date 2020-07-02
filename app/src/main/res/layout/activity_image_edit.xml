@@ -60,6 +60,32 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/colorBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:weightSum="8"
+            android:layout_centerInParent="true">
+
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_weight="7"
+                app:srcCompat="@drawable/ic_filter"/>
+
+            <TextView
+                android:layout_width="51dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="1dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="Color"
+                android:textColor="#FFFFFF"/>
+        </LinearLayout>
+
+        <LinearLayout
             android:id="@+id/cropBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
