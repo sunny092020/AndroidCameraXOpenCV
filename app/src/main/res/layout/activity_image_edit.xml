@@ -33,6 +33,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
+        android:layout_marginBottom="10dp"
         app:layout_constraintBottom_toTopOf="@+id/hr">
 
         <LinearLayout
@@ -108,12 +109,37 @@
                 android:textColor="#FFFFFF"/>
         </LinearLayout>
 
+        <LinearLayout
+            android:id="@+id/a4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:weightSum="8"
+            android:layout_toEndOf="@+id/a3">
+
+            <ImageView
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_gravity="center_horizontal"
+                app:srcCompat="@drawable/ic_crop"/>
+            <TextView
+                android:layout_width="59dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="1dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="BW"
+                android:textColor="#FFFFFF"/>
+        </LinearLayout>
+
     </RelativeLayout>
 
     <View
         android:id="@+id/hr"
         android:layout_width="match_parent"
         android:layout_height="1dp"
+        android:layout_marginBottom="10dp"
         app:layout_constraintBottom_toTopOf="@+id/bottomPanel"
         android:background="#c0c0c0"/>
 
