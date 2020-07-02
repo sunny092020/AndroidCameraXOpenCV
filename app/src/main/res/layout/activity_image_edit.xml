@@ -46,7 +46,7 @@
 
             <ImageView
                 android:id="@+id/imgOrigin"
-                android:layout_width="60dp"
+                android:layout_width="80dp"
                 android:layout_height="80dp"
                 android:layout_gravity="center_horizontal"
                 app:srcCompat="@drawable/ic_crop"/>
@@ -73,7 +73,7 @@
 
             <ImageView
                 android:id="@+id/imgGray"
-                android:layout_width="60dp"
+                android:layout_width="80dp"
                 android:layout_height="80dp"
                 android:layout_gravity="center_horizontal"
                 app:srcCompat="@drawable/ic_crop"/>
@@ -99,7 +99,7 @@
 
             <ImageView
                 android:id="@+id/imgEnhance"
-                android:layout_width="60dp"
+                android:layout_width="80dp"
                 android:layout_height="80dp"
                 android:layout_gravity="center_horizontal"
                 app:srcCompat="@drawable/ic_crop"/>
@@ -125,7 +125,7 @@
 
             <ImageView
                 android:id="@+id/imgBw"
-                android:layout_width="60dp"
+                android:layout_width="80dp"
                 android:layout_height="80dp"
                 android:layout_gravity="center_horizontal"
                 app:srcCompat="@drawable/ic_crop"/>

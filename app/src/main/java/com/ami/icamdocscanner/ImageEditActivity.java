@@ -1,6 +1,7 @@
 package com.ami.icamdocscanner;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.DisplayMetrics;
@@ -14,6 +15,7 @@ import android.widget.LinearLayout;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.ami.icamdocscanner.helpers.ScannerConstants;
+import com.ami.icamdocscanner.helpers.VisionUtils;
 import com.lowagie.text.Document;
 import com.lowagie.text.DocumentException;
 import com.lowagie.text.Image;
@@ -22,7 +24,11 @@ import com.lowagie.text.pdf.PdfName;
 import com.lowagie.text.pdf.PdfString;
 import com.lowagie.text.pdf.PdfWriter;
 
+import org.opencv.android.Utils;
+import org.opencv.core.Mat;
+
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -41,16 +47,53 @@ public class ImageEditActivity extends AppCompatActivity {
         setContentView(R.layout.activity_image_edit);
 
         imageView = findViewById(R.id.imageView);
-        imageView.setImageBitmap(ScannerConstants.cropImageBitmap);
+//        imageView.setImageBitmap(ScannerConstants.cropImageBitmap);
         scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
 
         setFrameLayoutRatio();
 
+        displayFilterThumbnails();
+    }
+
+    private void displayFilterThumbnails() {
+        Mat origin = new Mat();
+        Utils.bitmapToMat(ScannerConstants.cropImageBitmap, origin);
+
+        double DOWNSCALE_IMAGE_SIZE = 80f;
+
+        // Downscale image for better performance.
+        double ratio = DOWNSCALE_IMAGE_SIZE / Math.max(origin.width(), origin.height());
+
+        Mat smallOrigin = VisionUtils.downscaleMat(origin, ratio);
+        Bitmap smallOriginBitmap = VisionUtils.matToBitmap(smallOrigin);
+
+        Mat grayThumbnail = new Mat();
+        VisionUtils.toGray(smallOrigin, grayThumbnail);
+        Bitmap grayThumbnailBitmap = VisionUtils.matToBitmap(grayThumbnail);
+
+        Mat enhanceThumbnail = new Mat();
+        VisionUtils.enhance(smallOrigin, enhanceThumbnail);
+        Bitmap enhanceBitmap = VisionUtils.matToBitmap(enhanceThumbnail);
+
+        Mat bwThumbnail = new Mat();
+        VisionUtils.toBw(smallOrigin, bwThumbnail);
+        Bitmap bwBitmap = VisionUtils.matToBitmap(bwThumbnail);
+
+        imgOrigin = findViewById(R.id.imgOrigin);
+        imgGray = findViewById(R.id.imgGray);
+        imgEnhance = findViewById(R.id.imgEnhance);
+        imgBw = findViewById(R.id.imgBw);
+
+        imgOrigin.setImageBitmap(smallOriginBitmap);
+        imgGray.setImageBitmap(grayThumbnailBitmap);
+        imgEnhance.setImageBitmap(enhanceBitmap);
+        imgBw.setImageBitmap(bwBitmap);
+    }
+
+    private void toPDF(Bitmap bitmap) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
 
-        if(ScannerConstants.cropImageBitmap == null) return;
-
-        ScannerConstants.cropImageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
         byte[] byteArr = stream.toByteArray();
 
         // step 1: creation of a document-object
@@ -78,7 +121,6 @@ public class ImageEditActivity extends AppCompatActivity {
 
         // step 5: we close the document
         document.close();
-
     }
 
     private void setFrameLayoutRatio() {

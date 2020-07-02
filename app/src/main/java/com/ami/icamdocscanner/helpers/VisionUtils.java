@@ -27,6 +27,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.function.BiFunction;
 
@@ -482,5 +483,41 @@ public class VisionUtils {
         rectangle.fromArray(new Point(x1, y1), new Point(x2, y2), new Point(x3, y3), new Point(x4, y4));
         Mat dstMat = perspective.transform(VisionUtils.bitmapToMat(bitmap), rectangle);
         return VisionUtils.matToBitmap(dstMat);
+    }
+
+    public static void toBw(Mat mat, Mat bw) {
+        Mat gray = new Mat();
+        Imgproc.cvtColor(mat, gray, Imgproc.COLOR_RGB2GRAY);
+        Imgproc.threshold(gray, bw, 127, 255, Imgproc.THRESH_BINARY);
+    }
+
+    public static void enhance(Mat mat, Mat enhance) {
+        enhance = Mat.zeros(mat.size(), mat.type());
+        double alpha = 1.0; /*< Simple contrast control */
+        int beta = 0;       /*< Simple brightness control */
+        byte[] imageData = new byte[(int) (mat.total()*mat.channels())];
+        mat.get(0, 0, imageData);
+        byte[] newImageData = new byte[(int) (enhance.total()*enhance.channels())];
+        for (int y = 0; y < mat.rows(); y++) {
+            for (int x = 0; x < mat.cols(); x++) {
+                for (int c = 0; c < mat.channels(); c++) {
+                    double pixelValue = imageData[(y * mat.cols() + x) * mat.channels() + c];
+                    pixelValue = pixelValue < 0 ? pixelValue + 256 : pixelValue;
+                    newImageData[(y * mat.cols() + x) * mat.channels() + c]
+                            = saturate(alpha * pixelValue + beta);
+                }
+            }
+        }
+        enhance.put(0, 0, newImageData);
+    }
+
+    public static void toGray(Mat mat, Mat gray) {
+        Imgproc.cvtColor(mat, gray, Imgproc.COLOR_RGB2GRAY);
+    }
+
+    private static byte saturate(double val) {
+        int iVal = (int) Math.round(val);
+        iVal = iVal > 255 ? 255 : (iVal < 0 ? 0 : iVal);
+        return (byte) iVal;
     }
 }
