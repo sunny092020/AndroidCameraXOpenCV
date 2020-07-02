@@ -47,12 +47,14 @@ public class ImageEditActivity extends AppCompatActivity {
         setContentView(R.layout.activity_image_edit);
 
         imageView = findViewById(R.id.imageView);
-//        imageView.setImageBitmap(ScannerConstants.cropImageBitmap);
+        imageView.setImageBitmap(ScannerConstants.cropImageBitmap);
         scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
 
         setFrameLayoutRatio();
 
         displayFilterThumbnails();
+
+        setupButtonEvent();
     }
 
     private void displayFilterThumbnails() {
@@ -71,8 +73,7 @@ public class ImageEditActivity extends AppCompatActivity {
         VisionUtils.toGray(smallOrigin, grayThumbnail);
         Bitmap grayThumbnailBitmap = VisionUtils.matToBitmap(grayThumbnail);
 
-        Mat enhanceThumbnail = new Mat();
-        VisionUtils.enhance(smallOrigin, enhanceThumbnail);
+        Mat enhanceThumbnail = VisionUtils.enhance(smallOrigin);
         Bitmap enhanceBitmap = VisionUtils.matToBitmap(enhanceThumbnail);
 
         Mat bwThumbnail = new Mat();
@@ -88,6 +89,38 @@ public class ImageEditActivity extends AppCompatActivity {
         imgGray.setImageBitmap(grayThumbnailBitmap);
         imgEnhance.setImageBitmap(enhanceBitmap);
         imgBw.setImageBitmap(bwBitmap);
+    }
+
+    private void setupButtonEvent() {
+        imgOrigin.setOnClickListener(v -> {
+            imageView.setImageBitmap(ScannerConstants.cropImageBitmap);
+        });
+
+        imgGray.setOnClickListener(v -> {
+            Mat gray = new Mat();
+            Mat origin = new Mat();
+            Utils.bitmapToMat(ScannerConstants.cropImageBitmap, origin);
+            VisionUtils.toGray(origin, gray);
+            Bitmap grayBitmap = VisionUtils.matToBitmap(gray);
+            imageView.setImageBitmap(grayBitmap);
+        });
+
+        imgEnhance.setOnClickListener(v -> {
+            Mat origin = new Mat();
+            Utils.bitmapToMat(ScannerConstants.cropImageBitmap, origin);
+            Mat enhance = VisionUtils.enhance(origin);
+            Bitmap enhanceBitmap = VisionUtils.matToBitmap(enhance);
+            imageView.setImageBitmap(enhanceBitmap);
+        });
+
+        imgBw.setOnClickListener(v -> {
+            Mat bw = new Mat();
+            Mat origin = new Mat();
+            Utils.bitmapToMat(ScannerConstants.cropImageBitmap, origin);
+            VisionUtils.toBw(origin, bw);
+            Bitmap bwBitmap = VisionUtils.matToBitmap(bw);
+            imageView.setImageBitmap(bwBitmap);
+        });
     }
 
     private void toPDF(Bitmap bitmap) {

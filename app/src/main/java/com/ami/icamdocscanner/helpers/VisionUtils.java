@@ -491,10 +491,10 @@ public class VisionUtils {
         Imgproc.threshold(gray, bw, 127, 255, Imgproc.THRESH_BINARY);
     }
 
-    public static void enhance(Mat mat, Mat enhance) {
-        enhance = Mat.zeros(mat.size(), mat.type());
-        double alpha = 1.0; /*< Simple contrast control */
-        int beta = 0;       /*< Simple brightness control */
+    public static Mat enhance(Mat mat) {
+        Mat enhance = Mat.zeros(mat.size(), mat.type());
+        double alpha = 2.0; /*< Simple contrast control: 1~3 */
+        int beta = 30;       /*< Simple brightness control: 1~100 */
         byte[] imageData = new byte[(int) (mat.total()*mat.channels())];
         mat.get(0, 0, imageData);
         byte[] newImageData = new byte[(int) (enhance.total()*enhance.channels())];
@@ -509,6 +509,8 @@ public class VisionUtils {
             }
         }
         enhance.put(0, 0, newImageData);
+
+        return enhance;
     }
 
     public static void toGray(Mat mat, Mat gray) {
