@@ -159,8 +159,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:weightSum="8"
-            android:layout_toStartOf="@+id/rotateBtn"
-            android:layout_alignParentStart="true">
+            android:layout_toStartOf="@+id/rotateBtn">
 
             <ImageView
                 android:layout_width="30dp"
@@ -214,8 +213,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:weightSum="8"
-            android:layout_toEndOf="@+id/rotateBtn"
-            android:layout_alignParentEnd="true">
+            android:layout_toEndOf="@+id/rotateBtn">
 
             <ImageView
                 android:layout_width="30dp"
