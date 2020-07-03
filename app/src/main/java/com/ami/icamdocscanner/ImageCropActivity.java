@@ -55,11 +55,38 @@ public class ImageCropActivity extends AppCompatActivity {
         toEditImage();
     };
 
-    private  void toEditImage() {
-        ScannerConstants.cropImageBitmap = getCroppedImage();
+    private void toEditImage() {
+        Bitmap cropImageBitmap = getCroppedImage();
+        if(cropImageBitmap == null) {
+            hideProgressBar();
+            return;
+        }
+
+        ScannerConstants.cropImageBitmap = cropImageBitmap;
+        getCroppedPolygon();
+
         Intent cropIntent = new Intent(this, ImageEditActivity.class);
         startActivityForResult(cropIntent, 1234);
         finish();
+    }
+
+    private void getCroppedPolygon() {
+        Map<Integer, PointF> mapPoints = polygonView.getPoints();
+        List<PointF> pointFs = new ArrayList<>(mapPoints.values());
+
+        if(pointFs.size() != 4) return;
+
+        float kx = (float) holderImageCrop.getWidth()/selectedImage.getWidth();
+        float ky = (float) holderImageCrop.getHeight()/selectedImage.getHeight();
+        float k = (Math.min(kx, ky));
+
+        Point[] points = {
+            new Point(pointFs.get(0).x/k, pointFs.get(0).y/k),
+            new Point(pointFs.get(1).x/k, pointFs.get(1).y/k),
+            new Point(pointFs.get(2).x/k, pointFs.get(2).y/k),
+            new Point(pointFs.get(3).x/k, pointFs.get(3).y/k),
+        };
+        ScannerConstants.croppedPolygon = new MatOfPoint2f(points);
     }
 
     private OnClickListener btnCloseClick = v -> {
