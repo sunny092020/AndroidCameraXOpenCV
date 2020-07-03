@@ -57,26 +57,9 @@ public class ImageCropActivity extends AppCompatActivity {
 
     private  void toEditImage() {
         ScannerConstants.cropImageBitmap = getCroppedImage();
-        preEnhance();
         Intent cropIntent = new Intent(this, ImageEditActivity.class);
         startActivityForResult(cropIntent, 1234);
         finish();
-    }
-
-    private void preEnhance() {
-        Thread thread = new Thread(){
-            public void run(){
-                Mat origin = new Mat();
-                Utils.bitmapToMat(ScannerConstants.cropImageBitmap, origin);
-                Mat enhance = new Mat();
-                VisionUtils.enhance(origin, enhance);
-                origin.release();
-                ScannerConstants.enhanceCache = VisionUtils.matToBitmap(enhance);
-                enhance.release();
-            }
-        };
-
-        thread.start();
     }
 
     private OnClickListener btnCloseClick = v -> {
