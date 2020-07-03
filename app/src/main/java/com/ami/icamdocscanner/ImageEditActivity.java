@@ -1,11 +1,9 @@
 package com.ami.icamdocscanner;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.ViewGroup;
@@ -17,31 +15,17 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.ami.icamdocscanner.helpers.ScannerConstants;
 import com.ami.icamdocscanner.helpers.VisionUtils;
-import com.lowagie.text.Document;
-import com.lowagie.text.DocumentException;
-import com.lowagie.text.Image;
-import com.lowagie.text.Rectangle;
-import com.lowagie.text.pdf.PdfName;
-import com.lowagie.text.pdf.PdfString;
-import com.lowagie.text.pdf.PdfWriter;
 
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.concurrent.Executors;
 
 public class ImageEditActivity extends AppCompatActivity {
     private ScaleGestureDetector scaleGestureDetector;
     private float mScaleFactor = 1.0f;
     private ImageView imageView;
-    private FrameLayout frameLayout;
 
     private ImageView imgOrigin, imgGray, imgEnhance, imgBw;
-    private LinearLayout btnCrop, btnRotate, btnDone;
+    private Bitmap currentImg, currentFilteredImg;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,13 +34,17 @@ public class ImageEditActivity extends AppCompatActivity {
 
         imageView = findViewById(R.id.imageView);
         imageView.setImageBitmap(ScannerConstants.cropImageBitmap);
+        currentImg = ScannerConstants.cropImageBitmap;
+        currentFilteredImg = ScannerConstants.cropImageBitmap;
         scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
 
         setFrameLayoutRatio();
 
         displayFilterThumbnails();
 
-        setupButtonEvent();
+        setupFilterButtonEvent();
+
+        setupBottomButtonEvent();
     }
 
     private void displayFilterThumbnails() {
@@ -94,41 +82,65 @@ public class ImageEditActivity extends AppCompatActivity {
         imgBw.setImageBitmap(bwBitmap);
     }
 
-    private void setupButtonEvent() {
-        imgOrigin.setOnClickListener(v -> imageView.setImageBitmap(ScannerConstants.cropImageBitmap));
+    private void setupFilterButtonEvent() {
+        imgOrigin.setOnClickListener(v -> {
+            imageView.setImageBitmap(currentImg);
+            currentFilteredImg = currentImg;
+        });
 
         imgGray.setOnClickListener(v -> {
             Mat gray = new Mat();
             Mat origin = new Mat();
-            Utils.bitmapToMat(ScannerConstants.cropImageBitmap, origin);
+            Utils.bitmapToMat(currentImg, origin);
             VisionUtils.toGray(origin, gray);
             Bitmap grayBitmap = VisionUtils.matToBitmap(gray);
             imageView.setImageBitmap(grayBitmap);
+            currentFilteredImg = grayBitmap;
         });
 
         imgEnhance.setOnClickListener(v -> {
-            while (ScannerConstants.enhanceCache==null) {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            imageView.setImageBitmap(ScannerConstants.enhanceCache);
+            Mat enhance = new Mat();
+            Mat origin = new Mat();
+            Utils.bitmapToMat(currentImg, origin);
+            VisionUtils.enhance(origin, enhance);
+            Bitmap enhanceBitmap = VisionUtils.matToBitmap(enhance);
+            imageView.setImageBitmap(enhanceBitmap);
+            currentFilteredImg = enhanceBitmap;
         });
 
         imgBw.setOnClickListener(v -> {
             Mat bw = new Mat();
             Mat origin = new Mat();
-            Utils.bitmapToMat(ScannerConstants.cropImageBitmap, origin);
+            Utils.bitmapToMat(currentImg, origin);
             VisionUtils.toBw(origin, bw);
             Bitmap bwBitmap = VisionUtils.matToBitmap(bw);
             imageView.setImageBitmap(bwBitmap);
+            currentFilteredImg = bwBitmap;
+        });
+    }
+
+    private void setupBottomButtonEvent() {
+        LinearLayout cropBtn = findViewById(R.id.cropBtn);
+        cropBtn.setOnClickListener(v -> {
+            Intent cropIntent = new Intent(this, ImageCropActivity.class);
+            startActivityForResult(cropIntent, 1234);
+            finish();
+        });
+
+        LinearLayout rotateBtn = findViewById(R.id.rotateBtn);
+        rotateBtn.setOnClickListener(v -> {
+            currentFilteredImg = VisionUtils.rotateBitmap(currentFilteredImg, 90);
+            currentImg = VisionUtils.rotateBitmap(currentImg, 90);
+            imageView.setImageBitmap(currentFilteredImg);
+        });
+
+        LinearLayout checkBtn = findViewById(R.id.checkBtn);
+        checkBtn.setOnClickListener(v -> {
         });
     }
 
     private void setFrameLayoutRatio() {
-        frameLayout = findViewById(R.id.frameLayout);
+        FrameLayout frameLayout = findViewById(R.id.frameLayout);
 
         // Gets the layout params that will allow you to resize the layout
         ViewGroup.LayoutParams params = frameLayout.getLayoutParams();
