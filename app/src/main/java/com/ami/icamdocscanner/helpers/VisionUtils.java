@@ -491,35 +491,13 @@ public class VisionUtils {
         Imgproc.threshold(gray, bw, 127, 255, Imgproc.THRESH_BINARY);
     }
 
-    public static Mat enhance(Mat mat) {
-        Mat enhance = Mat.zeros(mat.size(), mat.type());
-        double alpha = 2.0; /*< Simple contrast control: 1~3 */
-        int beta = 30;       /*< Simple brightness control: 1~100 */
-        byte[] imageData = new byte[(int) (mat.total()*mat.channels())];
-        mat.get(0, 0, imageData);
-        byte[] newImageData = new byte[(int) (enhance.total()*enhance.channels())];
-        for (int y = 0; y < mat.rows(); y++) {
-            for (int x = 0; x < mat.cols(); x++) {
-                for (int c = 0; c < mat.channels(); c++) {
-                    double pixelValue = imageData[(y * mat.cols() + x) * mat.channels() + c];
-                    pixelValue = pixelValue < 0 ? pixelValue + 256 : pixelValue;
-                    newImageData[(y * mat.cols() + x) * mat.channels() + c]
-                            = saturate(alpha * pixelValue + beta);
-                }
-            }
-        }
-        enhance.put(0, 0, newImageData);
-
-        return enhance;
+    public static void enhance(Mat mat, Mat enhance) {
+        // filtering
+        Imgproc.GaussianBlur(mat, enhance, new Size(0, 0), 10);
+        Core.addWeighted(mat, 1.5, enhance, -0.5, 0, enhance);
     }
 
     public static void toGray(Mat mat, Mat gray) {
         Imgproc.cvtColor(mat, gray, Imgproc.COLOR_RGB2GRAY);
-    }
-
-    private static byte saturate(double val) {
-        int iVal = (int) Math.round(val);
-        iVal = iVal > 255 ? 255 : (iVal < 0 ? 0 : iVal);
-        return (byte) iVal;
     }
 }

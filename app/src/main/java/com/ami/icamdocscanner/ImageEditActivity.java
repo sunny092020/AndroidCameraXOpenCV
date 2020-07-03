@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.ViewGroup;
@@ -31,6 +32,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.concurrent.Executors;
 
 public class ImageEditActivity extends AppCompatActivity {
     private ScaleGestureDetector scaleGestureDetector;
@@ -38,8 +40,8 @@ public class ImageEditActivity extends AppCompatActivity {
     private ImageView imageView;
     private FrameLayout frameLayout;
 
-    ImageView imgOrigin, imgGray, imgEnhance, imgBw;
-    LinearLayout btnCrop, btnRotate, btnDone;
+    private ImageView imgOrigin, imgGray, imgEnhance, imgBw;
+    private LinearLayout btnCrop, btnRotate, btnDone;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,7 +75,8 @@ public class ImageEditActivity extends AppCompatActivity {
         VisionUtils.toGray(smallOrigin, grayThumbnail);
         Bitmap grayThumbnailBitmap = VisionUtils.matToBitmap(grayThumbnail);
 
-        Mat enhanceThumbnail = VisionUtils.enhance(smallOrigin);
+        Mat enhanceThumbnail = new Mat();
+        VisionUtils.enhance(smallOrigin, enhanceThumbnail);
         Bitmap enhanceBitmap = VisionUtils.matToBitmap(enhanceThumbnail);
 
         Mat bwThumbnail = new Mat();
@@ -106,11 +109,14 @@ public class ImageEditActivity extends AppCompatActivity {
         });
 
         imgEnhance.setOnClickListener(v -> {
-            Mat origin = new Mat();
-            Utils.bitmapToMat(ScannerConstants.cropImageBitmap, origin);
-            Mat enhance = VisionUtils.enhance(origin);
-            Bitmap enhanceBitmap = VisionUtils.matToBitmap(enhance);
-            imageView.setImageBitmap(enhanceBitmap);
+            while (ScannerConstants.enhanceCache==null) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            imageView.setImageBitmap(ScannerConstants.enhanceCache);
         });
 
         imgBw.setOnClickListener(v -> {
