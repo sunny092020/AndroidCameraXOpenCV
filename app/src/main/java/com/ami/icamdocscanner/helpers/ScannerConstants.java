@@ -7,7 +7,6 @@ public class ScannerConstants {
     public static MatOfPoint2f croppedPolygon;
     public static Bitmap selectedImageBitmap;
     public static Bitmap cropImageBitmap;
-    public static Bitmap enhanceCache = null;
 
     public static String cropText="Crop";
     public static String backText="Retake";
