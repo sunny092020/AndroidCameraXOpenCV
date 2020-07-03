@@ -2,6 +2,7 @@ package com.ami.icamdocscanner;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
@@ -25,7 +26,7 @@ public class ImageEditActivity extends AppCompatActivity {
     private ImageView imageView;
 
     private ImageView imgOrigin, imgGray, imgEnhance, imgBw;
-    private Bitmap currentImg, currentFilteredImg;
+    private Bitmap currentImg;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,7 +36,6 @@ public class ImageEditActivity extends AppCompatActivity {
         imageView = findViewById(R.id.imageView);
         imageView.setImageBitmap(ScannerConstants.cropImageBitmap);
         currentImg = ScannerConstants.cropImageBitmap;
-        currentFilteredImg = ScannerConstants.cropImageBitmap;
         scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
 
         setFrameLayoutRatio();
@@ -85,7 +85,6 @@ public class ImageEditActivity extends AppCompatActivity {
     private void setupFilterButtonEvent() {
         imgOrigin.setOnClickListener(v -> {
             imageView.setImageBitmap(currentImg);
-            currentFilteredImg = currentImg;
         });
 
         imgGray.setOnClickListener(v -> {
@@ -95,7 +94,6 @@ public class ImageEditActivity extends AppCompatActivity {
             VisionUtils.toGray(origin, gray);
             Bitmap grayBitmap = VisionUtils.matToBitmap(gray);
             imageView.setImageBitmap(grayBitmap);
-            currentFilteredImg = grayBitmap;
         });
 
         imgEnhance.setOnClickListener(v -> {
@@ -105,7 +103,6 @@ public class ImageEditActivity extends AppCompatActivity {
             VisionUtils.enhance(origin, enhance);
             Bitmap enhanceBitmap = VisionUtils.matToBitmap(enhance);
             imageView.setImageBitmap(enhanceBitmap);
-            currentFilteredImg = enhanceBitmap;
         });
 
         imgBw.setOnClickListener(v -> {
@@ -115,7 +112,6 @@ public class ImageEditActivity extends AppCompatActivity {
             VisionUtils.toBw(origin, bw);
             Bitmap bwBitmap = VisionUtils.matToBitmap(bw);
             imageView.setImageBitmap(bwBitmap);
-            currentFilteredImg = bwBitmap;
         });
     }
 
@@ -129,6 +125,7 @@ public class ImageEditActivity extends AppCompatActivity {
 
         LinearLayout rotateBtn = findViewById(R.id.rotateBtn);
         rotateBtn.setOnClickListener(v -> {
+            Bitmap currentFilteredImg = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
             currentFilteredImg = VisionUtils.rotateBitmap(currentFilteredImg, 90);
             currentImg = VisionUtils.rotateBitmap(currentImg, 90);
             imageView.setImageBitmap(currentFilteredImg);
