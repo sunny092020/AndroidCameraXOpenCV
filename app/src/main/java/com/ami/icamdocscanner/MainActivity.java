@@ -395,7 +395,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void takePicture(int previewBitmapW, int previewBitmapH) {
-        File capturedImg = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "CAPTURE.jpg");
+        File capturedImg = new File(context.getFilesDir(), "CAPTURE.jpg");
         ImageCapture.OutputFileOptions.Builder outputFileOptionsBuilder =
                 new ImageCapture.OutputFileOptions.Builder(capturedImg);
 
@@ -416,7 +416,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void takePictureManual() {
-        File capturedImg = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "CAPTURE_MANUAL.jpg");
+        File capturedImg = new File(context.getFilesDir(), "CAPTURE_MANUAL.jpg");
         ImageCapture.OutputFileOptions.Builder outputFileOptionsBuilder =
                 new ImageCapture.OutputFileOptions.Builder(capturedImg);
 
