@@ -133,6 +133,9 @@ public class ImageEditActivity extends AppCompatActivity {
 
         LinearLayout checkBtn = findViewById(R.id.checkBtn);
         checkBtn.setOnClickListener(v -> {
+            Intent cropIntent = new Intent(this, ImageDoneActivity.class);
+            startActivityForResult(cropIntent, 1234);
+            finish();
         });
     }
 
