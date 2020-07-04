@@ -3,16 +3,14 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_marginLeft="0dp"
-    android:layout_marginEnd="0dp"
-    android:layout_marginRight=".0dp"
-    android:layout_marginStart="0dp">
+    android:layout_height="wrap_content">
 
     <androidx.cardview.widget.CardView
-        android:layout_width="240dp"
-        android:layout_height="240dp"
-        android:layout_marginTop="0dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="5dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginTop="10dp"
         app:cardCornerRadius="0dp">
 
         <LinearLayout android:id="@+id/a1"
@@ -20,14 +18,16 @@
             android:layout_height="match_parent"
             android:orientation="vertical"
             android:weightSum="8"
-            android:layout_alignParentStart="true">
+            android:layout_alignParentStart="true"
+            android:background="#000000">
 
             <ImageView
                 android:id="@+id/fileThumbnail"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="200dp"
                 android:layout_gravity="center_horizontal"
-                app:srcCompat="@drawable/ic_crop"/>
+                app:srcCompat="@drawable/ic_crop"
+                android:scaleType="centerCrop"/>
 
             <TextView
                 android:id="@+id/fileName"

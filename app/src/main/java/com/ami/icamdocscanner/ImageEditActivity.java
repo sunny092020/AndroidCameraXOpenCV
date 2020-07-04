@@ -149,7 +149,7 @@ public class ImageEditActivity extends AppCompatActivity {
 
             // Create a filename from a format string.
             // ... Apply date formatting codes.
-            String filename = String.format("file-%1$tY-%1$tm-%1$td-%1$tk-%1$tS-%1$tp.jpg", cal);
+            String filename = String.format("AMI_ICAMDOC_SCANNER-%1$tY-%1$tm-%1$td-%1$tk-%1$tS-%1$tp.jpg", cal);
 
             Bitmap currentFilteredImg = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
             try (FileOutputStream out = context.openFileOutput(filename, Context.MODE_PRIVATE)) {
