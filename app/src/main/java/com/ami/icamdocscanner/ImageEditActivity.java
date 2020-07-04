@@ -1,5 +1,6 @@
 package com.ami.icamdocscanner;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -20,6 +21,12 @@ import com.ami.icamdocscanner.helpers.VisionUtils;
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.time.Instant;
+import java.util.Calendar;
+import java.util.Date;
+
 public class ImageEditActivity extends AppCompatActivity {
     private ScaleGestureDetector scaleGestureDetector;
     private float mScaleFactor = 1.0f;
@@ -27,11 +34,14 @@ public class ImageEditActivity extends AppCompatActivity {
 
     private ImageView imgOrigin, imgGray, imgEnhance, imgBw;
     private Bitmap currentImg;
+    Context context;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_image_edit);
+
+        context = this;
 
         imageView = findViewById(R.id.imageView);
         imageView.setImageBitmap(ScannerConstants.cropImageBitmap);
@@ -133,6 +143,21 @@ public class ImageEditActivity extends AppCompatActivity {
 
         LinearLayout checkBtn = findViewById(R.id.checkBtn);
         checkBtn.setOnClickListener(v -> {
+            // Get a Calendar and set it to the current time.
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(Date.from(Instant.now()));
+
+            // Create a filename from a format string.
+            // ... Apply date formatting codes.
+            String filename = String.format("file-%1$tY-%1$tm-%1$td-%1$tk-%1$tS-%1$tp.jpg", cal);
+
+            Bitmap currentFilteredImg = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
+            try (FileOutputStream out = context.openFileOutput(filename, Context.MODE_PRIVATE)) {
+                currentFilteredImg.compress(Bitmap.CompressFormat.JPEG, 99, out);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
             Intent cropIntent = new Intent(this, ImageDoneActivity.class);
             startActivityForResult(cropIntent, 1234);
             finish();
