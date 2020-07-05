@@ -92,6 +92,23 @@ public class ImageDoneActivity extends AppCompatActivity {
         setupDeleteButtonListener();
         setupShareButtonListener();
         setupRetakeButtonListener();
+        setupPdfButtonListener();
+    }
+
+    private void setupPdfButtonListener() {
+        LinearLayout pdfBtn = findViewById(R.id.pdfBtn);
+
+        pdfBtn.setOnClickListener(v -> {
+            if(adapter.getSelected().size() == 0) {
+                showToast("No Selection");
+                return;
+            }
+
+            for (int i = 0; i < adapter.getSelected().size(); i++) {
+                File file = adapter.getSelected().get(i);
+            }
+
+        });
     }
 
     private void setupRetakeButtonListener() {

@@ -9,7 +9,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".ImageDoneActivity"></activity>
+        <activity android:name=".PdfActivity"></activity>
+        <activity android:name=".ImageDoneActivity" />
         <activity
             android:name=".ImageEditActivity"
             android:screenOrientation="portrait" />
@@ -26,7 +27,7 @@
             android:name=".ImageCropActivity"
             android:launchMode="singleTop"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar"></activity>
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
 
         <provider
             android:name=".GenericFileProvider"
@@ -35,9 +36,11 @@
             android:grantUriPermissions="true">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/images_provider_paths"/>
+                android:resource="@xml/images_provider_paths" />
         </provider>
     </application>
-    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+    <uses-permission android:name="android.permission.CAMERA" />
+
 </manifest>
