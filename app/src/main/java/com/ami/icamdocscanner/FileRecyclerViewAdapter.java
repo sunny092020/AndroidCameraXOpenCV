@@ -18,6 +18,8 @@ import com.ami.icamdocscanner.models.RecyclerImageFile;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerViewAdapter.ViewHolder> {
     private RecyclerImageFile[] mData;
@@ -117,6 +119,20 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
     // parent activity will implement this method to respond to click events
     public interface ItemClickListener {
         void onItemClick(View view, int position);
+    }
+
+    public RecyclerImageFile[] getAll() {
+        return mData;
+    }
+
+    public List<RecyclerImageFile> getSelected() {
+        List<RecyclerImageFile> selected = new ArrayList<>();
+        for (int i = 0; i < mData.length; i++) {
+            if (mData[i].isChecked()) {
+                selected.add(mData[i]);
+            }
+        }
+        return selected;
     }
 
 }

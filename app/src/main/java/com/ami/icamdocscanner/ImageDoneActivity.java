@@ -1,9 +1,15 @@
 package com.ami.icamdocscanner;
 
 import android.Manifest;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.util.Log;
+import android.widget.LinearLayout;
+import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -41,6 +47,8 @@ public class ImageDoneActivity extends AppCompatActivity {
 
         adapter = new FileRecyclerViewAdapter(this, listFiles(directory));
         recyclerView.setAdapter(adapter);
+
+        setupButtonListener();
     }
 
     private RecyclerImageFile[] listFiles(File directory) {
@@ -58,5 +66,52 @@ public class ImageDoneActivity extends AppCompatActivity {
         }
 
         return recyclerImageFiles;
+    }
+
+    private void setupButtonListener() {
+        LinearLayout deleteBtn = findViewById(R.id.deleteBtn);
+
+        deleteBtn.setOnClickListener(v -> {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+            builder.setMessage(R.string.delete_file_message)
+                    .setTitle(R.string.delete_file_title);
+
+            // Add the buttons
+            builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    // User clicked OK button
+
+                    if (adapter.getSelected().size() > 0) {
+                        StringBuilder stringBuilder = new StringBuilder();
+                        for (int i = 0; i < adapter.getSelected().size(); i++) {
+                            File file = adapter.getSelected().get(i);
+                            stringBuilder.append(file);
+                            stringBuilder.append("\n");
+                            boolean delete = file.delete();
+                            Log.d("delete", Boolean.toString(delete));
+                        }
+                        showToast(stringBuilder.toString().trim());
+                        adapter.notifyDataSetChanged();
+                    } else {
+                        showToast("No Selection");
+                    }
+                }
+            });
+            builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    // User cancelled the dialog
+                }
+            });
+
+            AlertDialog dialog = builder.create();
+
+            dialog.show();
+
+        });
+    }
+
+    private void showToast(String msg) {
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
     }
 }
