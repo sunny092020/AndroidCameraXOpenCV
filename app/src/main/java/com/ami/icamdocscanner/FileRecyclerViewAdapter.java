@@ -13,18 +13,19 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.ami.icamdocscanner.helpers.VisionUtils;
+import com.ami.icamdocscanner.models.RecyclerImageFile;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerViewAdapter.ViewHolder> {
-    private File[] mData;
+    private RecyclerImageFile[] mData;
     private LayoutInflater mInflater;
     private ItemClickListener mClickListener;
 
     // data is passed into the constructor
-    FileRecyclerViewAdapter(Context context, File[] data) {
+    FileRecyclerViewAdapter(Context context, RecyclerImageFile[] data) {
         this.mInflater = LayoutInflater.from(context);
         this.mData = data;
     }
@@ -40,7 +41,7 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
     // binds the data to the TextView in each cell
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        File file = mData[position];
+        RecyclerImageFile file = mData[position];
 
         String thumbnailPath = file.getParent() + "/thumbnails/" + file.getName();
 
@@ -78,7 +79,6 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
         return mData.length;
     }
 
-
     // stores and recycles views as they are scrolled off screen
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         ImageView thumbnail;
@@ -98,7 +98,7 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
     }
 
     // convenience method for getting data at click position
-    File getItem(int id) {
+    RecyclerImageFile getItem(int id) {
         return mData[id];
     }
 

@@ -1,26 +1,18 @@
 package com.ami.icamdocscanner;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Bundle;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.Manifest;
-import android.content.Context;
-import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.net.Uri;
-import android.os.Bundle;
-import android.os.Environment;
-import android.provider.MediaStore;
-import android.util.Log;
+import com.ami.icamdocscanner.models.RecyclerImageFile;
 
 import java.io.File;
-import java.io.FileFilter;
-import java.net.URI;
-import java.util.AbstractSequentialList;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -51,13 +43,20 @@ public class ImageDoneActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
     }
 
-    private File[] listFiles(File directory) {
+    private RecyclerImageFile[] listFiles(File directory) {
         File[] files = directory.listFiles(File::isFile);
         Arrays.sort( files, (Comparator) (o1, o2) -> {
             long lastModified1 = ((File)o1).lastModified();
             long lastModified2 = ((File)o2).lastModified();
             return Long.compare(lastModified2, lastModified1);
         });
-        return files;
+
+        RecyclerImageFile[] recyclerImageFiles = new RecyclerImageFile[files.length];
+
+        for(int i = 0; i<files.length; i++) {
+            recyclerImageFiles[i] = new RecyclerImageFile(files[i]);
+        }
+
+        return recyclerImageFiles;
     }
 }
