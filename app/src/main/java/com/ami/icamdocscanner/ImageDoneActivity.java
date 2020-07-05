@@ -1,11 +1,13 @@
 package com.ami.icamdocscanner;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
@@ -25,11 +27,14 @@ import java.util.Comparator;
 public class ImageDoneActivity extends AppCompatActivity {
     FileRecyclerViewAdapter adapter;
     private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 1;
+    Context context;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_image_done);
+
+        context = this;
 
         if(ContextCompat.checkSelfPermission(ImageDoneActivity.this,
                 Manifest.permission.READ_EXTERNAL_STORAGE)
@@ -37,6 +42,14 @@ public class ImageDoneActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(ImageDoneActivity.this,
                     new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                     MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE);
+
+        setupAdapter();
+
+        setupButtonListener();
+    }
+
+    private void setupAdapter() {
+        adapter = null;
 
         File directory = this.getFilesDir();
 
@@ -47,8 +60,6 @@ public class ImageDoneActivity extends AppCompatActivity {
 
         adapter = new FileRecyclerViewAdapter(this, listFiles(directory));
         recyclerView.setAdapter(adapter);
-
-        setupButtonListener();
     }
 
     private RecyclerImageFile[] listFiles(File directory) {
@@ -72,37 +83,32 @@ public class ImageDoneActivity extends AppCompatActivity {
         LinearLayout deleteBtn = findViewById(R.id.deleteBtn);
 
         deleteBtn.setOnClickListener(v -> {
+            if(adapter.getSelected().size() == 0) {
+                showToast("No Selection");
+                return;
+            }
+
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
             builder.setMessage(R.string.delete_file_message)
                     .setTitle(R.string.delete_file_title);
 
             // Add the buttons
-            builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int id) {
-                    // User clicked OK button
+            builder.setPositiveButton(R.string.ok, (dialog, id) -> {
+                // User clicked OK button
 
-                    if (adapter.getSelected().size() > 0) {
-                        StringBuilder stringBuilder = new StringBuilder();
-                        for (int i = 0; i < adapter.getSelected().size(); i++) {
-                            File file = adapter.getSelected().get(i);
-                            stringBuilder.append(file);
-                            stringBuilder.append("\n");
-                            boolean delete = file.delete();
-                            Log.d("delete", Boolean.toString(delete));
-                        }
-                        showToast(stringBuilder.toString().trim());
-                        adapter.notifyDataSetChanged();
-                    } else {
-                        showToast("No Selection");
-                    }
+                StringBuilder stringBuilder = new StringBuilder();
+                for (int i = 0; i < adapter.getSelected().size(); i++) {
+                    File file = adapter.getSelected().get(i);
+                    stringBuilder.append(file);
+                    stringBuilder.append("\n");
+                    boolean delete = file.delete();
+                    Log.d("delete", Boolean.toString(delete));
                 }
+                showToast(stringBuilder.toString().trim());
+                setupAdapter();
             });
-            builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int id) {
-                    // User cancelled the dialog
-                }
-            });
+            builder.setNegativeButton(R.string.cancel, (dialog, id) -> {});
 
             AlertDialog dialog = builder.create();
 
@@ -112,6 +118,8 @@ public class ImageDoneActivity extends AppCompatActivity {
     }
 
     private void showToast(String msg) {
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+        Toast toast = Toast.makeText(this, msg, Toast.LENGTH_SHORT);
+        toast.setGravity(Gravity.CENTER, 0, 0);
+        toast.show();
     }
 }
