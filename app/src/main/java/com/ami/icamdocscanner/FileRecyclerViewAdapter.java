@@ -22,14 +22,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerViewAdapter.ViewHolder> {
-    private RecyclerImageFile[] mData;
+    private List<RecyclerImageFile> files;
     private LayoutInflater mInflater;
     private ItemClickListener mClickListener;
 
     // data is passed into the constructor
-    FileRecyclerViewAdapter(Context context, RecyclerImageFile[] data) {
+    FileRecyclerViewAdapter(Context context, List<RecyclerImageFile> data) {
         this.mInflater = LayoutInflater.from(context);
-        this.mData = data;
+        this.files = data;
     }
 
     // inflates the cell layout from xml when needed
@@ -43,13 +43,13 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
     // binds the data to the TextView in each cell
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.bind(mData[position]);
+        holder.bind(files.get(position));
     }
 
     // total number of cells
     @Override
     public int getItemCount() {
-        return mData.length;
+        return files.size();
     }
 
     // stores and recycles views as they are scrolled off screen
@@ -108,7 +108,7 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
 
     // convenience method for getting data at click position
     RecyclerImageFile getItem(int id) {
-        return mData[id];
+        return files.get(id);
     }
 
     // allows clicks events to be caught
@@ -121,18 +121,17 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
         void onItemClick(View view, int position);
     }
 
-    public RecyclerImageFile[] getAll() {
-        return mData;
+    public List<RecyclerImageFile> getAll() {
+        return files;
     }
 
     public List<RecyclerImageFile> getSelected() {
         List<RecyclerImageFile> selected = new ArrayList<>();
-        for (int i = 0; i < mData.length; i++) {
-            if (mData[i].isChecked()) {
-                selected.add(mData[i]);
+        for (int i = 0; i < files.size(); i++) {
+            if (files.get(i).isChecked()) {
+                selected.add(files.get(i));
             }
         }
         return selected;
     }
-
 }

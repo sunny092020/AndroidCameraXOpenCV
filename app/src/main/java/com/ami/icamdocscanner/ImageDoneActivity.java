@@ -70,7 +70,7 @@ public class ImageDoneActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
     }
 
-    private RecyclerImageFile[] listFiles(File directory) {
+    private List<RecyclerImageFile> listFiles(File directory) {
         File[] files = directory.listFiles(File::isFile);
         assert files != null;
         Arrays.sort( files, (Comparator<File>) (o1, o2) -> {
@@ -79,10 +79,10 @@ public class ImageDoneActivity extends AppCompatActivity {
             return Long.compare(lastModified2, lastModified1);
         });
 
-        RecyclerImageFile[] recyclerImageFiles = new RecyclerImageFile[files.length];
+        List<RecyclerImageFile> recyclerImageFiles = new ArrayList<>();
 
         for(int i = 0; i<files.length; i++) {
-            recyclerImageFiles[i] = new RecyclerImageFile(files[i]);
+            recyclerImageFiles.add(new RecyclerImageFile(files[i]));
         }
 
         return recyclerImageFiles;
