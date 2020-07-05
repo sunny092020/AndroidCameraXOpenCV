@@ -18,6 +18,7 @@ import android.os.Looper;
 import android.os.SystemClock;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Display;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
@@ -275,7 +276,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private int aspectRatio() {
         DisplayMetrics metrics = new DisplayMetrics();
-        previewView.getDisplay().getRealMetrics(metrics);
+
+        Display display = previewView.getDisplay();
+
+        while (display==null) {
+            try {
+                Thread.sleep(100);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            display = previewView.getDisplay();
+        }
+        display.getRealMetrics(metrics);
 
         int width = metrics.widthPixels, height = metrics.heightPixels;
 

@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.util.Log;
 import android.view.Gravity;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
@@ -21,6 +22,7 @@ import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.ami.icamdocscanner.helpers.ScannerConstants;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
 
 import java.io.File;
@@ -89,6 +91,18 @@ public class ImageDoneActivity extends AppCompatActivity {
     private void setupButtonListener() {
         setupDeleteButtonListener();
         setupShareButtonListener();
+        setupRetakeButtonListener();
+    }
+
+    private void setupRetakeButtonListener() {
+        ImageView retakeBtn = findViewById(R.id.retakeBtn);
+
+        retakeBtn.setOnClickListener(v -> {
+            ScannerConstants.resetCaptureState();
+            Intent intent = new Intent(this, MainActivity.class);
+            startActivity(intent);
+            finish();
+        });
     }
 
     private void setupShareButtonListener() {
