@@ -27,7 +27,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
 import java.util.Set;
 import java.util.function.BiFunction;
 
@@ -362,9 +361,9 @@ public class VisionUtils {
     }
 
     private static List<Map.Entry<LinePolar, List<Line>>> sortLineMap(HashMap<LinePolar, List<Line>> lineMap) {
-        Comparator<Map.Entry> distanceComparator = (o1, o2) -> {
-            List<Line> linesByPl1 = (List<Line>) o1.getValue();
-            List<Line> linesByPl2 = (List<Line>) o2.getValue();
+        Comparator<Map.Entry<LinePolar, List<Line>>> distanceComparator = (o1, o2) -> {
+            List<Line> linesByPl1 = o1.getValue();
+            List<Line> linesByPl2 = o2.getValue();
 
             double maxDistance1 = maxDistance(linesByPl1);
             double maxDistance2 = maxDistance(linesByPl2);
@@ -374,7 +373,7 @@ public class VisionUtils {
 
         Set<Map.Entry<LinePolar, List<Line>>> lineMapVals = lineMap.entrySet();
 
-        List<Map.Entry<LinePolar, List<Line>>> lineMapValsList = new ArrayList<Map.Entry<LinePolar, List<Line>>>(lineMapVals);
+        List<Map.Entry<LinePolar, List<Line>>> lineMapValsList = new ArrayList<>(lineMapVals);
         Collections.sort(lineMapValsList, distanceComparator);
 
         return lineMapValsList;
@@ -387,8 +386,8 @@ public class VisionUtils {
 //            ret = ret+l.distance();
 //        }
 
-        List xs = new ArrayList();
-        List ys = new ArrayList();
+        List<Object> xs = new ArrayList<>();
+        List<Object> ys = new ArrayList<>();
 
         for(Line line: lines) {
             xs.add(line._p1.x);
@@ -398,7 +397,7 @@ public class VisionUtils {
         }
 
 
-        Comparator xyComparator = (o1, o2) -> {
+        Comparator<Object> xyComparator = (o1, o2) -> {
             double xy1 = (double)o1;
             double xy2 = (double)o2;
             return Double.compare(xy1, xy2);
