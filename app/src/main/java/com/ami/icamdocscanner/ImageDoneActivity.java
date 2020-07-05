@@ -1,8 +1,8 @@
 package com.ami.icamdocscanner;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -33,6 +33,7 @@ public class ImageDoneActivity extends AppCompatActivity {
     FileRecyclerViewAdapter adapter;
     private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 1;
     Context context;
+    private final int LAUNCH_SECOND_ACTIVITY = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,7 +70,8 @@ public class ImageDoneActivity extends AppCompatActivity {
 
     private RecyclerImageFile[] listFiles(File directory) {
         File[] files = directory.listFiles(File::isFile);
-        Arrays.sort( files, (Comparator) (o1, o2) -> {
+        assert files != null;
+        Arrays.sort( files, (Comparator<File>) (o1, o2) -> {
             long lastModified1 = ((File)o1).lastModified();
             long lastModified2 = ((File)o2).lastModified();
             return Long.compare(lastModified2, lastModified1);
@@ -103,10 +105,13 @@ public class ImageDoneActivity extends AppCompatActivity {
             intent.putExtra(Intent.EXTRA_SUBJECT, "Here are some files.");
             intent.setType("image/jpeg");
 
-            List<Uri> files = new ArrayList<Uri>();
+            List<Uri> files = new ArrayList<>();
 
             for (int i = 0; i < adapter.getSelected().size(); i++) {
                 File file = adapter.getSelected().get(i);
+
+                Log.d("file ", file.getAbsolutePath());
+
                 Uri fileUri = FileProvider.getUriForFile(
                         ImageDoneActivity.this,
                         "com.ami.icamdocscanner",
@@ -115,10 +120,23 @@ public class ImageDoneActivity extends AppCompatActivity {
             }
 
             intent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, (ArrayList<? extends Parcelable>) files);
-            startActivity(intent);
-
+            startActivityForResult(intent, LAUNCH_SECOND_ACTIVITY);
         });
     }
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == LAUNCH_SECOND_ACTIVITY) {
+            if(resultCode == Activity.RESULT_OK){
+                Log.d("result", "OK");
+            }
+            if (resultCode == Activity.RESULT_CANCELED) {
+                //Write your code if there's no result
+                Log.d("result", "cancel");
+            }
+        }
+    }//onActivityResult
 
     private void setupDeleteButtonListener() {
         LinearLayout deleteBtn = findViewById(R.id.deleteBtn);
@@ -138,15 +156,12 @@ public class ImageDoneActivity extends AppCompatActivity {
             builder.setPositiveButton(R.string.ok, (dialog, id) -> {
                 // User clicked OK button
 
-                StringBuilder stringBuilder = new StringBuilder();
+                int numDeleted = 0;
                 for (int i = 0; i < adapter.getSelected().size(); i++) {
                     File file = adapter.getSelected().get(i);
-                    stringBuilder.append(file);
-                    stringBuilder.append("\n");
-                    boolean delete = file.delete();
-                    Log.d("delete", Boolean.toString(delete));
+                    if(file.delete()) numDeleted++;
                 }
-                showToast(stringBuilder.toString().trim());
+                showToast(numDeleted + " files has been deleted.");
                 setupAdapter();
             });
             builder.setNegativeButton(R.string.cancel, (dialog, id) -> {});

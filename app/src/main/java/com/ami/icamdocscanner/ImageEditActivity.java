@@ -93,9 +93,7 @@ public class ImageEditActivity extends AppCompatActivity {
     }
 
     private void setupFilterButtonEvent() {
-        imgOrigin.setOnClickListener(v -> {
-            imageView.setImageBitmap(currentImg);
-        });
+        imgOrigin.setOnClickListener(v -> imageView.setImageBitmap(currentImg));
 
         imgGray.setOnClickListener(v -> {
             Mat gray = new Mat();

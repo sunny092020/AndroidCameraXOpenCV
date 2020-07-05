@@ -158,9 +158,7 @@ public class ImageCropActivity extends AppCompatActivity {
 
     private void drawPolygonAsync() {
         setProgressBar(true);
-        disposable.add(Observable.fromCallable(() -> {
-                    return false;
-                })
+        disposable.add(Observable.fromCallable(() -> false)
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe((result) -> {
