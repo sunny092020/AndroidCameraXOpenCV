@@ -3,8 +3,6 @@ package com.ami.icamdocscanner;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,17 +12,11 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.ami.icamdocscanner.helpers.ScannerConstants;
 import com.ami.icamdocscanner.helpers.VisionUtils;
-
-import org.opencv.android.Utils;
-import org.opencv.core.Mat;
-import org.opencv.imgcodecs.Imgcodecs;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.List;
 
 public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerViewAdapter.ViewHolder> {
     private File[] mData;
@@ -58,22 +50,14 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
             holder.thumbnail.setImageBitmap(thumbnailBitmap);
         }else {
             File directory = new File(file.getParent() + "/thumbnails/");
-            if (! directory.exists()){
-                directory.mkdir();
+            if (!directory.exists()){
+                if (!directory.mkdir()) return;
             }
 
-            //Instantiating the Imagecodecs class
-            Imgcodecs imageCodecs = new Imgcodecs();
+            Bitmap originBitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
+            int DOWNSCALE_IMAGE_SIZE = 200;
 
-            //Reading the Image from the file
-            Mat origin = imageCodecs.imread(file.getAbsolutePath());
-            double DOWNSCALE_IMAGE_SIZE = 200f;
-
-            // Downscale image for better performance.
-            double ratio = DOWNSCALE_IMAGE_SIZE / Math.max(origin.width(), origin.height());
-
-            Mat smallOrigin = VisionUtils.downscaleMat(origin, ratio);
-            Bitmap smallOriginBitmap = VisionUtils.matToBitmap(smallOrigin);
+            Bitmap smallOriginBitmap = VisionUtils.scaledBitmap(originBitmap, DOWNSCALE_IMAGE_SIZE, DOWNSCALE_IMAGE_SIZE);
 
             holder.thumbnail.setImageBitmap(smallOriginBitmap);
             try (FileOutputStream out = new FileOutputStream(thumbnailPath)) {
@@ -81,6 +65,7 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
             } catch (IOException e) {
                 e.printStackTrace();
             }
+
         }
 
 
