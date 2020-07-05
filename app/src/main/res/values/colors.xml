@@ -10,7 +10,8 @@
     <color name="white">#FFFFFF</color>
     <color name="red">#ff2600</color>
     <color name="green">#26d84c</color>
-
+    <color name="color_primary">#FFF57C00</color>
+    
     // Scanner Colors
     <color name="colorGrey">#cccccc</color>
     <color name="blue">#ff59a9ff</color>

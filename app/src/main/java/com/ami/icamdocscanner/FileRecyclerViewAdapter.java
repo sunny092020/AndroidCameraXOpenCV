@@ -41,36 +41,7 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
     // binds the data to the TextView in each cell
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        RecyclerImageFile file = mData[position];
-
-        String thumbnailPath = file.getParent() + "/thumbnails/" + file.getName();
-
-        File thumbnail = new File(thumbnailPath);
-        if(thumbnail.exists()) {
-            Bitmap thumbnailBitmap = BitmapFactory.decodeFile(thumbnail.getAbsolutePath());
-            holder.thumbnail.setImageBitmap(thumbnailBitmap);
-        }else {
-            File directory = new File(file.getParent() + "/thumbnails/");
-            if (!directory.exists()){
-                if (!directory.mkdir()) return;
-            }
-
-            Bitmap originBitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
-            int DOWNSCALE_IMAGE_SIZE = 200;
-
-            Bitmap smallOriginBitmap = VisionUtils.scaledBitmap(originBitmap, DOWNSCALE_IMAGE_SIZE, DOWNSCALE_IMAGE_SIZE);
-
-            holder.thumbnail.setImageBitmap(smallOriginBitmap);
-            try (FileOutputStream out = new FileOutputStream(thumbnailPath)) {
-                smallOriginBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-        }
-
-
-        holder.fileName.setText(file.getName());
+        holder.bind(mData[position]);
     }
 
     // total number of cells
@@ -81,14 +52,50 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
 
     // stores and recycles views as they are scrolled off screen
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        ImageView thumbnail;
+        ImageView thumbnail, check;
         TextView fileName;
 
         ViewHolder(View itemView) {
             super(itemView);
             thumbnail = itemView.findViewById(R.id.fileThumbnail);
+            check = itemView.findViewById(R.id.check);
             fileName = itemView.findViewById(R.id.fileName);
             itemView.setOnClickListener(this);
+        }
+
+        void bind(final RecyclerImageFile file) {
+            check.setVisibility(file.isChecked() ? View.VISIBLE : View.GONE);
+            String thumbnailPath = file.getParent() + "/thumbnails/" + file.getName();
+
+            File thumbnailFile = new File(thumbnailPath);
+            if(thumbnailFile.exists()) {
+                Bitmap thumbnailBitmap = BitmapFactory.decodeFile(thumbnailFile.getAbsolutePath());
+                thumbnail.setImageBitmap(thumbnailBitmap);
+            }else {
+                File directory = new File(file.getParent() + "/thumbnails/");
+                if (!directory.exists()){
+                    if (!directory.mkdir()) return;
+                }
+
+                Bitmap originBitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
+                int DOWNSCALE_IMAGE_SIZE = 200;
+
+                Bitmap smallOriginBitmap = VisionUtils.scaledBitmap(originBitmap, DOWNSCALE_IMAGE_SIZE, DOWNSCALE_IMAGE_SIZE);
+
+                thumbnail.setImageBitmap(smallOriginBitmap);
+                try (FileOutputStream out = new FileOutputStream(thumbnailPath)) {
+                    smallOriginBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+
+            fileName.setText(file.getName());
+            itemView.setOnClickListener(view -> {
+                file.setChecked(!file.isChecked());
+                check.setVisibility(file.isChecked() ? View.VISIBLE : View.GONE);
+            });
         }
 
         @Override
