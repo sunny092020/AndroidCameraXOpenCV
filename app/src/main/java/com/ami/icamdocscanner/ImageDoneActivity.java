@@ -107,15 +107,10 @@ public class ImageDoneActivity extends AppCompatActivity {
 
             for (int i = 0; i < adapter.getSelected().size(); i++) {
                 File file = adapter.getSelected().get(i);
-                Log.d("file path", file.getAbsolutePath());
-
-//                Uri photoURI = FileProvider.getUriForFile(context, context.getApplicationContext().getPackageName() + ".provider", file);
-
                 Uri fileUri = FileProvider.getUriForFile(
                         ImageDoneActivity.this,
                         "com.ami.icamdocscanner",
                         file);
-
                 files.add(fileUri);
             }
 
