@@ -5,7 +5,9 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.Gravity;
 import android.widget.LinearLayout;
@@ -15,14 +17,17 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.ami.icamdocscanner.models.RecyclerImageFile;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 
 public class ImageDoneActivity extends AppCompatActivity {
     FileRecyclerViewAdapter adapter;
@@ -80,6 +85,47 @@ public class ImageDoneActivity extends AppCompatActivity {
     }
 
     private void setupButtonListener() {
+        setupDeleteButtonListener();
+        setupShareButtonListener();
+    }
+
+    private void setupShareButtonListener() {
+        LinearLayout shareBtn = findViewById(R.id.shareBtn);
+
+        shareBtn.setOnClickListener(v -> {
+            if(adapter.getSelected().size() == 0) {
+                showToast("No Selection");
+                return;
+            }
+
+            Intent intent = new Intent();
+            intent.setAction(Intent.ACTION_SEND_MULTIPLE);
+            intent.putExtra(Intent.EXTRA_SUBJECT, "Here are some files.");
+            intent.setType("image/jpeg");
+
+            List<Uri> files = new ArrayList<Uri>();
+
+            for (int i = 0; i < adapter.getSelected().size(); i++) {
+                File file = adapter.getSelected().get(i);
+                Log.d("file path", file.getAbsolutePath());
+
+//                Uri photoURI = FileProvider.getUriForFile(context, context.getApplicationContext().getPackageName() + ".provider", file);
+
+                Uri fileUri = FileProvider.getUriForFile(
+                        ImageDoneActivity.this,
+                        "com.ami.icamdocscanner",
+                        file);
+
+                files.add(fileUri);
+            }
+
+            intent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, (ArrayList<? extends Parcelable>) files);
+            startActivity(intent);
+
+        });
+    }
+
+    private void setupDeleteButtonListener() {
         LinearLayout deleteBtn = findViewById(R.id.deleteBtn);
 
         deleteBtn.setOnClickListener(v -> {
