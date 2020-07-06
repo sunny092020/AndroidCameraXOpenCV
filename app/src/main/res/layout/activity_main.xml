@@ -58,28 +58,33 @@
 
     </FrameLayout>
 
-    <ImageButton
-        android:id="@+id/btnAutoCapture"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:layout_marginLeft="84dp"
-        android:layout_marginBottom="100dp"
-        android:background="@android:color/transparent"
-        android:scaleType="fitCenter"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:srcCompat="@drawable/ic_auto_enable" />
+    <RelativeLayout
+        android:id="@+id/bottomPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/borders"
+        app:layout_constraintTop_toBottomOf="@+id/frameLayout"
+        app:layout_constraintBottom_toBottomOf="parent">
 
-    <ImageButton
-        android:id="@+id/btnCapture"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:layout_marginBottom="80dp"
-        android:background="@android:color/transparent"
-        android:scaleType="fitCenter"
-        android:src="@drawable/ic_shutter"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent" />
+        <ImageButton
+            android:id="@+id/btnAutoCapture"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginRight="30dp"
+            android:background="@android:color/transparent"
+            android:scaleType="fitCenter"
+            android:layout_toStartOf="@+id/btnCapture"
+            app:srcCompat="@drawable/ic_auto_enable" />
+
+        <ImageButton
+            android:id="@+id/btnCapture"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:scaleType="fitCenter"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_shutter"
+            android:layout_centerInParent="true"/>
+
+    </RelativeLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
