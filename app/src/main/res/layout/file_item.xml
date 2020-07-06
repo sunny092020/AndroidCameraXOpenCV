@@ -19,6 +19,8 @@
             android:id="@+id/fileThumbnail"
             android:layout_width="match_parent"
             android:layout_height="200dp"
+            android:padding="7dp"
+            android:cropToPadding="true"
             android:layout_gravity="center_horizontal"
             app:srcCompat="@drawable/ic_crop"
             android:scaleType="centerCrop"/>

@@ -4,17 +4,16 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.core.view.MotionEventCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.ami.icamdocscanner.helpers.ItemTouchHelperAdapter;
+import com.ami.icamdocscanner.helpers.ItemTouchHelperViewHolder;
 import com.ami.icamdocscanner.helpers.OnStartDragListener;
 import com.ami.icamdocscanner.helpers.VisionUtils;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
@@ -60,10 +59,8 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
         if(mDragStartListener == null) return;
 
         // Start a drag whenever the handle view it touched
-        holder.thumbnail.setOnTouchListener((View.OnTouchListener) (v, event) -> {
-            if (MotionEventCompat.getActionMasked(event) == MotionEvent.ACTION_DOWN) {
-                mDragStartListener.onStartDrag(holder);
-            }
+        holder.thumbnail.setOnLongClickListener((View.OnLongClickListener) (v) -> {
+            mDragStartListener.onStartDrag(holder);
             return false;
         });
     }
@@ -88,7 +85,7 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
     }
 
     // stores and recycles views as they are scrolled off screen
-    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, ItemTouchHelperViewHolder {
         ImageView thumbnail, check;
         TextView fileName;
 
@@ -138,6 +135,16 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
         @Override
         public void onClick(View view) {
             if (mClickListener != null) mClickListener.onItemClick(view, getAdapterPosition());
+        }
+
+        @Override
+        public void onItemSelected() {
+            thumbnail.setBackgroundResource(R.drawable.selected_pdf_borders);
+        }
+
+        @Override
+        public void onItemClear() {
+            thumbnail.setBackgroundResource(android.R.color.transparent);
         }
     }
 
