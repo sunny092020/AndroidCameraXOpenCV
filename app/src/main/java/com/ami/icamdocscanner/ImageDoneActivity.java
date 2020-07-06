@@ -101,8 +101,8 @@ public class ImageDoneActivity extends AppCompatActivity {
         LinearLayout pdfBtn = findViewById(R.id.pdfBtn);
 
         pdfBtn.setOnClickListener(v -> {
-            if(adapter.getSelected().size() == 0) {
-                showToast("No Selection");
+            if(adapter.getSelectedByExtension("jpg").size() == 0) {
+                showToast("No Images Selection");
                 return;
             }
 
