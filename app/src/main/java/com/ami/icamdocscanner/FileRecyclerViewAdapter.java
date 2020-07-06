@@ -143,4 +143,14 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
         }
         return selected;
     }
+
+    public List<RecyclerImageFile> getSelectedByExtension(String extension) {
+        List<RecyclerImageFile> selected = new ArrayList<>();
+        for (int i = 0; i < files.size(); i++) {
+            if (files.get(i).isChecked() && FileUtils.isFileType(files.get(i).getName(), extension)) {
+                selected.add(files.get(i));
+            }
+        }
+        return selected;
+    }
 }

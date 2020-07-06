@@ -107,7 +107,7 @@ public class ImageDoneActivity extends AppCompatActivity {
             }
 
             Intent intent = new Intent(this, PdfActivity.class);
-            intent.putExtra("selectedFiles", (Serializable) adapter.getSelected());
+            intent.putExtra("selectedFiles", (Serializable) adapter.getSelectedByExtension("jpg"));
             startActivity(intent);
             finish();
 
