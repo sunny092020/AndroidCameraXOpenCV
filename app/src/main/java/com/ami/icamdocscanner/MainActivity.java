@@ -103,6 +103,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        context = this;
+
         ImageButton btnCapture = findViewById(R.id.btnCapture);
         btnCapture.setOnClickListener(v -> {
             // preventing double, using threshold of 1000 ms
@@ -117,8 +119,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
 
         ImageButton btnAutoCapture = findViewById(R.id.btnAutoCapture);
-
-        context = this;
         btnAutoCapture.setOnClickListener(v -> {
             Activity activity = (Activity) context;
             // set text to "" to make way for other hint
@@ -140,6 +140,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }, 1000);
         });
 
+        ImageButton btnMode = findViewById(R.id.btnMode);
+        btnMode.setOnClickListener(v -> {
+            Activity activity = (Activity) context;
+            // set text to "" to make way for other hint
+            if(Preferences.getCaptureMode(activity) == Preferences.CAPTURE_MODE_SINGLE) {
+                btnMode.setImageResource(R.drawable.ic_multi);
+                Preferences.setCaptureMode(activity, Preferences.CAPTURE_MODE_BATCH);
+                displayHint("Batch mode");
+                resetManualCaptureTime();
+            } else {
+                btnMode.setImageResource(R.drawable.ic_single);
+                Preferences.setCaptureMode(activity, Preferences.CAPTURE_MODE_SINGLE);
+                displayHint("Single mode");
+            }
+            // make "Auto capture: On/Off" last 1 seconds
+            new Handler().postDelayed(() -> {
+                // set text to "" to make way for other hint
+                captureHintText.setText("");
+                captureHintText.setVisibility(View.INVISIBLE);
+            }, 1000);
+        });
+
         ivBitmap = findViewById(R.id.ivBitmap);
         capturedView = findViewById(R.id.capturedView);
 
@@ -150,6 +172,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             btnAutoCapture.setImageResource(R.drawable.ic_auto_enable);
         } else {
             btnAutoCapture.setImageResource(R.drawable.ic_auto_disable);
+        }
+
+        if(Preferences.getCaptureMode(this) == Preferences.CAPTURE_MODE_SINGLE) {
+            btnMode.setImageResource(R.drawable.ic_single);
+        } else {
+            btnMode.setImageResource(R.drawable.ic_multi);
         }
 
         setupPaint();
@@ -480,8 +508,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
 
+        if(text.equalsIgnoreCase("Batch mode")) {
+            captureHintText.setVisibility(View.VISIBLE);
+            captureHintText.setText(text);
+            return;
+        }
+
+        if(text.equalsIgnoreCase("Single mode")) {
+            captureHintText.setVisibility(View.VISIBLE);
+            captureHintText.setText(text);
+            return;
+        }
+
         if(captureHintText.getText() == "Auto capture: Off") return;
         if(captureHintText.getText() == "Auto capture: On") return;
+        if(captureHintText.getText() == "Batch mode") return;
+        if(captureHintText.getText() == "Single mode") return;
         captureHintText.setVisibility(View.VISIBLE);
         captureHintText.setText(text);
     }

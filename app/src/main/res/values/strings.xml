@@ -10,6 +10,7 @@
     <string name="looking_for_doc">Looking for document ...</string>
     <string name="preference_file_key">ami_cam_doc_scanner</string>
     <string name="auto_capture_key">auto_capture_key</string>
+    <string name="capture_mode_key">capture_mode_key</string>
 
     <string name="delete_file_title">Delete files</string>
     <string name="delete_file_message">Do you want to delete these files?</string>

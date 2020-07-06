@@ -68,8 +68,8 @@
 
         <ImageButton
             android:id="@+id/btnAutoCapture"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_marginRight="30dp"
             android:background="@android:color/transparent"
             android:scaleType="fitCenter"
@@ -88,8 +88,8 @@
 
         <ImageButton
             android:id="@+id/btnMode"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_centerInParent="true"
             android:layout_marginLeft="30dp"
             android:layout_toEndOf="@+id/btnCapture"
