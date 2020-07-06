@@ -55,14 +55,6 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         holder.bind(files.get(position));
-
-        if(mDragStartListener == null) return;
-
-        // Start a drag whenever the handle view it touched
-        holder.thumbnail.setOnLongClickListener((View.OnLongClickListener) (v) -> {
-            mDragStartListener.onStartDrag(holder);
-            return false;
-        });
     }
 
     @Override
