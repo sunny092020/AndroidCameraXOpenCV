@@ -3,6 +3,7 @@ package com.ami.icamdocscanner;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -121,6 +122,10 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
             itemView.setOnClickListener(view -> {
                 file.setChecked(!file.isChecked());
                 check.setVisibility(file.isChecked() ? View.VISIBLE : View.GONE);
+            });
+
+            itemView.setOnLongClickListener(view -> {
+                return  true;
             });
         }
 
