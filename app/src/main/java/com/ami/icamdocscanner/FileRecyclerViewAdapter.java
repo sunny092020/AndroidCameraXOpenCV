@@ -4,14 +4,18 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.view.MotionEventCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.ami.icamdocscanner.helpers.ItemTouchHelperAdapter;
+import com.ami.icamdocscanner.helpers.OnStartDragListener;
 import com.ami.icamdocscanner.helpers.VisionUtils;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
 
@@ -19,15 +23,23 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerViewAdapter.ViewHolder> {
+public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerViewAdapter.ViewHolder> implements ItemTouchHelperAdapter {
     private List<RecyclerImageFile> files;
     private LayoutInflater mInflater;
     private ItemClickListener mClickListener;
+    private OnStartDragListener mDragStartListener;
 
     // data is passed into the constructor
     FileRecyclerViewAdapter(Context context, List<RecyclerImageFile> data) {
+        this.mInflater = LayoutInflater.from(context);
+        this.files = data;
+    }
+
+    FileRecyclerViewAdapter(Context context, List<RecyclerImageFile> data, OnStartDragListener dragStartListener) {
+        mDragStartListener = dragStartListener;
         this.mInflater = LayoutInflater.from(context);
         this.files = data;
     }
@@ -44,6 +56,29 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         holder.bind(files.get(position));
+
+        if(mDragStartListener == null) return;
+
+        // Start a drag whenever the handle view it touched
+        holder.thumbnail.setOnTouchListener((View.OnTouchListener) (v, event) -> {
+            if (MotionEventCompat.getActionMasked(event) == MotionEvent.ACTION_DOWN) {
+                mDragStartListener.onStartDrag(holder);
+            }
+            return false;
+        });
+    }
+
+    @Override
+    public void onItemDismiss(int position) {
+        files.remove(position);
+        notifyItemRemoved(position);
+    }
+
+    @Override
+    public boolean onItemMove(int fromPosition, int toPosition) {
+        Collections.swap(files, fromPosition, toPosition);
+        notifyItemMoved(fromPosition, toPosition);
+        return true;
     }
 
     // total number of cells

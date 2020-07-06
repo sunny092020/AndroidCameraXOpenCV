@@ -26,6 +26,7 @@ import com.ami.icamdocscanner.helpers.ScannerConstants;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
 
 import java.io.File;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -104,9 +105,10 @@ public class ImageDoneActivity extends AppCompatActivity {
                 return;
             }
 
-            for (int i = 0; i < adapter.getSelected().size(); i++) {
-                File file = adapter.getSelected().get(i);
-            }
+            Intent intent = new Intent(this, PdfActivity.class);
+            intent.putExtra("selectedFiles", (Serializable) adapter.getSelected());
+            startActivity(intent);
+            finish();
 
         });
     }
