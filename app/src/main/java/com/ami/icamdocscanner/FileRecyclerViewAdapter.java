@@ -2,8 +2,6 @@ package com.ami.icamdocscanner;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,15 +11,12 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.ami.icamdocscanner.helpers.FileUtils;
 import com.ami.icamdocscanner.helpers.ItemTouchHelperAdapter;
 import com.ami.icamdocscanner.helpers.ItemTouchHelperViewHolder;
 import com.ami.icamdocscanner.helpers.OnStartDragListener;
-import com.ami.icamdocscanner.helpers.VisionUtils;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -92,31 +87,8 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
 
         void bind(final RecyclerImageFile file) {
             check.setVisibility(file.isChecked() ? View.VISIBLE : View.GONE);
-            String thumbnailPath = file.getParent() + "/thumbnails/" + file.getName();
-
-            File thumbnailFile = new File(thumbnailPath);
-            if(thumbnailFile.exists()) {
-                Bitmap thumbnailBitmap = BitmapFactory.decodeFile(thumbnailFile.getAbsolutePath());
-                thumbnail.setImageBitmap(thumbnailBitmap);
-            }else {
-                File directory = new File(file.getParent() + "/thumbnails/");
-                if (!directory.exists()){
-                    if (!directory.mkdir()) return;
-                }
-
-                Bitmap originBitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
-                int DOWNSCALE_IMAGE_SIZE = 200;
-
-                Bitmap smallOriginBitmap = VisionUtils.scaledBitmap(originBitmap, DOWNSCALE_IMAGE_SIZE, DOWNSCALE_IMAGE_SIZE);
-
-                thumbnail.setImageBitmap(smallOriginBitmap);
-                try (FileOutputStream out = new FileOutputStream(thumbnailPath)) {
-                    smallOriginBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-            }
+            Bitmap thumbnailBitmap = FileUtils.getThumbnail(file);
+            thumbnail.setImageBitmap(thumbnailBitmap);
 
             fileName.setText(file.getName());
             itemView.setOnClickListener(view -> {
@@ -124,9 +96,7 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
                 check.setVisibility(file.isChecked() ? View.VISIBLE : View.GONE);
             });
 
-            itemView.setOnLongClickListener(view -> {
-                return  true;
-            });
+            itemView.setOnLongClickListener(view -> true);
         }
 
         @Override

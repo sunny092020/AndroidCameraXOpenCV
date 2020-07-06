@@ -82,8 +82,8 @@ public class ImageDoneActivity extends AppCompatActivity {
 
         List<RecyclerImageFile> recyclerImageFiles = new ArrayList<>();
 
-        for(int i = 0; i<files.length; i++) {
-            recyclerImageFiles.add(new RecyclerImageFile(files[i]));
+        for (File file : files) {
+            recyclerImageFiles.add(new RecyclerImageFile(file));
         }
 
         return recyclerImageFiles;

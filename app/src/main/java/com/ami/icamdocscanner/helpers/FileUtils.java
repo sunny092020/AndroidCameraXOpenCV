@@ -2,6 +2,7 @@ package com.ami.icamdocscanner.helpers;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Log;
 
 import com.ami.icamdocscanner.models.RecyclerImageFile;
 
@@ -24,45 +25,51 @@ public class FileUtils {
     }
 
     public static boolean isFileType(String fileName, String extension) {
-        if(FileUtils.fileExtension(fileName).equalsIgnoreCase(extension)) return true;
-        return false;
+        return FileUtils.fileExtension(fileName).equalsIgnoreCase(extension);
     }
 
-    public static Bitmap createThumbnail(RecyclerImageFile imageFile) {
+    public static Bitmap getThumbnail(RecyclerImageFile imageFile) {
         String thumbnailPath = imageFile.getParent() + "/thumbnails/" + imageFile.getName();
 
         if(FileUtils.isFileType(imageFile.getName(), "pdf")) {
-            thumbnailPath = imageFile.getParent() + "/thumbnails/" + FileUtils.fileNameWithoutExtension(imageFile.getName()) + "jpg";
+            thumbnailPath = imageFile.getParent() + "/thumbnails/" + FileUtils.fileNameWithoutExtension(imageFile.getName()) + "-pdf.jpg";
         }
 
         File thumbnailFile = new File(thumbnailPath);
+
         if(thumbnailFile.exists()) {
             return BitmapFactory.decodeFile(thumbnailFile.getAbsolutePath());
         }else {
-            File directory = new File(imageFile.getParent() + "/thumbnails/");
-            if (!directory.exists()){
-                if (!directory.mkdir()) return null;
-            }
-
-            Bitmap originBitmap = null;
 
             if(FileUtils.isFileType(imageFile.getName(), "pdf")) {
                 // TODO: cannot create thumbnail of a pdf
                 return null;
             } else {
-                originBitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
-                int DOWNSCALE_IMAGE_SIZE = 200;
-
-                Bitmap smallOriginBitmap = VisionUtils.scaledBitmap(originBitmap, DOWNSCALE_IMAGE_SIZE, DOWNSCALE_IMAGE_SIZE);
-
-                try (FileOutputStream out = new FileOutputStream(thumbnailPath)) {
-                    smallOriginBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-                return smallOriginBitmap;
+                return createThumbnail(imageFile, thumbnailPath);
             }
         }
+    }
+
+    public static Bitmap createThumbnail(RecyclerImageFile imageFile, String thumbnailPath) {
+
+        File directory = new File(imageFile.getParent() + "/thumbnails/");
+        if (!directory.exists()){
+            if (!directory.mkdir()) return null;
+        }
+
+        Bitmap originBitmap;
+
+        originBitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
+        int DOWNSCALE_IMAGE_SIZE = 200;
+
+        Bitmap smallOriginBitmap = VisionUtils.scaledBitmap(originBitmap, DOWNSCALE_IMAGE_SIZE, DOWNSCALE_IMAGE_SIZE);
+
+        try (FileOutputStream out = new FileOutputStream(thumbnailPath)) {
+            smallOriginBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return smallOriginBitmap;
     }
 }
