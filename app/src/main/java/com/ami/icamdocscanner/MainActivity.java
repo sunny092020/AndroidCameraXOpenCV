@@ -278,17 +278,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         DisplayMetrics metrics = new DisplayMetrics();
 
         Display display = previewView.getDisplay();
-
-        while (display==null) {
-            try {
-                Thread.sleep(100);
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            display = previewView.getDisplay();
-        }
         display.getRealMetrics(metrics);
 
         int width = metrics.widthPixels, height = metrics.heightPixels;
