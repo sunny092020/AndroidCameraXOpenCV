@@ -66,7 +66,7 @@ public class ImageCropActivity extends AppCompatActivity {
         getCroppedPolygon();
 
         Intent cropIntent = new Intent(this, ImageEditActivity.class);
-        startActivityForResult(cropIntent, 1234);
+        startActivity(cropIntent);
         finish();
     }
 
@@ -92,7 +92,7 @@ public class ImageCropActivity extends AppCompatActivity {
     private OnClickListener btnCloseClick = v -> {
         ScannerConstants.resetCaptureState();
         Intent intent = new Intent(this, MainActivity.class);
-        startActivityForResult(intent, 1234);
+        startActivity(intent);
         finish();
     };
 

@@ -127,7 +127,7 @@ public class ImageEditActivity extends AppCompatActivity {
         LinearLayout cropBtn = findViewById(R.id.cropBtn);
         cropBtn.setOnClickListener(v -> {
             Intent cropIntent = new Intent(this, ImageCropActivity.class);
-            startActivityForResult(cropIntent, 1234);
+            startActivity(cropIntent);
             finish();
         });
 
@@ -157,7 +157,7 @@ public class ImageEditActivity extends AppCompatActivity {
             }
 
             Intent cropIntent = new Intent(this, ImageDoneActivity.class);
-            startActivityForResult(cropIntent, 1234);
+            startActivity(cropIntent);
             finish();
         });
     }

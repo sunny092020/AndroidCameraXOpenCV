@@ -509,7 +509,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         ScannerConstants.croppedPolygon = contour;
 
         Intent cropIntent = new Intent(this, ImageCropActivity.class);
-        startActivityForResult(cropIntent, 1234);
+        startActivity(cropIntent);
         finish();
     }
 
