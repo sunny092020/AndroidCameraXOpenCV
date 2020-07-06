@@ -158,40 +158,43 @@ public class ImageCropActivity extends AppCompatActivity {
 
     private void drawPolygonAsync() {
         setProgressBar(true);
-        disposable.add(Observable.fromCallable(() -> false)
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe((result) -> {
-                            drawPolygon();
-                            setProgressBar(false);
-                        })
-        );
+        drawPolygon();
     }
 
     private void drawPolygon() {
-        Bitmap scaledBitmap = VisionUtils.scaledBitmap(selectedImage, holderImageCrop.getWidth(), holderImageCrop.getHeight());
-        imageView.setImageBitmap(scaledBitmap);
+        // For those curious why this works, when onCreate is executed in your Activity, the UI has not been drawn to the screen yet,
+        // so nothing has dimensions yet since they haven't been laid out on the screen. When setContentView is called,
+        // a message is posted to the UI thread to draw the UI for your layout, but will happen in the future after onCreate
+        // finishes executing. Posting a Runnable to the UI thread will put the Runnable at the end of the message queue for the UI thread,
+        // so will be executed after the screen has been drawn, thus everything has dimensions
+        holderImageCrop.post(() -> {
+            Bitmap scaledBitmap = VisionUtils.scaledBitmap(selectedImage, holderImageCrop.getWidth(), holderImageCrop.getHeight());
+            imageView.setImageBitmap(scaledBitmap);
 
-        Bitmap tempBitmap = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
+            Bitmap tempBitmap = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
 
-        Map<Integer, PointF> pointFs;
-        try {
-            pointFs = getEdgePoints(tempBitmap);
+            Map<Integer, PointF> pointFs;
+            try {
+                pointFs = getEdgePoints(tempBitmap);
 
-            polygonView.setPoints(pointFs);
-            polygonView.setVisibility(View.VISIBLE);
+                polygonView.setPoints(pointFs);
+                polygonView.setVisibility(View.VISIBLE);
 
-            int padding = (int) getResources().getDimension(R.dimen.scanPadding);
+                int padding = (int) getResources().getDimension(R.dimen.scanPadding);
 
-            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(tempBitmap.getWidth() + 2 * padding, tempBitmap.getHeight() + 2 * padding);
-            layoutParams.gravity = Gravity.CENTER;
+                FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(tempBitmap.getWidth() + 2 * padding, tempBitmap.getHeight() + 2 * padding);
+                layoutParams.gravity = Gravity.CENTER;
 
-            polygonView.setLayoutParams(layoutParams);
-            polygonView.setPointColor(getResources().getColor(R.color.orange));
+                polygonView.setLayoutParams(layoutParams);
+                polygonView.setPointColor(getResources().getColor(R.color.orange));
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                setProgressBar(false);
+            }
+        });
+
     }
 
     private Bitmap getCroppedImage() {
