@@ -188,9 +188,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
 
         cameraProviderFuture.addListener(() -> {
-            try {
+            previewView.post(() -> {
                 // Camera provider is now guaranteed to be available
-                ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
+                ProcessCameraProvider cameraProvider = null;
+                try {
+                    cameraProvider = cameraProviderFuture.get();
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
 
                 preview = setPreview();
                 imageCapture = setImageCapture();
@@ -215,11 +222,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         previewView.createSurfaceProvider());
 
                 setFrameLayoutRatio();
-            } catch (InterruptedException | ExecutionException e) {
-                // Currently no exceptions thrown. cameraProviderFuture.get() should
-                // not block since the listener is being called, so no need to
-                // handle InterruptedException.
-            }
+
+            });
         }, ContextCompat.getMainExecutor(this));
     }
 
