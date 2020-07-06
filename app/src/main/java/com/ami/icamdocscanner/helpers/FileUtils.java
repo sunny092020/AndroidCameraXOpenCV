@@ -50,6 +50,18 @@ public class FileUtils {
         }
     }
 
+    public static void removeThumbnail(RecyclerImageFile imageFile) {
+        String thumbnailPath = imageFile.getParent() + "/thumbnails/" + imageFile.getName();
+
+        if(FileUtils.isFileType(imageFile.getName(), "pdf")) {
+            thumbnailPath = imageFile.getParent() + "/thumbnails/" + FileUtils.fileNameWithoutExtension(imageFile.getName()) + "-pdf.jpg";
+        }
+
+        File thumbnailFile = new File(thumbnailPath);
+        boolean delete_result = thumbnailFile.delete();
+        Log.d("delete_result", Boolean.toString(delete_result));
+    }
+
     public static Bitmap createThumbnail(RecyclerImageFile imageFile, String thumbnailPath) {
 
         File directory = new File(imageFile.getParent() + "/thumbnails/");
@@ -65,7 +77,7 @@ public class FileUtils {
         Bitmap smallOriginBitmap = VisionUtils.scaledBitmap(originBitmap, DOWNSCALE_IMAGE_SIZE, DOWNSCALE_IMAGE_SIZE);
 
         try (FileOutputStream out = new FileOutputStream(thumbnailPath)) {
-            smallOriginBitmap.compress(Bitmap.CompressFormat.JPEG, 99, out);
+            smallOriginBitmap.compress(Bitmap.CompressFormat.JPEG, 30, out);
         } catch (IOException e) {
             e.printStackTrace();
         }

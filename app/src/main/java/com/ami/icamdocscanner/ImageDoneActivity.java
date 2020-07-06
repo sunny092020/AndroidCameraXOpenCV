@@ -22,6 +22,7 @@ import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.ami.icamdocscanner.helpers.FileUtils;
 import com.ami.icamdocscanner.helpers.ScannerConstants;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
 
@@ -191,8 +192,9 @@ public class ImageDoneActivity extends AppCompatActivity {
 
                 int numDeleted = 0;
                 for (int i = 0; i < adapter.getSelected().size(); i++) {
-                    File file = adapter.getSelected().get(i);
+                    RecyclerImageFile file = adapter.getSelected().get(i);
                     if(file.delete()) numDeleted++;
+                    FileUtils.removeThumbnail(file);
                 }
                 showToast(numDeleted + " files has been deleted.");
                 setupAdapter();
