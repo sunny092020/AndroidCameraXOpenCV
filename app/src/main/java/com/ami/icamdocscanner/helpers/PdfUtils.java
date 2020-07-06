@@ -21,16 +21,7 @@ import java.io.IOException;
 import java.util.List;
 
 public class PdfUtils {
-
     public static void toPDFMulti(List<RecyclerImageFile> imageFiles, String outPath) {
-        toPDFMultiOpenPdf(imageFiles, outPath);
-    }
-
-    public static void toPDFSingle(RecyclerImageFile imageFile, String outPath) {
-        toPDFSingleOpenPdf(imageFile, outPath);
-    }
-    
-    public static void toPDFMultiOpenPdf(List<RecyclerImageFile> imageFiles, String outPath) {
         // step 1: creation of a document-object
         Document document = new Document();
 
@@ -82,7 +73,7 @@ public class PdfUtils {
         document.close();
     }
 
-    public static void toPDFSingleOpenPdf(RecyclerImageFile imgFile, String outPath) {
+    public static void toPDFSingle(RecyclerImageFile imgFile, String outPath) {
         // step 1: creation of a document-object
         Document document = new Document();
 
