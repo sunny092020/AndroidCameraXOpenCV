@@ -82,8 +82,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Preview preview;
     Camera camera;
 
-    ImageButton btnCapture, btnAutoCapture;
-
     private TextView captureHintText;
     Context context;
 
@@ -105,7 +103,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        btnCapture = findViewById(R.id.btnCapture);
+        ImageButton btnCapture = findViewById(R.id.btnCapture);
         btnCapture.setOnClickListener(v -> {
             // preventing double, using threshold of 1000 ms
             if (lastManualCaptureEarly()){
@@ -118,7 +116,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             takePictureManual();
         });
 
-        btnAutoCapture = findViewById(R.id.btnAutoCapture);
+        ImageButton btnAutoCapture = findViewById(R.id.btnAutoCapture);
 
         context = this;
         btnAutoCapture.setOnClickListener(v -> {
