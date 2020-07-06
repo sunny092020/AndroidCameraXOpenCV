@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:shape="rectangle">
 
-</selector>
+    <solid android:color="@color/polygonViewCircleBackground" />
+
+    <stroke
+        android:width="10dp"
+        android:color="@color/polygonViewCircleStrokeColor"></stroke>
+</shape>
