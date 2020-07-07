@@ -112,8 +112,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 return;
             }
             markManualCaptureTime();
-            displayHint("Hold firmly. Capturing image...");
-
             setAutoFocus();
             takePictureManual();
         });
@@ -436,6 +434,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
                 Bitmap rotated90croppedBmp = cropCapturedImage(capturedImg, previewBitmapW, previewBitmapH);
+
+                if(Preferences.getCaptureMode((Activity) context) == Preferences.CAPTURE_MODE_BATCH) {
+                    batchModeCapture(rotated90croppedBmp);
+                    return;
+                }
+
                 MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, (Activity) context);
 
                 if(contour == null) {
@@ -457,9 +461,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
                 Bitmap previewBitmap = previewView.getBitmap();
-                runOnUiThread(() -> freezePreview(previewBitmap));
                 int previewBitmapW = previewBitmap.getWidth(), previewBitmapH = previewBitmap.getHeight();
                 Bitmap rotated90croppedBmp = cropCapturedImage(capturedImg, previewBitmapW, previewBitmapH);
+
+                if(Preferences.getCaptureMode((Activity) context) == Preferences.CAPTURE_MODE_BATCH) {
+                    batchModeCapture(rotated90croppedBmp);
+                    return;
+                }
+
+                runOnUiThread(() -> freezePreview(previewBitmap));
+
                 MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, (Activity) context);
 
                 // proceed to cropping screen even no contour found
@@ -534,7 +545,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
     }
 
-    private  void drawPoint(List<Point> points) {
+    private void drawPoint(List<Point> points) {
         overlay = Bitmap.createBitmap(previewView.getWidth(), previewView.getHeight(), Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(overlay);
 
@@ -542,6 +553,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             canvas.drawCircle((float) p.x, (float)p.y, 30, fillPaint);
             canvas.drawCircle((float) p.x, (float)p.y, 30, strokePaint);
         }
+    }
+
+    private void batchModeCapture(Bitmap rotated90croppedBmp) {
+        int DOWNSCALE_IMAGE_SIZE = 80;
+        Bitmap smallOriginBitmap = VisionUtils.scaledBitmap(rotated90croppedBmp, DOWNSCALE_IMAGE_SIZE, DOWNSCALE_IMAGE_SIZE);
+
+        runOnUiThread(() -> {
+            ImageView batchThumbnails = findViewById(R.id.batchThumbnails);
+            batchThumbnails.setImageBitmap(smallOriginBitmap);
+            resetCaptureTime();
+        });
     }
 
     private void startCrop(Bitmap rotated90croppedBmp, MatOfPoint2f contour) {

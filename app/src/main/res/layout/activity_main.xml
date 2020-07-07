@@ -97,6 +97,17 @@
             android:scaleType="fitCenter"
             app:srcCompat="@drawable/ic_single" />
 
+        <ImageView
+            android:id="@+id/batchThumbnails"
+            android:layout_width="60dp"
+            android:layout_height="80dp"
+            android:layout_marginRight="5dp"
+            android:background="@android:color/transparent"
+            android:layout_centerInParent="true"
+            android:layout_alignParentRight="true"
+            android:scaleType="centerCrop"
+            app:srcCompat="@android:color/transparent" />
+
     </RelativeLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
