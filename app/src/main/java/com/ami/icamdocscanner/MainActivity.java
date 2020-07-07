@@ -12,7 +12,6 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
@@ -61,6 +60,7 @@ import org.opencv.core.Point;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
@@ -216,44 +216,40 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void startCamera() {
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
 
-        cameraProviderFuture.addListener(() -> {
-            previewView.post(() -> {
-                // Camera provider is now guaranteed to be available
-                ProcessCameraProvider cameraProvider = null;
-                try {
-                    cameraProvider = cameraProviderFuture.get();
-                } catch (ExecutionException e) {
-                    e.printStackTrace();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+        cameraProviderFuture.addListener(() -> previewView.post(() -> {
+            // Camera provider is now guaranteed to be available
+            ProcessCameraProvider cameraProvider = null;
+            try {
+                cameraProvider = cameraProviderFuture.get();
+            } catch (ExecutionException | InterruptedException e) {
+                e.printStackTrace();
+            }
 
-                preview = setPreview();
-                imageCapture = setImageCapture();
-                imageAnalysis = setImageAnalysis();
+            preview = setPreview();
+            imageCapture = setImageCapture();
+            imageAnalysis = setImageAnalysis();
 
-                // Select back camera
-                CameraSelector cameraSelector = new CameraSelector.Builder().requireLensFacing(CameraSelector.LENS_FACING_BACK).build();
+            // Select back camera
+            CameraSelector cameraSelector = new CameraSelector.Builder().requireLensFacing(CameraSelector.LENS_FACING_BACK).build();
 
-                // Unbind use cases before rebinding
-                cameraProvider.unbindAll();
+            // Unbind use cases before rebinding
+            cameraProvider.unbindAll();
 
-                // Attach use cases to the camera with the same lifecycle owner
-                camera = cameraProvider.bindToLifecycle(
-                        this,
-                        cameraSelector,
-                        preview,
-                        imageCapture,
-                        imageAnalysis);
+            // Attach use cases to the camera with the same lifecycle owner
+            camera = cameraProvider.bindToLifecycle(
+                    this,
+                    cameraSelector,
+                    preview,
+                    imageCapture,
+                    imageAnalysis);
 
-                // Connect the preview use case to the previewView
-                preview.setSurfaceProvider(
-                        previewView.createSurfaceProvider());
+            // Connect the preview use case to the previewView
+            preview.setSurfaceProvider(
+                    previewView.createSurfaceProvider());
 
-                setFrameLayoutRatio();
+            setFrameLayoutRatio();
 
-            });
-        }, ContextCompat.getMainExecutor(this));
+        }), ContextCompat.getMainExecutor(this));
     }
 
     private void setAutoFocus() {
@@ -572,7 +568,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             batchThumbnails.setImageBitmap(smallOriginBitmap);
             batchNum++;
             TextView batchNumTxt = findViewById(R.id.batchNum);
-            batchNumTxt.setText(Integer.toString(batchNum));
+            batchNumTxt.setText(String.format(Locale.US, "%d", batchNum));
             batchNumTxt.setVisibility(View.VISIBLE);
             resetCaptureTime();
         });
