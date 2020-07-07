@@ -47,6 +47,7 @@ import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.ami.icamdocscanner.helpers.FileUtils;
 import com.ami.icamdocscanner.helpers.Preferences;
 import com.ami.icamdocscanner.helpers.ScannerConstants;
 import com.ami.icamdocscanner.helpers.VisionUtils;
@@ -88,6 +89,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public Bitmap overlay;
     public Paint fillPaint, strokePaint;
 
+    private int batchNum = 0;
+
     private static long lastManualCaptureTime, lastAutoCaptureTime;
 
     static {
@@ -102,6 +105,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        FileUtils.deleteTempDir(this);
 
         context = this;
 
@@ -558,10 +563,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void batchModeCapture(Bitmap rotated90croppedBmp) {
         int DOWNSCALE_IMAGE_SIZE = 80;
         Bitmap smallOriginBitmap = VisionUtils.scaledBitmap(rotated90croppedBmp, DOWNSCALE_IMAGE_SIZE, DOWNSCALE_IMAGE_SIZE);
+        FileUtils.ensureTempDir(this);
+        String fileName = FileUtils.tempDir(this) + batchNum + ".jpg";
+        FileUtils.writeBitmap(rotated90croppedBmp, fileName);
 
         runOnUiThread(() -> {
             ImageView batchThumbnails = findViewById(R.id.batchThumbnails);
             batchThumbnails.setImageBitmap(smallOriginBitmap);
+            batchNum++;
+            TextView batchNumTxt = findViewById(R.id.batchNum);
+            batchNumTxt.setText(Integer.toString(batchNum));
+            batchNumTxt.setVisibility(View.VISIBLE);
             resetCaptureTime();
         });
     }

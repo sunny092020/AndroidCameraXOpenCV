@@ -1,9 +1,11 @@
 package com.ami.icamdocscanner.helpers;
 
+import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
 
+import com.ami.icamdocscanner.R;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
 
 import java.io.File;
@@ -84,4 +86,34 @@ public class FileUtils {
 
         return smallOriginBitmap;
     }
+
+    public static void ensureTempDir(Activity activity) {
+        File directory = new File(activity.getFilesDir() + "/" +  R.string.temp_dir + "/");
+        if (!directory.exists()){
+            if (!directory.mkdir()) return;
+        }
+    }
+
+    public static void deleteTempDir(Activity activity) {
+        File directory = new File(activity.getFilesDir() + "/" +  R.string.temp_dir + "/");
+        if (directory.exists()) directory.delete();
+    }
+
+    public static void writeBitmap(Bitmap bitmap, String filename) {
+        try (FileOutputStream out = new FileOutputStream(filename)) {
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 99, out); // bmp is your Bitmap instance
+            // PNG is a lossless format, the compression factor (100) is ignored
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static String home(Activity activity) {
+        return activity.getFilesDir().getAbsolutePath();
+    }
+
+    public static String tempDir(Activity activity) {
+        return activity.getFilesDir() + "/" +  R.string.temp_dir + "/";
+    }
+
 }

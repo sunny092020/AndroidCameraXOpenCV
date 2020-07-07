@@ -97,16 +97,50 @@
             android:scaleType="fitCenter"
             app:srcCompat="@drawable/ic_single" />
 
-        <ImageView
-            android:id="@+id/batchThumbnails"
-            android:layout_width="60dp"
-            android:layout_height="80dp"
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
             android:layout_marginRight="5dp"
-            android:background="@android:color/transparent"
+            android:layout_marginLeft="5dp"
+            android:layout_marginTop="10dp"
             android:layout_centerInParent="true"
-            android:layout_alignParentRight="true"
-            android:scaleType="centerCrop"
-            app:srcCompat="@android:color/transparent" />
+            android:layout_alignParentRight="true">
+
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginRight="5dp"
+                android:layout_marginLeft="5dp"
+                android:layout_marginTop="10dp"
+                android:layout_centerInParent="true"
+                android:layout_alignParentRight="true">
+
+                <ImageView
+                    android:id="@+id/batchThumbnails"
+                    android:layout_width="60dp"
+                    android:layout_height="80dp"
+                    android:background="@android:color/transparent"
+                    android:scaleType="centerCrop"
+                    app:srcCompat="@android:color/transparent" />
+
+                <TextView
+                    android:id="@+id/batchNum"
+                    android:layout_alignRight="@id/batchThumbnails"
+                    android:layout_alignTop="@id/batchThumbnails"
+                    android:layout_width="20dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/circle_background"
+                    android:layout_height="20dp"
+                    android:gravity="center"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:visibility="gone"/>
+
+            </RelativeLayout>
+
+        </RelativeLayout>
 
     </RelativeLayout>
 

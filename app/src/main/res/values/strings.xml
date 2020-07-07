@@ -14,7 +14,7 @@
 
     <string name="delete_file_title">Delete files</string>
     <string name="delete_file_message">Do you want to delete these files?</string>
-
+    <string name="temp_dir">temp</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
 
