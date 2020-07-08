@@ -88,15 +88,27 @@ public class FileUtils {
     }
 
     public static void ensureTempDir(Activity activity) {
-        File directory = new File(activity.getFilesDir() + "/" +  R.string.temp_dir + "/");
+        File directory = new File(activity.getFilesDir().getAbsolutePath() + "/" +  "temp_dir" + "/");
         if (!directory.exists()){
             if (!directory.mkdir()) return;
         }
     }
 
     public static void deleteTempDir(Activity activity) {
-        File directory = new File(activity.getFilesDir() + "/" +  R.string.temp_dir + "/");
-        if (directory.exists()) directory.delete();
+        File directory = new File(activity.getFilesDir().getAbsolutePath() + "/" +  "temp_dir");
+        if (directory.exists()) {
+            File[] allContents = directory.listFiles();
+            if (allContents != null) {
+                for (File file : allContents) {
+                    file.delete();
+                }
+            }
+            directory.delete();
+        }
+    }
+
+    public static Bitmap readBitmap(String filename) {
+        return BitmapFactory.decodeFile(filename);
     }
 
     public static void writeBitmap(Bitmap bitmap, String filename) {
@@ -113,7 +125,7 @@ public class FileUtils {
     }
 
     public static String tempDir(Activity activity) {
-        return activity.getFilesDir() + "/" +  R.string.temp_dir + "/";
+        return activity.getFilesDir().getAbsolutePath() + "/" +  "temp_dir" + "/";
     }
 
 }

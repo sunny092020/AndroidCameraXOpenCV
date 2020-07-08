@@ -1,95 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<RelativeLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000"
+    tools:context="com.ami.icamdocscanner.ImageCropActivity"
+    android:id="@+id/rlContainer">
+
+    <RelativeLayout
+        android:id="@+id/viewPager2Holder"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:context="com.ami.icamdocscanner.ImageCropActivity"
-        android:background="#ffffff"
-        android:id="@+id/rlContainer"
->
-    <LinearLayout
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        app:layout_constraintBottom_toTopOf="@+id/bottomPanel"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp">
+
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/viewPager2"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            tools:context="com.ami.icamdocscanner.ImageCropActivity"
-            android:background="#000000"
-            android:orientation="vertical"
-            android:weightSum="10">
+            android:layout_height="match_parent"/>
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:layout_marginStart="20dp"
-            android:layout_marginEnd="20dp">
-        </RelativeLayout>
+    </RelativeLayout>
 
-        <FrameLayout
-                android:id="@+id/frameLayout"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="8"
-                android:layout_gravity="center"
-                android:layout_margin="0dp">
+    <RelativeLayout
+        android:id="@+id/bottomPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent">
 
-            <FrameLayout
-                    android:id="@+id/holderImageCrop"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center"
-                    android:layout_margin="0dp">
+        <Button
+            android:id="@+id/btnClose"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:minWidth="150dp"
+            android:layout_alignParentStart="true"
+            android:layout_marginLeft="30dp"
+            android:foreground="?android:selectableItemBackground"
+            android:shadowRadius="10"
+            android:textColor="#ffffff"/>
 
-                <ImageView
-                        android:id="@+id/imageView"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:adjustViewBounds="true"/>
-            </FrameLayout>
-
-            <com.ami.icamdocscanner.libraries.PolygonView
-                    android:id="@+id/polygonView"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center"
-                    android:visibility="gone"/>
-        </FrameLayout>
-
-        <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp"
-                android:gravity="center">
-            <Button
-                    android:id="@+id/btnImageCrop"
-                    android:layout_width="wrap_content"
-                    android:layout_height="50dp"
-                    android:minWidth="150dp"
-                    android:layout_alignParentEnd="true"
-                    android:foreground="?android:selectableItemBackground"
-                    android:shadowRadius="10"
-                    android:textColor="#ffffff"
-            />
-            <Button
-                    android:id="@+id/btnClose"
-                    android:layout_width="wrap_content"
-                    android:layout_height="50dp"
-                    android:minWidth="150dp"
-                    android:layout_alignParentStart="true"
-                    android:foreground="?android:selectableItemBackground"
-                    android:shadowRadius="10"
-                    android:textColor="#ffffff"
-            />
-        </RelativeLayout>
-    </LinearLayout>
-    <ProgressBar
-            android:id="@+id/progressBar"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@color/halfTransparentBackground"
-            android:padding="100dp"
-    />
-</RelativeLayout>
+        <Button
+            android:id="@+id/btnImageCrop"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:minWidth="150dp"
+            android:layout_marginRight="30dp"
+            android:layout_alignParentEnd="true"
+            android:foreground="?android:selectableItemBackground"
+            android:shadowRadius="10"
+            android:textColor="#ffffff"/>
+    </RelativeLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

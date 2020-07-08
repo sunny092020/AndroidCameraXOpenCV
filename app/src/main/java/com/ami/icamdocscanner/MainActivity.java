@@ -50,6 +50,7 @@ import com.ami.icamdocscanner.helpers.FileUtils;
 import com.ami.icamdocscanner.helpers.Preferences;
 import com.ami.icamdocscanner.helpers.ScannerConstants;
 import com.ami.icamdocscanner.helpers.VisionUtils;
+import com.ami.icamdocscanner.models.RecyclerImageFile;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.jetbrains.annotations.NotNull;
@@ -90,6 +91,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public Paint fillPaint, strokePaint;
 
     private int batchNum = 0;
+    int currentImagePosition = -1;
 
     private static long lastManualCaptureTime, lastAutoCaptureTime;
 
@@ -106,7 +108,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        FileUtils.deleteTempDir(this);
+        // for retake image
+        currentImagePosition =  getIntent().getIntExtra("currentImagePosition", -1);
+        if(currentImagePosition == -1) FileUtils.deleteTempDir(this);
 
         context = this;
 
@@ -163,6 +167,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 captureHintText.setText("");
                 captureHintText.setVisibility(View.INVISIBLE);
             }, 1000);
+        });
+
+        ImageView btnBatchThumbnails = findViewById(R.id.batchThumbnails);
+
+        btnBatchThumbnails.setOnClickListener(v -> {
+            Activity activity = (Activity) context;
+            // set text to "" to make way for other hint
+            if(Preferences.getCaptureMode(activity) == Preferences.CAPTURE_MODE_BATCH) {
+                Intent intent = new Intent(this, ImageCropActivity.class);
+                startActivity(intent);
+                finish();
+            }
         });
 
         ivBitmap = findViewById(R.id.ivBitmap);
@@ -557,6 +573,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void batchModeCapture(Bitmap rotated90croppedBmp) {
+        if(currentImagePosition >= 0) {
+            String fileName = FileUtils.tempDir(this) + currentImagePosition + ".jpg";
+            FileUtils.writeBitmap(rotated90croppedBmp, fileName);
+            Intent cropIntent = new Intent(this, ImageCropActivity.class);
+            cropIntent.putExtra("currentImagePosition", currentImagePosition);
+            startActivity(cropIntent);
+            finish();
+            return;
+        }
+
         int DOWNSCALE_IMAGE_SIZE = 80;
         Bitmap smallOriginBitmap = VisionUtils.scaledBitmap(rotated90croppedBmp, DOWNSCALE_IMAGE_SIZE, DOWNSCALE_IMAGE_SIZE);
         FileUtils.ensureTempDir(this);

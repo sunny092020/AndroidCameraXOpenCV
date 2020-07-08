@@ -35,15 +35,10 @@ public class Line {
         if (x2==x1) return new LinePolar(x1, 0);
         if (y2==y1) return new LinePolar(y1, 90);
 
-//        Log.d("a", Double.toString(a));
-
         double b = y1 - a*x1;
-//        Log.d("b", Double.toString(b));
 
         double x0 = -b/a;
         double y0 = b;
-//        Log.d("x0", Double.toString(x0));
-//        Log.d("y0", Double.toString(y0));
 
         double r     = x0*y0/Math.sqrt(x0*x0 + y0*y0);
         double theta = Math.atan2(x0, y0)*180/Math.PI;

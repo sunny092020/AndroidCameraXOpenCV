@@ -1,97 +1,48 @@
 package com.ami.icamdocscanner;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.graphics.PointF;
-import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Gravity;
-import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.viewpager2.widget.ViewPager2;
 
+import com.ami.icamdocscanner.helpers.FileUtils;
 import com.ami.icamdocscanner.helpers.ScannerConstants;
 import com.ami.icamdocscanner.helpers.VisionUtils;
-import com.ami.icamdocscanner.libraries.PolygonView;
+import com.ami.icamdocscanner.models.RecyclerImageFile;
 
-import org.opencv.android.Utils;
-import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint2f;
-import org.opencv.core.Point;
 
+import java.io.File;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-
-import io.reactivex.Observable;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.schedulers.Schedulers;
 
 public class ImageCropActivity extends AppCompatActivity {
+    ViewPager2 viewPager2;
 
-    private FrameLayout holderImageCrop;
-    private ImageView imageView;
-    private PolygonView polygonView;
-    private ProgressBar progressBar;
-
-    protected CompositeDisposable disposable = new CompositeDisposable();
-    private Bitmap selectedImage;
-
-    private OnClickListener btnImageEnhanceClick = v -> {
-        showProgressBar();
-        toEditImage();
-    };
+    private OnClickListener btnImageEnhanceClick = v -> toEditImage();
 
     private void toEditImage() {
-        Bitmap cropImageBitmap = getCroppedImage();
-        if(cropImageBitmap == null) {
-            hideProgressBar();
-            return;
-        }
-
-        ScannerConstants.cropImageBitmap = cropImageBitmap;
-        getCroppedPolygon();
-
         Intent cropIntent = new Intent(this, ImageEditActivity.class);
         startActivity(cropIntent);
         finish();
     }
 
-    private void getCroppedPolygon() {
-        Map<Integer, PointF> mapPoints = polygonView.getPoints();
-        List<PointF> pointFs = new ArrayList<>(mapPoints.values());
-
-        if(pointFs.size() != 4) return;
-
-        float kx = (float) holderImageCrop.getWidth()/selectedImage.getWidth();
-        float ky = (float) holderImageCrop.getHeight()/selectedImage.getHeight();
-        float k = (Math.min(kx, ky));
-
-        Point[] points = {
-            new Point(pointFs.get(0).x/k, pointFs.get(0).y/k),
-            new Point(pointFs.get(1).x/k, pointFs.get(1).y/k),
-            new Point(pointFs.get(2).x/k, pointFs.get(2).y/k),
-            new Point(pointFs.get(3).x/k, pointFs.get(3).y/k),
-        };
-        ScannerConstants.croppedPolygon = new MatOfPoint2f(points);
-    }
 
     private OnClickListener btnCloseClick = v -> {
         ScannerConstants.resetCaptureState();
         Intent intent = new Intent(this, MainActivity.class);
+        int currentImagePosition = viewPager2.getCurrentItem();
+        intent.putExtra("currentImagePosition", currentImagePosition);
         startActivity(intent);
         finish();
     };
@@ -100,165 +51,45 @@ public class ImageCropActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_image_crop);
-        selectedImage = ScannerConstants.selectedImageBitmap;
         initView();
+        viewPager2 = findViewById(R.id.viewPager2);
+        File directory = new File(FileUtils.tempDir(this));
+        viewPager2.setAdapter(new ViewPagerAdapter(this, listFiles(directory), viewPager2));
+
+        int currentImagePosition =  getIntent().getIntExtra("currentImagePosition", -1);
+        viewPager2.setCurrentItem(currentImagePosition, false);
     }
 
-    private void showProgressBar() {
-        RelativeLayout rlContainer = findViewById(R.id.rlContainer);
-        setViewInteract(rlContainer, false);
-        progressBar.setVisibility(View.VISIBLE);
-    }
+    private List<RecyclerImageFile> listFiles(File directory) {
+        File[] files = directory.listFiles(File::isFile);
+        assert files != null;
+        Arrays.sort( files, (Comparator<File>) (o1, o2) -> {
+            String name1 = FileUtils.fileNameWithoutExtension(o1.getName());
+            String name2 = FileUtils.fileNameWithoutExtension(o2.getName());
+            return Integer.compare(Integer.parseInt(name1), Integer.parseInt(name2));
+        });
 
-    private void hideProgressBar() {
-        RelativeLayout rlContainer = findViewById(R.id.rlContainer);
-        setViewInteract(rlContainer, true);
-        progressBar.setVisibility(View.GONE);
-    }
+        List<RecyclerImageFile> recyclerImageFiles = new ArrayList<>();
 
-    private void showError() {
-        Toast.makeText(this, ScannerConstants.cropError, Toast.LENGTH_LONG).show();
-    }
-
-    private void setViewInteract(View view, boolean canDo) {
-        view.setEnabled(canDo);
-        if (view instanceof ViewGroup) {
-            for (int i = 0; i < ((ViewGroup) view).getChildCount(); i++) {
-                setViewInteract(((ViewGroup) view).getChildAt(i), canDo);
-            }
+        for (File file : files) {
+            RecyclerImageFile returnFile = new RecyclerImageFile(file);
+            Bitmap rotated90croppedBmp = FileUtils.readBitmap(returnFile.getAbsolutePath());
+            MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, this);
+            returnFile.setCroppedPolygon(contour);
+            recyclerImageFiles.add(returnFile);
         }
+
+        return recyclerImageFiles;
     }
 
     private void initView() {
         Button btnImageCrop = findViewById(R.id.btnImageCrop);
         Button btnClose = findViewById(R.id.btnClose);
-        holderImageCrop = findViewById(R.id.holderImageCrop);
-        imageView = findViewById(R.id.imageView);
         btnImageCrop.setText(ScannerConstants.cropText);
         btnClose.setText(ScannerConstants.backText);
-        polygonView = findViewById(R.id.polygonView);
-        progressBar = findViewById(R.id.progressBar);
-        if (progressBar.getIndeterminateDrawable() != null && ScannerConstants.progressColor != null)
-            progressBar.getIndeterminateDrawable().setColorFilter(Color.parseColor(ScannerConstants.progressColor), android.graphics.PorterDuff.Mode.MULTIPLY);
-        else if (progressBar.getProgressDrawable() != null && ScannerConstants.progressColor != null)
-            progressBar.getProgressDrawable().setColorFilter(Color.parseColor(ScannerConstants.progressColor), android.graphics.PorterDuff.Mode.MULTIPLY);
         btnImageCrop.setBackgroundColor(Color.parseColor(ScannerConstants.cropColor));
         btnClose.setBackgroundColor(Color.parseColor(ScannerConstants.backColor));
         btnImageCrop.setOnClickListener(btnImageEnhanceClick);
         btnClose.setOnClickListener(btnCloseClick);
-        drawPolygonAsync();
     }
-
-    private void setProgressBar(boolean isShow) {
-        if (isShow)
-            showProgressBar();
-        else
-            hideProgressBar();
-    }
-
-    private void drawPolygonAsync() {
-        setProgressBar(true);
-        drawPolygon();
-    }
-
-    private void drawPolygon() {
-        // For those curious why this works, when onCreate is executed in your Activity, the UI has not been drawn to the screen yet,
-        // so nothing has dimensions yet since they haven't been laid out on the screen. When setContentView is called,
-        // a message is posted to the UI thread to draw the UI for your layout, but will happen in the future after onCreate
-        // finishes executing. Posting a Runnable to the UI thread will put the Runnable at the end of the message queue for the UI thread,
-        // so will be executed after the screen has been drawn, thus everything has dimensions
-        holderImageCrop.post(() -> {
-            Bitmap scaledBitmap = VisionUtils.scaledBitmap(selectedImage, holderImageCrop.getWidth(), holderImageCrop.getHeight());
-            imageView.setImageBitmap(scaledBitmap);
-
-            Bitmap tempBitmap = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
-
-            Map<Integer, PointF> pointFs;
-            try {
-                pointFs = getEdgePoints(tempBitmap);
-
-                polygonView.setPoints(pointFs);
-                polygonView.setVisibility(View.VISIBLE);
-
-                int padding = (int) getResources().getDimension(R.dimen.scanPadding);
-
-                FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(tempBitmap.getWidth() + 2 * padding, tempBitmap.getHeight() + 2 * padding);
-                layoutParams.gravity = Gravity.CENTER;
-
-                polygonView.setLayoutParams(layoutParams);
-                polygonView.setPointColor(getResources().getColor(R.color.orange));
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                setProgressBar(false);
-            }
-        });
-
-    }
-
-    private Bitmap getCroppedImage() {
-        try {
-            Map<Integer, PointF> points = polygonView.getPoints();
-
-            float xRatio = (float) selectedImage.getWidth() / imageView.getWidth();
-            float yRatio = (float) selectedImage.getHeight() / imageView.getHeight();
-
-            float x1 = (Objects.requireNonNull(points.get(0)).x) * xRatio;
-            float x2 = (Objects.requireNonNull(points.get(1)).x) * xRatio;
-            float x3 = (Objects.requireNonNull(points.get(2)).x) * xRatio;
-            float x4 = (Objects.requireNonNull(points.get(3)).x) * xRatio;
-            float y1 = (Objects.requireNonNull(points.get(0)).y) * yRatio;
-            float y2 = (Objects.requireNonNull(points.get(1)).y) * yRatio;
-            float y3 = (Objects.requireNonNull(points.get(2)).y) * yRatio;
-            float y4 = (Objects.requireNonNull(points.get(3)).y) * yRatio;
-            return VisionUtils.getScannedBitmap(selectedImage, x1, y1, x2, y2, x3, y3, x4, y4);
-        } catch (Exception e) {
-            showError();
-            return null;
-        }
-    }
-
-    private Map<Integer, PointF> getEdgePoints(Bitmap tempBitmap) {
-        List<PointF> pointFs = getContourEdgePoints();
-        return orderedValidEdgePoints(tempBitmap, pointFs);
-    }
-
-    private List<PointF> getContourEdgePoints() {
-        MatOfPoint2f point2f = ScannerConstants.croppedPolygon;
-        if (point2f == null)
-            point2f = new MatOfPoint2f();
-        List<Point> points = Arrays.asList(point2f.toArray());
-        List<PointF> result = new ArrayList<>();
-
-        float kx = (float) holderImageCrop.getWidth()/selectedImage.getWidth();
-        float ky = (float) holderImageCrop.getHeight()/selectedImage.getHeight();
-        float k = (Math.min(kx, ky));
-
-        for (int i = 0; i < points.size(); i++) {
-            result.add(new PointF(((float) points.get(i).x*k), ((float) points.get(i).y*k)));
-        }
-        return result;
-    }
-
-    private Map<Integer, PointF> orderedValidEdgePoints(Bitmap tempBitmap, List<PointF> pointFs) {
-        Map<Integer, PointF> orderedPoints = polygonView.getOrderedPoints(pointFs);
-        if (!polygonView.isValidShape(orderedPoints)) {
-            orderedPoints = VisionUtils.getOutlinePoints(tempBitmap);
-        }
-        return orderedPoints;
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        disposable.clear();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        disposable.dispose();
-    }
-
 }
