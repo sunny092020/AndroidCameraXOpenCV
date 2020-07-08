@@ -111,6 +111,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         context = this;
 
+        setupButtons();
+        
+        ivBitmap = findViewById(R.id.ivBitmap);
+        capturedView = findViewById(R.id.capturedView);
+
+        captureHintText = findViewById(R.id.capture_hint_text);
+        previewView = findViewById(R.id.preview_view);
+
+        setupPaint();
+
+        resetCaptureTime();
+
+        if (allPermissionsGranted()) {
+            startCamera();
+        } else {
+            ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
+        }
+    }
+
+    private void setupButtons() {
         ImageButton btnCapture = findViewById(R.id.btnCapture);
         btnCapture.setOnClickListener(v -> {
             // preventing double, using threshold of 1000 ms
@@ -144,6 +164,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }, 1000);
         });
 
+        if(Preferences.getAutoCapture(this)) {
+            btnAutoCapture.setImageResource(R.drawable.ic_auto_enable);
+        } else {
+            btnAutoCapture.setImageResource(R.drawable.ic_auto_disable);
+        }
+
         RelativeLayout btnBatchThumbnails = findViewById(R.id.batchThumbnailsHolder);
 
         ImageButton btnMode = findViewById(R.id.btnMode);
@@ -170,6 +196,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }, 1000);
         });
 
+        if(Preferences.getCaptureMode(this) == Preferences.CAPTURE_MODE_SINGLE) {
+            btnMode.setImageResource(R.drawable.ic_single);
+        } else {
+            btnMode.setImageResource(R.drawable.ic_multi);
+        }
+
         // for retake image
         currentImagePosition =  getIntent().getIntExtra("currentImagePosition", -1);
         if(currentImagePosition == -1) {
@@ -186,34 +218,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         else {
             btnMode.setVisibility(View.INVISIBLE);
-        }
-        
-        ivBitmap = findViewById(R.id.ivBitmap);
-        capturedView = findViewById(R.id.capturedView);
-
-        captureHintText = findViewById(R.id.capture_hint_text);
-        previewView = findViewById(R.id.preview_view);
-
-        if(Preferences.getAutoCapture(this)) {
-            btnAutoCapture.setImageResource(R.drawable.ic_auto_enable);
-        } else {
-            btnAutoCapture.setImageResource(R.drawable.ic_auto_disable);
-        }
-
-        if(Preferences.getCaptureMode(this) == Preferences.CAPTURE_MODE_SINGLE) {
-            btnMode.setImageResource(R.drawable.ic_single);
-        } else {
-            btnMode.setImageResource(R.drawable.ic_multi);
-        }
-
-        setupPaint();
-
-        resetCaptureTime();
-
-        if (allPermissionsGranted()) {
-            startCamera();
-        } else {
-            ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
         }
     }
 
