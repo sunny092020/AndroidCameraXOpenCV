@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 
@@ -13,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.ami.icamdocscanner.helpers.FileUtils;
+import com.ami.icamdocscanner.helpers.Preferences;
 import com.ami.icamdocscanner.helpers.ScannerConstants;
 import com.ami.icamdocscanner.helpers.VisionUtils;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
@@ -29,14 +31,49 @@ import java.util.List;
 public class ImageCropActivity extends AppCompatActivity {
     ViewPager2 viewPager2;
 
-    private OnClickListener btnImageEnhanceClick = v -> toEditImage();
-
     private void toEditImage() {
         Intent cropIntent = new Intent(this, ImageEditActivity.class);
         startActivity(cropIntent);
         finish();
     }
 
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_image_crop);
+        initView();
+        viewPager2 = findViewById(R.id.viewPager2);
+        File directory = new File(FileUtils.tempDir(this));
+
+        List<RecyclerImageFile> files = FileUtils.listFilesByName(directory);
+
+        viewPager2.setAdapter(new ViewPagerAdapter(this, setContours(files), viewPager2));
+
+        int currentImagePosition =  getIntent().getIntExtra("currentImagePosition", files.size());
+        viewPager2.setCurrentItem(currentImagePosition, false);
+    }
+
+    private List<RecyclerImageFile> setContours(List<RecyclerImageFile> files) {
+        for (RecyclerImageFile file : files) {
+            Bitmap rotated90croppedBmp = FileUtils.readBitmap(file.getAbsolutePath());
+            MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, this);
+            file.setCroppedPolygon(contour);
+        }
+        return files;
+    }
+
+
+    private void initView() {
+        Button btnImageCrop = findViewById(R.id.btnImageCrop);
+        Button btnClose = findViewById(R.id.btnClose);
+        Button btnAdd = findViewById(R.id.btnAdd);
+
+        btnImageCrop.setOnClickListener(btnImageEnhanceClick);
+        btnClose.setOnClickListener(btnCloseClick);
+
+        if(Preferences.getCaptureMode(this) == Preferences.CAPTURE_MODE_SINGLE) btnAdd.setVisibility(View.GONE);
+        else btnAdd.setOnClickListener(btnAddClick);
+    }
 
     private OnClickListener btnCloseClick = v -> {
         ScannerConstants.resetCaptureState();
@@ -47,49 +84,14 @@ public class ImageCropActivity extends AppCompatActivity {
         finish();
     };
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_image_crop);
-        initView();
-        viewPager2 = findViewById(R.id.viewPager2);
-        File directory = new File(FileUtils.tempDir(this));
-        viewPager2.setAdapter(new ViewPagerAdapter(this, listFiles(directory), viewPager2));
+    private OnClickListener btnAddClick = v -> {
+        ScannerConstants.resetCaptureState();
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.putExtra("add", true);
+        startActivity(intent);
+        finish();
+    };
 
-        int currentImagePosition =  getIntent().getIntExtra("currentImagePosition", -1);
-        viewPager2.setCurrentItem(currentImagePosition, false);
-    }
+    private OnClickListener btnImageEnhanceClick = v -> toEditImage();
 
-    private List<RecyclerImageFile> listFiles(File directory) {
-        File[] files = directory.listFiles(File::isFile);
-        assert files != null;
-        Arrays.sort( files, (Comparator<File>) (o1, o2) -> {
-            String name1 = FileUtils.fileNameWithoutExtension(o1.getName());
-            String name2 = FileUtils.fileNameWithoutExtension(o2.getName());
-            return Integer.compare(Integer.parseInt(name1), Integer.parseInt(name2));
-        });
-
-        List<RecyclerImageFile> recyclerImageFiles = new ArrayList<>();
-
-        for (File file : files) {
-            RecyclerImageFile returnFile = new RecyclerImageFile(file);
-            Bitmap rotated90croppedBmp = FileUtils.readBitmap(returnFile.getAbsolutePath());
-            MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, this);
-            returnFile.setCroppedPolygon(contour);
-            recyclerImageFiles.add(returnFile);
-        }
-
-        return recyclerImageFiles;
-    }
-
-    private void initView() {
-        Button btnImageCrop = findViewById(R.id.btnImageCrop);
-        Button btnClose = findViewById(R.id.btnClose);
-        btnImageCrop.setText(ScannerConstants.cropText);
-        btnClose.setText(ScannerConstants.backText);
-        btnImageCrop.setBackgroundColor(Color.parseColor(ScannerConstants.cropColor));
-        btnClose.setBackgroundColor(Color.parseColor(ScannerConstants.backColor));
-        btnImageCrop.setOnClickListener(btnImageEnhanceClick);
-        btnClose.setOnClickListener(btnCloseClick);
-    }
 }

@@ -93,6 +93,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private int batchNum = 0;
     int currentImagePosition = -1;
+    boolean add = false;
 
     private static long lastManualCaptureTime, lastAutoCaptureTime;
 
@@ -112,7 +113,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         context = this;
 
         setupButtons();
-        
+        deleteTempDir();
+
         ivBitmap = findViewById(R.id.ivBitmap);
         capturedView = findViewById(R.id.capturedView);
 
@@ -172,6 +174,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         RelativeLayout btnBatchThumbnails = findViewById(R.id.batchThumbnailsHolder);
 
+        if(Preferences.getCaptureMode(this) == Preferences.CAPTURE_MODE_SINGLE) {
+            btnBatchThumbnails.setVisibility(View.GONE);
+        } else {
+            btnBatchThumbnails.setVisibility(View.VISIBLE);
+        }
+
         ImageButton btnMode = findViewById(R.id.btnMode);
         btnMode.setOnClickListener(v -> {
             Activity activity = (Activity) context;
@@ -186,7 +194,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 btnMode.setImageResource(R.drawable.ic_single);
                 Preferences.setCaptureMode(activity, Preferences.CAPTURE_MODE_SINGLE);
                 displayHint("Single mode");
-                btnBatchThumbnails.setVisibility(View.INVISIBLE);
+                btnBatchThumbnails.setVisibility(View.GONE);
             }
             // make "Auto capture: On/Off" last 1 seconds
             new Handler().postDelayed(() -> {
@@ -205,20 +213,48 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // for retake image
         currentImagePosition =  getIntent().getIntExtra("currentImagePosition", -1);
         if(currentImagePosition == -1) {
-            FileUtils.deleteTempDir(this);
             btnBatchThumbnails.setOnClickListener(v -> {
                 Activity activity = (Activity) context;
                 // set text to "" to make way for other hint
                 if(Preferences.getCaptureMode(activity) == Preferences.CAPTURE_MODE_BATCH) {
-                    Intent intent = new Intent(this, ImageCropActivity.class);
-                    startActivity(intent);
-                    finish();
+                    startCropActivity();
                 }
             });
         }
         else {
             btnMode.setVisibility(View.INVISIBLE);
         }
+
+        // add more images
+        add = getIntent().getBooleanExtra("add", false);
+        if(add) {
+            File tempDir = new File(FileUtils.tempDir(this));
+            List<RecyclerImageFile> files = FileUtils.listFilesByName(tempDir);
+
+            RecyclerImageFile latestFile = files.get(files.size() -1);
+
+            Bitmap latestFileBitmap = FileUtils.readBitmap(latestFile.getAbsolutePath());
+            int DOWNSCALE_IMAGE_SIZE = 80;
+            Bitmap smallOriginBitmap = VisionUtils.scaledBitmap(latestFileBitmap, DOWNSCALE_IMAGE_SIZE, DOWNSCALE_IMAGE_SIZE);
+
+            ImageView batchThumbnails = findViewById(R.id.batchThumbnails);
+            batchThumbnails.setImageBitmap(smallOriginBitmap);
+            batchNum=files.size();
+
+            TextView batchNumTxt = findViewById(R.id.batchNum);
+            batchNumTxt.setText(String.format(Locale.US, "%d", batchNum));
+            batchNumTxt.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void deleteTempDir() {
+        // for retake image
+        currentImagePosition =  getIntent().getIntExtra("currentImagePosition", -1);
+        add = getIntent().getBooleanExtra("add", false);
+
+        if(add) return;
+        if(currentImagePosition>=0) return;
+        FileUtils.deleteTempDir(this);
     }
 
     private void freezePreview(Bitmap lastFrameBitmap) {
@@ -412,16 +448,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         setAutoFocus();
-        int previewBitmapW = bitmap.getWidth();
-        int previewBitmapH = bitmap.getHeight();
-
         new Handler(Looper.getMainLooper()).post(() -> new CountDownTimer(2000, 100) {
             public void onTick(long millisUntilFinished) {
                 if(lastManualCaptureEarly()) cancel();
             }
             public void onFinish() {
                 if(!Preferences.getAutoCapture((Activity) context)) return;
-                takePicture(previewBitmapW, previewBitmapH);
+                takePicture();
             }
         }.start());
         image.close();
@@ -453,7 +486,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         lastAutoCaptureTime = 0;
     }
 
-    private void takePicture(int previewBitmapW, int previewBitmapH) {
+    private void takePicture() {
         File capturedImg = new File(context.getFilesDir(), "CAPTURE.jpg");
         ImageCapture.OutputFileOptions.Builder outputFileOptionsBuilder =
                 new ImageCapture.OutputFileOptions.Builder(capturedImg);
@@ -461,20 +494,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         imageCapture.takePicture(outputFileOptionsBuilder.build(), Executors.newSingleThreadExecutor(), new ImageCapture.OnImageSavedCallback() {
             @Override
             public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
+                Bitmap previewBitmap = previewView.getBitmap();
+                int previewBitmapW = previewBitmap.getWidth(), previewBitmapH = previewBitmap.getHeight();
                 Bitmap rotated90croppedBmp = cropCapturedImage(capturedImg, previewBitmapW, previewBitmapH);
-
-                if(Preferences.getCaptureMode((Activity) context) == Preferences.CAPTURE_MODE_BATCH) {
-                    batchModeCapture(rotated90croppedBmp);
-                    return;
-                }
-
                 MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, (Activity) context);
 
                 if(contour == null) {
                     resetCaptureTime();
                     return;
                 }
-                startCrop(rotated90croppedBmp, contour);
+                batchModeCapture(previewBitmap, rotated90croppedBmp);
             }
             public void onError(@NotNull ImageCaptureException exception) {}
         });
@@ -491,38 +520,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Bitmap previewBitmap = previewView.getBitmap();
                 int previewBitmapW = previewBitmap.getWidth(), previewBitmapH = previewBitmap.getHeight();
                 Bitmap rotated90croppedBmp = cropCapturedImage(capturedImg, previewBitmapW, previewBitmapH);
-
-                if(Preferences.getCaptureMode((Activity) context) == Preferences.CAPTURE_MODE_BATCH) {
-                    batchModeCapture(rotated90croppedBmp);
-                    return;
-                }
-
-                runOnUiThread(() -> freezePreview(previewBitmap));
-
-                MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, (Activity) context);
-
-                // proceed to cropping screen even no contour found
-                if(contour == null) {
-                    int originW = rotated90croppedBmp.getWidth();
-                    int originH = rotated90croppedBmp.getHeight();
-                    contour = dummyContour(originW, originH);
-                }
-                startCrop(rotated90croppedBmp, contour);
+                batchModeCapture(previewBitmap, rotated90croppedBmp);
             }
             public void onError(@NotNull ImageCaptureException exception) {}
         });
-    }
-
-    private MatOfPoint2f dummyContour(int width, int height) {
-        MatOfPoint2f contour = new MatOfPoint2f();
-        List<Point> cornerPoints = new ArrayList<>();
-
-        cornerPoints.add(new Point((float)width/5, (float)height/5));
-        cornerPoints.add(new Point((float)width*4/5, (float)height/5));
-        cornerPoints.add(new Point((float)width/5, (float)height*4/5));
-        cornerPoints.add(new Point((float)width*4/5, (float)height*4/5));
-        contour.fromList(cornerPoints);
-        return contour;
     }
 
     private Bitmap cropCapturedImage(File file, int previewBitmapW, int previewBitmapH) {
@@ -583,7 +584,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private void batchModeCapture(Bitmap rotated90croppedBmp) {
+    private void batchModeCapture(Bitmap previewBitmap, Bitmap rotated90croppedBmp) {
         if(currentImagePosition >= 0) {
             String fileName = FileUtils.tempDir(this) + currentImagePosition + ".jpg";
             FileUtils.writeBitmap(rotated90croppedBmp, fileName);
@@ -594,11 +595,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
 
+        String fileName = FileUtils.tempDir(this) + batchNum + ".jpg";
+        FileUtils.ensureTempDir(this);
+        FileUtils.writeBitmap(rotated90croppedBmp, fileName);
+
+        if(Preferences.getCaptureMode(this)==Preferences.CAPTURE_MODE_SINGLE) {
+            runOnUiThread(() -> freezePreview(previewBitmap));
+            startCropActivity();
+            return;
+        }
+
         int DOWNSCALE_IMAGE_SIZE = 80;
         Bitmap smallOriginBitmap = VisionUtils.scaledBitmap(rotated90croppedBmp, DOWNSCALE_IMAGE_SIZE, DOWNSCALE_IMAGE_SIZE);
-        FileUtils.ensureTempDir(this);
-        String fileName = FileUtils.tempDir(this) + batchNum + ".jpg";
-        FileUtils.writeBitmap(rotated90croppedBmp, fileName);
 
         runOnUiThread(() -> {
             ImageView batchThumbnails = findViewById(R.id.batchThumbnails);
@@ -611,10 +619,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
     }
 
-    private void startCrop(Bitmap rotated90croppedBmp, MatOfPoint2f contour) {
-        ScannerConstants.selectedImageBitmap = rotated90croppedBmp;
-        ScannerConstants.croppedPolygon = contour;
-
+    private void startCropActivity() {
         Intent cropIntent = new Intent(this, ImageCropActivity.class);
         startActivity(cropIntent);
         finish();

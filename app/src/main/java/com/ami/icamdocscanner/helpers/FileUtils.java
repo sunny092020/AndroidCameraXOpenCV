@@ -11,8 +11,31 @@ import com.ami.icamdocscanner.models.RecyclerImageFile;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 
 public class FileUtils {
+
+    public static List<RecyclerImageFile> listFilesByName(File directory) {
+        File[] files = directory.listFiles(File::isFile);
+        assert files != null;
+        Arrays.sort( files, (Comparator<File>) (o1, o2) -> {
+            String name1 = FileUtils.fileNameWithoutExtension(o1.getName());
+            String name2 = FileUtils.fileNameWithoutExtension(o2.getName());
+            return Integer.compare(Integer.parseInt(name1), Integer.parseInt(name2));
+        });
+
+        List<RecyclerImageFile> recyclerImageFiles = new ArrayList<>();
+
+        for (File file : files) {
+            RecyclerImageFile returnFile = new RecyclerImageFile(file);
+            recyclerImageFiles.add(returnFile);
+        }
+        return recyclerImageFiles;
+    }
+
     public static String fileNameWithoutExtension(String fileName) {
         if (fileName.indexOf(".") > 0)
             return fileName.substring(0, fileName.lastIndexOf("."));
@@ -60,8 +83,7 @@ public class FileUtils {
         }
 
         File thumbnailFile = new File(thumbnailPath);
-        boolean delete_result = thumbnailFile.delete();
-        Log.d("delete_result", Boolean.toString(delete_result));
+        thumbnailFile.delete();
     }
 
     public static Bitmap createThumbnail(RecyclerImageFile imageFile, String thumbnailPath) {
@@ -111,12 +133,13 @@ public class FileUtils {
         return BitmapFactory.decodeFile(filename);
     }
 
-    public static void writeBitmap(Bitmap bitmap, String filename) {
+    public static boolean writeBitmap(Bitmap bitmap, String filename) {
         try (FileOutputStream out = new FileOutputStream(filename)) {
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 99, out); // bmp is your Bitmap instance
+            return bitmap.compress(Bitmap.CompressFormat.JPEG, 99, out); // bmp is your Bitmap instance
             // PNG is a lossless format, the compression factor (100) is ignored
         } catch (IOException e) {
             e.printStackTrace();
+            return false;
         }
     }
 

@@ -35,22 +35,34 @@
             android:id="@+id/btnClose"
             android:layout_width="wrap_content"
             android:layout_height="50dp"
-            android:minWidth="150dp"
-            android:layout_alignParentStart="true"
-            android:layout_marginLeft="30dp"
             android:foreground="?android:selectableItemBackground"
+            android:background="@android:color/transparent"
             android:shadowRadius="10"
+            android:layout_marginLeft="20dp"
+            android:text="Retake"
+            android:layout_alignParentLeft="true"
+            android:textColor="#ffffff"/>
+
+        <Button
+            android:id="@+id/btnAdd"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:foreground="?android:selectableItemBackground"
+            android:background="@android:color/transparent"
+            android:shadowRadius="10"
+            android:text="Add"
+            android:layout_toEndOf="@+id/btnClose"
             android:textColor="#ffffff"/>
 
         <Button
             android:id="@+id/btnImageCrop"
             android:layout_width="wrap_content"
             android:layout_height="50dp"
-            android:minWidth="150dp"
-            android:layout_marginRight="30dp"
-            android:layout_alignParentEnd="true"
-            android:foreground="?android:selectableItemBackground"
+            android:background="@color/blue"
             android:shadowRadius="10"
+            android:layout_marginRight="20dp"
+            android:text="Crop"
+            android:layout_alignParentRight="true"
             android:textColor="#ffffff"/>
     </RelativeLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
