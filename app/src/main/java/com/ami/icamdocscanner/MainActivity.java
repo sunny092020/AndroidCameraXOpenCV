@@ -24,6 +24,7 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -108,10 +109,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // for retake image
-        currentImagePosition =  getIntent().getIntExtra("currentImagePosition", -1);
-        if(currentImagePosition == -1) FileUtils.deleteTempDir(this);
-
         context = this;
 
         ImageButton btnCapture = findViewById(R.id.btnCapture);
@@ -147,6 +144,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }, 1000);
         });
 
+        RelativeLayout btnBatchThumbnails = findViewById(R.id.batchThumbnailsHolder);
+
         ImageButton btnMode = findViewById(R.id.btnMode);
         btnMode.setOnClickListener(v -> {
             Activity activity = (Activity) context;
@@ -155,11 +154,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 btnMode.setImageResource(R.drawable.ic_multi);
                 Preferences.setCaptureMode(activity, Preferences.CAPTURE_MODE_BATCH);
                 displayHint("Batch mode");
+                btnBatchThumbnails.setVisibility(View.VISIBLE);
                 resetManualCaptureTime();
             } else {
                 btnMode.setImageResource(R.drawable.ic_single);
                 Preferences.setCaptureMode(activity, Preferences.CAPTURE_MODE_SINGLE);
                 displayHint("Single mode");
+                btnBatchThumbnails.setVisibility(View.INVISIBLE);
             }
             // make "Auto capture: On/Off" last 1 seconds
             new Handler().postDelayed(() -> {
@@ -169,18 +170,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }, 1000);
         });
 
-        ImageView btnBatchThumbnails = findViewById(R.id.batchThumbnails);
-
-        btnBatchThumbnails.setOnClickListener(v -> {
-            Activity activity = (Activity) context;
-            // set text to "" to make way for other hint
-            if(Preferences.getCaptureMode(activity) == Preferences.CAPTURE_MODE_BATCH) {
-                Intent intent = new Intent(this, ImageCropActivity.class);
-                startActivity(intent);
-                finish();
-            }
-        });
-
+        // for retake image
+        currentImagePosition =  getIntent().getIntExtra("currentImagePosition", -1);
+        if(currentImagePosition == -1) {
+            FileUtils.deleteTempDir(this);
+            btnBatchThumbnails.setOnClickListener(v -> {
+                Activity activity = (Activity) context;
+                // set text to "" to make way for other hint
+                if(Preferences.getCaptureMode(activity) == Preferences.CAPTURE_MODE_BATCH) {
+                    Intent intent = new Intent(this, ImageCropActivity.class);
+                    startActivity(intent);
+                    finish();
+                }
+            });
+        }
+        else {
+            btnMode.setVisibility(View.INVISIBLE);
+        }
+        
         ivBitmap = findViewById(R.id.ivBitmap);
         capturedView = findViewById(R.id.capturedView);
 
