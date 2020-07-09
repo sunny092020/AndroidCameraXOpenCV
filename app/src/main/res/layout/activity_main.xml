@@ -86,17 +86,6 @@
             android:src="@drawable/ic_shutter"
             android:layout_centerInParent="true"/>
 
-        <ImageButton
-            android:id="@+id/btnMode"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_centerInParent="true"
-            android:layout_marginLeft="30dp"
-            android:layout_toEndOf="@+id/btnCapture"
-            android:background="@android:color/transparent"
-            android:scaleType="fitCenter"
-            app:srcCompat="@drawable/ic_single" />
-
         <RelativeLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

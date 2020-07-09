@@ -174,55 +174,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         RelativeLayout btnBatchThumbnails = findViewById(R.id.batchThumbnailsHolder);
 
-        if(Preferences.getCaptureMode(this) == Preferences.CAPTURE_MODE_SINGLE) {
-            btnBatchThumbnails.setVisibility(View.GONE);
-        } else {
-            btnBatchThumbnails.setVisibility(View.VISIBLE);
-        }
-
-        ImageButton btnMode = findViewById(R.id.btnMode);
-        btnMode.setOnClickListener(v -> {
-            Activity activity = (Activity) context;
-            // set text to "" to make way for other hint
-            if(Preferences.getCaptureMode(activity) == Preferences.CAPTURE_MODE_SINGLE) {
-                btnMode.setImageResource(R.drawable.ic_multi);
-                Preferences.setCaptureMode(activity, Preferences.CAPTURE_MODE_BATCH);
-                displayHint("Batch mode");
-                btnBatchThumbnails.setVisibility(View.VISIBLE);
-                resetManualCaptureTime();
-            } else {
-                btnMode.setImageResource(R.drawable.ic_single);
-                Preferences.setCaptureMode(activity, Preferences.CAPTURE_MODE_SINGLE);
-                displayHint("Single mode");
-                btnBatchThumbnails.setVisibility(View.GONE);
-            }
-            // make "Auto capture: On/Off" last 1 seconds
-            new Handler().postDelayed(() -> {
-                // set text to "" to make way for other hint
-                captureHintText.setText("");
-                captureHintText.setVisibility(View.INVISIBLE);
-            }, 1000);
-        });
-
-        if(Preferences.getCaptureMode(this) == Preferences.CAPTURE_MODE_SINGLE) {
-            btnMode.setImageResource(R.drawable.ic_single);
-        } else {
-            btnMode.setImageResource(R.drawable.ic_multi);
-        }
-
         // for retake image
         currentImagePosition =  getIntent().getIntExtra("currentImagePosition", -1);
         if(currentImagePosition == -1) {
             btnBatchThumbnails.setOnClickListener(v -> {
                 Activity activity = (Activity) context;
                 // set text to "" to make way for other hint
-                if(Preferences.getCaptureMode(activity) == Preferences.CAPTURE_MODE_BATCH) {
-                    startCropActivity();
-                }
+                startCropActivity();
             });
-        }
-        else {
-            btnMode.setVisibility(View.INVISIBLE);
         }
 
         // add more images
@@ -547,23 +506,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             captureHintText.setText(text);
             return;
         }
-
-        if(text.equalsIgnoreCase("Batch mode")) {
-            captureHintText.setVisibility(View.VISIBLE);
-            captureHintText.setText(text);
-            return;
-        }
-
-        if(text.equalsIgnoreCase("Single mode")) {
-            captureHintText.setVisibility(View.VISIBLE);
-            captureHintText.setText(text);
-            return;
-        }
-
         if(captureHintText.getText() == "Auto capture: Off") return;
         if(captureHintText.getText() == "Auto capture: On") return;
-        if(captureHintText.getText() == "Batch mode") return;
-        if(captureHintText.getText() == "Single mode") return;
         captureHintText.setVisibility(View.VISIBLE);
         captureHintText.setText(text);
     }
@@ -585,6 +529,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void batchModeCapture(Bitmap previewBitmap, Bitmap rotated90croppedBmp) {
+        // retake existing capture
         if(currentImagePosition >= 0) {
             String fileName = FileUtils.tempDir(this) + currentImagePosition + ".jpg";
             FileUtils.writeBitmap(rotated90croppedBmp, fileName);
@@ -599,7 +544,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         FileUtils.ensureTempDir(this);
         FileUtils.writeBitmap(rotated90croppedBmp, fileName);
 
-        if(Preferences.getCaptureMode(this)==Preferences.CAPTURE_MODE_SINGLE) {
+        if(Preferences.getIsCropAfterEachCapture(this)) {
             runOnUiThread(() -> freezePreview(previewBitmap));
             startCropActivity();
             return;
