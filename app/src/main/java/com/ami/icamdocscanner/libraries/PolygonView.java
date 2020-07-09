@@ -268,7 +268,6 @@ public class PolygonView extends FrameLayout {
                             mainPointer1.setX((int) (mainPointer1.getX() + mv.x));
                         }
                     }
-                    drawMag(StartPT.x+50,StartPT.y+50);
                     break;
                 case MotionEvent.ACTION_DOWN:
                     DownPT.x = event.getX();
