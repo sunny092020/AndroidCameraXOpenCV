@@ -71,8 +71,7 @@ public class ImageCropActivity extends AppCompatActivity {
         btnImageCrop.setOnClickListener(btnImageEnhanceClick);
         btnClose.setOnClickListener(btnCloseClick);
 
-        if(Preferences.getCaptureMode(this) == Preferences.CAPTURE_MODE_SINGLE) btnAdd.setVisibility(View.GONE);
-        else btnAdd.setOnClickListener(btnAddClick);
+        btnAdd.setOnClickListener(btnAddClick);
     }
 
     private OnClickListener btnCloseClick = v -> {
