@@ -18,6 +18,11 @@ import androidx.viewpager.widget.ViewPager;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.ami.icamdocscanner.R;
+import com.ami.icamdocscanner.helpers.ScannerState;
+import com.ami.icamdocscanner.models.RecyclerImageFile;
+
+import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.Point;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,7 +46,10 @@ public class PolygonView extends FrameLayout {
     private ImageView midPointer24;
     private PolygonView polygonView;
     private Magnifier magnifier;
+
     private ViewPager2 viewPager2;
+    private int originWidth, originHeight;
+    private FrameLayout holderImageCrop;
 
     public PolygonView(Context context) {
         super(context);
@@ -65,7 +73,53 @@ public class PolygonView extends FrameLayout {
         this.viewPager2 = viewPager2;
     }
 
+    public void setOriginSize(int originWidth, int originHeight) {
+        this.originWidth = originWidth;
+        this.originHeight = originHeight;
+    }
+
+    public void setHolderImageCrop(FrameLayout holderImageCrop) {
+        this.holderImageCrop = holderImageCrop;
+    }
+
+    private void updatePolygon() {
+        RecyclerImageFile file = ScannerState.capturedImages.get(viewPager2.getCurrentItem());
+
+        Log.d(" updatePolygon file", file.getAbsolutePath());
+        MatOfPoint2f cropPolygon = getCroppedPolygon();
+
+        Log.d(" cropPolygon", cropPolygon+"");
+
+        if(cropPolygon!=null) {
+            Point p = cropPolygon.toList().get(0);
+            Log.d("updatePolygon p.x", "" + p.x);
+            Log.d("updatePolygon p.y", "" + p.y);
+        }
+        file.setCroppedPolygon(getCroppedPolygon());
+    }
+
+    private MatOfPoint2f getCroppedPolygon() {
+        Map<Integer, PointF> mapPoints = getPoints();
+        List<PointF> pointFs = new ArrayList<>(mapPoints.values());
+
+        if(pointFs.size() != 4) return null;
+
+        float kx = (float) holderImageCrop.getWidth()/originWidth;
+        float ky = (float) holderImageCrop.getHeight()/originHeight;
+        float k = (Math.min(kx, ky));
+
+        Point[] points = {
+                new Point(pointFs.get(0).x/k, pointFs.get(0).y/k),
+                new Point(pointFs.get(1).x/k, pointFs.get(1).y/k),
+                new Point(pointFs.get(2).x/k, pointFs.get(2).y/k),
+                new Point(pointFs.get(3).x/k, pointFs.get(3).y/k),
+        };
+        return new MatOfPoint2f(points);
+    }
+
+
     private void init() {
+        Log.d("init ", "polygon");
         polygonView = this;
         pointer1 = getImageView(0, 0);
         pointer2 = getImageView(getWidth(), 0);
@@ -274,6 +328,7 @@ public class PolygonView extends FrameLayout {
                     DownPT.y = event.getY();
                     StartPT = new PointF(v.getX(), v.getY());
                     viewPager2.setUserInputEnabled(true);
+                    updatePolygon();
                     break;
                 case MotionEvent.ACTION_UP:
                     int color = 0;
@@ -285,6 +340,7 @@ public class PolygonView extends FrameLayout {
                     paint.setColor(color);
                     dismissMag();
                     viewPager2.setUserInputEnabled(true);
+                    updatePolygon();
                     break;
                 default:
                     break;
@@ -327,6 +383,7 @@ public class PolygonView extends FrameLayout {
                     DownPT.y = event.getY();
                     StartPT = new PointF(v.getX(), v.getY());
                     viewPager2.setUserInputEnabled(true);
+                    updatePolygon();
                     break;
                 case MotionEvent.ACTION_UP:
                     int color = 0;
@@ -338,6 +395,7 @@ public class PolygonView extends FrameLayout {
                     paint.setColor(color);
                     dismissMag();
                     viewPager2.setUserInputEnabled(true);
+                    updatePolygon();
                     break;
                 default:
                     break;

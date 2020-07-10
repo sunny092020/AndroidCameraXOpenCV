@@ -1,12 +1,8 @@
 package com.ami.icamdocscanner;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 
@@ -14,22 +10,18 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.ami.icamdocscanner.helpers.FileUtils;
-import com.ami.icamdocscanner.helpers.Preferences;
-import com.ami.icamdocscanner.helpers.ScannerConstants;
+import com.ami.icamdocscanner.helpers.ScannerState;
 import com.ami.icamdocscanner.helpers.VisionUtils;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
 
 import org.opencv.core.MatOfPoint2f;
 
 import java.io.File;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 
 public class ImageCropActivity extends AppCompatActivity {
     ViewPager2 viewPager2;
+    ViewPagerAdapter adapter;
 
     private void toEditImage() {
         Intent cropIntent = new Intent(this, ImageEditActivity.class);
@@ -43,25 +35,26 @@ public class ImageCropActivity extends AppCompatActivity {
         setContentView(R.layout.activity_image_crop);
         initView();
         viewPager2 = findViewById(R.id.viewPager2);
-        File directory = new File(FileUtils.tempDir(this));
 
-        List<RecyclerImageFile> files = FileUtils.listFilesByName(directory);
+        adapter = new ViewPagerAdapter(this, viewPager2);
 
-        viewPager2.setAdapter(new ViewPagerAdapter(this, setContours(files), viewPager2));
+        viewPager2.setAdapter(adapter);
 
-        int currentImagePosition =  getIntent().getIntExtra("currentImagePosition", files.size());
+        int currentImagePosition =  getIntent().getIntExtra("currentImagePosition", ScannerState.capturedImages.size());
         viewPager2.setCurrentItem(currentImagePosition, false);
     }
 
     private List<RecyclerImageFile> setContours(List<RecyclerImageFile> files) {
         for (RecyclerImageFile file : files) {
+            // already set contours
+            if(file.getCroppedPolygon() != null) continue;
+
             Bitmap rotated90croppedBmp = FileUtils.readBitmap(file.getAbsolutePath());
             MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, this);
             file.setCroppedPolygon(contour);
         }
         return files;
     }
-
 
     private void initView() {
         Button btnImageCrop = findViewById(R.id.btnImageCrop);
@@ -75,7 +68,7 @@ public class ImageCropActivity extends AppCompatActivity {
     }
 
     private OnClickListener btnCloseClick = v -> {
-        ScannerConstants.resetCaptureState();
+        ScannerState.resetScannerState();
         Intent intent = new Intent(this, MainActivity.class);
         int currentImagePosition = viewPager2.getCurrentItem();
         intent.putExtra("currentImagePosition", currentImagePosition);
@@ -84,7 +77,7 @@ public class ImageCropActivity extends AppCompatActivity {
     };
 
     private OnClickListener btnAddClick = v -> {
-        ScannerConstants.resetCaptureState();
+        ScannerState.resetScannerState();
         Intent intent = new Intent(this, MainActivity.class);
         intent.putExtra("add", true);
         startActivity(intent);

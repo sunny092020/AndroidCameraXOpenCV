@@ -23,7 +23,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.ami.icamdocscanner.helpers.FileUtils;
-import com.ami.icamdocscanner.helpers.ScannerConstants;
+import com.ami.icamdocscanner.helpers.ScannerState;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
 
 import java.io.File;
@@ -118,7 +118,7 @@ public class ImageDoneActivity extends AppCompatActivity {
         ImageView retakeBtn = findViewById(R.id.retakeBtn);
 
         retakeBtn.setOnClickListener(v -> {
-            ScannerConstants.resetCaptureState();
+            ScannerState.resetScannerState();
             Intent intent = new Intent(this, MainActivity.class);
             startActivity(intent);
             finish();

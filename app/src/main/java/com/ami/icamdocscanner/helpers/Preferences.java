@@ -20,7 +20,7 @@ public class Preferences {
     }
 
     public static boolean getIsCropAfterEachCapture(Activity activity) {
-        return getSharedPreferences(activity).getBoolean(activity.getString(R.string.is_crop_after_each_capture_key), true);
+        return getSharedPreferences(activity).getBoolean(activity.getString(R.string.is_crop_after_each_capture_key), false);
     }
 
     public static void setIsCropAfterEachCapture(Activity activity, boolean value) {

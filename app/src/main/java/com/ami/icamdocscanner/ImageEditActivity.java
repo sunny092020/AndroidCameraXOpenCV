@@ -15,7 +15,7 @@ import android.widget.LinearLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.ami.icamdocscanner.helpers.ScannerConstants;
+import com.ami.icamdocscanner.helpers.ScannerState;
 import com.ami.icamdocscanner.helpers.VisionUtils;
 
 import org.opencv.android.Utils;
@@ -44,8 +44,8 @@ public class ImageEditActivity extends AppCompatActivity {
         context = this;
 
         imageView = findViewById(R.id.imageView);
-        imageView.setImageBitmap(ScannerConstants.cropImageBitmap);
-        currentImg = ScannerConstants.cropImageBitmap;
+        imageView.setImageBitmap(ScannerState.cropImageBitmap);
+        currentImg = ScannerState.cropImageBitmap;
         scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
 
         setFrameLayoutRatio();
@@ -59,7 +59,7 @@ public class ImageEditActivity extends AppCompatActivity {
 
     private void displayFilterThumbnails() {
         Mat origin = new Mat();
-        Utils.bitmapToMat(ScannerConstants.cropImageBitmap, origin);
+        Utils.bitmapToMat(ScannerState.cropImageBitmap, origin);
 
         double DOWNSCALE_IMAGE_SIZE = 80f;
 

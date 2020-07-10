@@ -16,6 +16,10 @@ public class RecyclerImageFile extends File implements Serializable {
         super(file.getAbsolutePath());
     }
 
+    public RecyclerImageFile(@NonNull String fileName) {
+        super(fileName);
+    }
+
     public boolean isChecked() {
         return isChecked;
     }

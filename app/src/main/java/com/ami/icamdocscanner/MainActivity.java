@@ -49,7 +49,7 @@ import androidx.core.content.ContextCompat;
 
 import com.ami.icamdocscanner.helpers.FileUtils;
 import com.ami.icamdocscanner.helpers.Preferences;
-import com.ami.icamdocscanner.helpers.ScannerConstants;
+import com.ami.icamdocscanner.helpers.ScannerState;
 import com.ami.icamdocscanner.helpers.VisionUtils;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -60,7 +60,6 @@ import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutionException;
@@ -533,6 +532,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if(currentImagePosition >= 0) {
             String fileName = FileUtils.tempDir(this) + currentImagePosition + ".jpg";
             FileUtils.writeBitmap(rotated90croppedBmp, fileName);
+
+            RecyclerImageFile file = new RecyclerImageFile(fileName);
+            ScannerState.updateCroppedPolygon(file, ScannerState.capturedImages);
+
             Intent cropIntent = new Intent(this, ImageCropActivity.class);
             cropIntent.putExtra("currentImagePosition", currentImagePosition);
             startActivity(cropIntent);
@@ -541,6 +544,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         String fileName = FileUtils.tempDir(this) + batchNum + ".jpg";
+
+        RecyclerImageFile file = new RecyclerImageFile(fileName);
+        ScannerState.capturedImages.add(file);
+
         FileUtils.ensureTempDir(this);
         FileUtils.writeBitmap(rotated90croppedBmp, fileName);
 
