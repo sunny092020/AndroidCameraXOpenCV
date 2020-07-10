@@ -16,12 +16,11 @@ import com.ami.icamdocscanner.models.RecyclerImageFile;
 
 import org.opencv.core.MatOfPoint2f;
 
-import java.io.File;
 import java.util.List;
 
 public class ImageCropActivity extends AppCompatActivity {
     ViewPager2 viewPager2;
-    ViewPagerAdapter adapter;
+    ViewPagerCropAdapter adapter;
 
     private void toEditImage() {
         Intent cropIntent = new Intent(this, ImageEditActivity.class);
@@ -36,7 +35,7 @@ public class ImageCropActivity extends AppCompatActivity {
         initView();
         viewPager2 = findViewById(R.id.viewPager2);
 
-        adapter = new ViewPagerAdapter(this, viewPager2);
+        adapter = new ViewPagerCropAdapter(this, viewPager2);
 
         viewPager2.setAdapter(adapter);
 

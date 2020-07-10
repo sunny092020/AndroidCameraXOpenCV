@@ -31,11 +31,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-public class ViewPagerAdapter extends RecyclerView.Adapter<ViewPagerAdapter.ViewHolder> {
+public class ViewPagerCropAdapter extends RecyclerView.Adapter<ViewPagerCropAdapter.ViewHolder> {
     private LayoutInflater mInflater;
     private ViewPager2 viewPager2;
 
-    ViewPagerAdapter(Context context, ViewPager2 viewPager2) {
+    ViewPagerCropAdapter(Context context, ViewPager2 viewPager2) {
         this.mInflater = LayoutInflater.from(context);
         this.viewPager2 = viewPager2;
     }
