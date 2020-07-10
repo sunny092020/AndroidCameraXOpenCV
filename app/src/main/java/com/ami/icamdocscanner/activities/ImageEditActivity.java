@@ -7,8 +7,10 @@ import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -55,23 +57,22 @@ public class ImageEditActivity extends AppCompatActivity {
         viewPagerEdit = findViewById(R.id.viewPagerEdit);
         adapter = new ViewPagerEditAdapter(this);
         viewPagerEdit.setAdapter(adapter);
-
         viewPagerEdit.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
                 super.onPageScrolled(position, positionOffset, positionOffsetPixels);
-            }
-
-            @Override
-            public void onPageSelected(int position) {
-                super.onPageSelected(position);
-                Log.e("Selected_Page", String.valueOf(position));
                 viewPagerEdit.post(() -> {
                     displayFilterThumbnails(position);
                     setFrameLayoutRatio();
                     setupFilterButtonEvent(position);
                     setupBottomButtonEvent(position);
                 });
+
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                super.onPageSelected(position);
             }
 
             @Override
@@ -80,11 +81,8 @@ public class ImageEditActivity extends AppCompatActivity {
             }
         });
 
-
-
         int currentImagePosition =  getIntent().getIntExtra("currentImagePosition", ScannerState.croppedImages.size());
         viewPagerEdit.setCurrentItem(currentImagePosition, false);
-
         scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
 
     }
@@ -133,16 +131,13 @@ public class ImageEditActivity extends AppCompatActivity {
         ImageView imgEnhance = findViewById(R.id.imgEnhance);
         ImageView imgBw = findViewById(R.id.imgBw);
 
-        if(imgOrigin==null) return;
-        if(imgGray==null) return;
-        if(imgEnhance==null) return;
-        if(imgBw==null) return;
-
         RecyclerImageFile currentImage = ScannerState.croppedImages.get(currentImagePosition);
         Bitmap currentBitmap = FileUtils.readBitmap(currentImage.getAbsolutePath());
 
         imageView = findViewById(R.id.imageView);
-        imgOrigin.setOnClickListener(v -> imageView.setImageBitmap(currentBitmap));
+        imgOrigin.setOnClickListener(v -> {
+            imageView.setImageBitmap(currentBitmap);
+        });
 
         imgOrigin.setOnClickListener(null);
 
