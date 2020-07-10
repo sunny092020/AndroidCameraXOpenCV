@@ -57,8 +57,6 @@ public class ViewPagerCropAdapter extends RecyclerView.Adapter<ViewPagerCropAdap
         return ScannerState.capturedImages.size();
     }
 
-    public List<RecyclerImageFile> getFiles() {return ScannerState.capturedImages;}
-
     // stores and recycles views as they are scrolled off screen
     public static class ViewHolder extends RecyclerView.ViewHolder {
         FrameLayout frameLayout, holderImageCrop;
