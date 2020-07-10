@@ -6,6 +6,8 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.ami.icamdocscanner.adapters.ItemTouchHelperAdapter;
+
 public class SimpleItemTouchHelperCallback extends ItemTouchHelper.Callback{
 
     public static final float ALPHA_FULL = 1.0f;

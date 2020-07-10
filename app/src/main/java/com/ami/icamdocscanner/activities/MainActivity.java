@@ -1,4 +1,4 @@
-package com.ami.icamdocscanner;
+package com.ami.icamdocscanner.activities;
 
 import android.app.Activity;
 import android.content.Context;
@@ -47,6 +47,7 @@ import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.ami.icamdocscanner.R;
 import com.ami.icamdocscanner.helpers.FileUtils;
 import com.ami.icamdocscanner.helpers.Preferences;
 import com.ami.icamdocscanner.helpers.ScannerState;

@@ -1,4 +1,4 @@
-package com.ami.icamdocscanner;
+package com.ami.icamdocscanner.adapters;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -11,8 +11,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.ami.icamdocscanner.R;
 import com.ami.icamdocscanner.helpers.FileUtils;
-import com.ami.icamdocscanner.helpers.ItemTouchHelperAdapter;
 import com.ami.icamdocscanner.helpers.ItemTouchHelperViewHolder;
 import com.ami.icamdocscanner.helpers.OnStartDragListener;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
@@ -28,12 +28,12 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
     private OnStartDragListener mDragStartListener;
 
     // data is passed into the constructor
-    FileRecyclerViewAdapter(Context context, List<RecyclerImageFile> data) {
+    public FileRecyclerViewAdapter(Context context, List<RecyclerImageFile> data) {
         this.mInflater = LayoutInflater.from(context);
         this.files = data;
     }
 
-    FileRecyclerViewAdapter(Context context, List<RecyclerImageFile> data, OnStartDragListener dragStartListener) {
+    public FileRecyclerViewAdapter(Context context, List<RecyclerImageFile> data, OnStartDragListener dragStartListener) {
         mDragStartListener = dragStartListener;
         this.mInflater = LayoutInflater.from(context);
         this.files = data;

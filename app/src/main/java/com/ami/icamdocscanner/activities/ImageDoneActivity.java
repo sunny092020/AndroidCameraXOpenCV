@@ -1,4 +1,4 @@
-package com.ami.icamdocscanner;
+package com.ami.icamdocscanner.activities;
 
 import android.Manifest;
 import android.app.Activity;
@@ -22,6 +22,8 @@ import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.ami.icamdocscanner.R;
+import com.ami.icamdocscanner.adapters.FileRecyclerViewAdapter;
 import com.ami.icamdocscanner.helpers.FileUtils;
 import com.ami.icamdocscanner.helpers.ScannerState;
 import com.ami.icamdocscanner.models.RecyclerImageFile;

@@ -1,4 +1,4 @@
-package com.ami.icamdocscanner;
+package com.ami.icamdocscanner.adapters;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -17,6 +17,7 @@ import android.widget.RelativeLayout;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
+import com.ami.icamdocscanner.R;
 import com.ami.icamdocscanner.helpers.FileUtils;
 import com.ami.icamdocscanner.helpers.ScannerState;
 import com.ami.icamdocscanner.helpers.VisionUtils;
@@ -35,7 +36,7 @@ public class ViewPagerCropAdapter extends RecyclerView.Adapter<ViewPagerCropAdap
     private LayoutInflater mInflater;
     private ViewPager2 viewPager2;
 
-    ViewPagerCropAdapter(Context context, ViewPager2 viewPager2) {
+    public ViewPagerCropAdapter(Context context, ViewPager2 viewPager2) {
         this.mInflater = LayoutInflater.from(context);
         this.viewPager2 = viewPager2;
     }

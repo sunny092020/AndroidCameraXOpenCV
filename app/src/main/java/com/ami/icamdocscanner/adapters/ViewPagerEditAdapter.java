@@ -1,4 +1,4 @@
-package com.ami.icamdocscanner;
+package com.ami.icamdocscanner.adapters;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -10,6 +10,7 @@ import android.widget.ImageView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.ami.icamdocscanner.R;
 import com.ami.icamdocscanner.helpers.FileUtils;
 import com.ami.icamdocscanner.helpers.ScannerState;
 import com.ami.icamdocscanner.models.RecyclerImageFile;

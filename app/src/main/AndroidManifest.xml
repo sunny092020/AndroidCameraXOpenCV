@@ -9,13 +9,13 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".PdfActivity"></activity>
-        <activity android:name=".ImageDoneActivity" />
+        <activity android:name=".activities.PdfActivity"></activity>
+        <activity android:name=".activities.ImageDoneActivity" />
         <activity
-            android:name=".ImageEditActivity"
+            android:name=".activities.ImageEditActivity"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".MainActivity"
+            android:name=".activities.MainActivity"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -24,7 +24,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ImageCropActivity"
+            android:name=".activities.ImageCropActivity"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
 

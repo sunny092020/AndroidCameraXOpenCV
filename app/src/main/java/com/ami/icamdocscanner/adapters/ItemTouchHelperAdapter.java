@@ -1,4 +1,4 @@
-package com.ami.icamdocscanner.helpers;
+package com.ami.icamdocscanner.adapters;
 
 public interface ItemTouchHelperAdapter {
     boolean onItemMove(int fromPosition, int toPosition);

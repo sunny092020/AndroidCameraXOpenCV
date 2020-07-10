@@ -1,8 +1,7 @@
-package com.ami.icamdocscanner;
+package com.ami.icamdocscanner.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Environment;
 import android.view.Gravity;
 import android.widget.LinearLayout;
 import android.widget.Toast;
@@ -12,6 +11,8 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.ami.icamdocscanner.R;
+import com.ami.icamdocscanner.adapters.FileRecyclerViewAdapter;
 import com.ami.icamdocscanner.helpers.FileUtils;
 import com.ami.icamdocscanner.helpers.OnStartDragListener;
 import com.ami.icamdocscanner.helpers.PdfUtils;

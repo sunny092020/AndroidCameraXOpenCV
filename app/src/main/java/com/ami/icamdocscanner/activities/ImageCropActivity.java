@@ -1,4 +1,4 @@
-package com.ami.icamdocscanner;
+package com.ami.icamdocscanner.activities;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -9,6 +9,8 @@ import android.widget.Button;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
 
+import com.ami.icamdocscanner.R;
+import com.ami.icamdocscanner.adapters.ViewPagerCropAdapter;
 import com.ami.icamdocscanner.helpers.FileUtils;
 import com.ami.icamdocscanner.helpers.ScannerState;
 import com.ami.icamdocscanner.helpers.VisionUtils;

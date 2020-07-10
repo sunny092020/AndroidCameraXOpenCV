@@ -1,4 +1,4 @@
-package com.ami.icamdocscanner;
+package com.ami.icamdocscanner.activities;
 
 import android.content.Context;
 import android.content.Intent;
@@ -15,6 +15,7 @@ import android.widget.LinearLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.ami.icamdocscanner.R;
 import com.ami.icamdocscanner.helpers.ScannerState;
 import com.ami.icamdocscanner.helpers.VisionUtils;
 
