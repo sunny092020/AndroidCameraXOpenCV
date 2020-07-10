@@ -34,17 +34,17 @@ import java.util.Map;
 
 public class ViewPagerCropAdapter extends RecyclerView.Adapter<ViewPagerCropAdapter.ViewHolder> {
     private LayoutInflater mInflater;
-    private ViewPager2 viewPager2;
+    private ViewPager2 viewPagerCrop;
 
-    public ViewPagerCropAdapter(Context context, ViewPager2 viewPager2) {
+    public ViewPagerCropAdapter(Context context, ViewPager2 viewPagerCrop) {
         this.mInflater = LayoutInflater.from(context);
-        this.viewPager2 = viewPager2;
+        this.viewPagerCrop = viewPagerCrop;
     }
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = mInflater.inflate(R.layout.item_crop_viewpager, parent, false);
-        return new ViewHolder(view, viewPager2);
+        return new ViewHolder(view, viewPagerCrop);
     }
 
     @Override
@@ -67,7 +67,7 @@ public class ViewPagerCropAdapter extends RecyclerView.Adapter<ViewPagerCropAdap
         ProgressBar progressBar;
         View itemView;
 
-        ViewHolder(View itemView, ViewPager2 viewPager2) {
+        ViewHolder(View itemView, ViewPager2 viewCrop) {
             super(itemView);
             this.itemView = itemView;
             frameLayout = itemView.findViewById(R.id.frameLayout);
@@ -75,7 +75,7 @@ public class ViewPagerCropAdapter extends RecyclerView.Adapter<ViewPagerCropAdap
             imageView = itemView.findViewById(R.id.imageView);
             holderImageCrop = itemView.findViewById(R.id.holderImageCrop);
             polygonView = itemView.findViewById(R.id.polygonView);
-            polygonView.setViewPager2(viewPager2);
+            polygonView.setViewPagerCrop(viewCrop);
             polygonView.setHolderImageCrop(holderImageCrop);
             progressBar = itemView.findViewById(R.id.progressBar);
             if (progressBar.getIndeterminateDrawable() != null && ScannerState.progressColor != null)

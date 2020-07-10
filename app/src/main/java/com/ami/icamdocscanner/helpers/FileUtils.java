@@ -1,6 +1,7 @@
 package com.ami.icamdocscanner.helpers;
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
@@ -109,15 +110,15 @@ public class FileUtils {
         return smallOriginBitmap;
     }
 
-    public static void ensureTempDir(Activity activity) {
-        File directory = new File(activity.getFilesDir().getAbsolutePath() + "/" +  "temp_dir" + "/");
+    public static void ensureTempDir(Context context) {
+        File directory = new File(context.getFilesDir().getAbsolutePath() + "/" +  "temp_dir" + "/");
         if (!directory.exists()){
             if (!directory.mkdir()) return;
         }
     }
 
-    public static void deleteTempDir(Activity activity) {
-        File directory = new File(activity.getFilesDir().getAbsolutePath() + "/" +  "temp_dir");
+    public static void deleteTempDir(Context context) {
+        File directory = new File(context.getFilesDir().getAbsolutePath() + "/" +  "temp_dir");
         if (directory.exists()) {
             File[] allContents = directory.listFiles();
             if (allContents != null) {
@@ -143,12 +144,12 @@ public class FileUtils {
         }
     }
 
-    public static String home(Activity activity) {
-        return activity.getFilesDir().getAbsolutePath();
+    public static String home(Context context) {
+        return context.getFilesDir().getAbsolutePath();
     }
 
-    public static String tempDir(Activity activity) {
-        return activity.getFilesDir().getAbsolutePath() + "/" +  "temp_dir" + "/";
+    public static String tempDir(Context context) {
+        return context.getFilesDir().getAbsolutePath() + "/" +  "temp_dir" + "/";
     }
 
 }

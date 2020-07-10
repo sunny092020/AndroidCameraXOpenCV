@@ -14,7 +14,6 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.Magnifier;
 
-import androidx.viewpager.widget.ViewPager;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.ami.icamdocscanner.R;
@@ -47,7 +46,7 @@ public class PolygonView extends FrameLayout {
     private PolygonView polygonView;
     private Magnifier magnifier;
 
-    private ViewPager2 viewPager2;
+    private ViewPager2 viewPagerCrop;
     private int originWidth, originHeight;
     private FrameLayout holderImageCrop;
 
@@ -69,8 +68,8 @@ public class PolygonView extends FrameLayout {
         init();
     }
 
-    public void setViewPager2(ViewPager2 viewPager2) {
-        this.viewPager2 = viewPager2;
+    public void setViewPagerCrop(ViewPager2 viewPagerCrop) {
+        this.viewPagerCrop = viewPagerCrop;
     }
 
     public void setOriginSize(int originWidth, int originHeight) {
@@ -83,7 +82,7 @@ public class PolygonView extends FrameLayout {
     }
 
     private void updatePolygon() {
-        RecyclerImageFile file = ScannerState.capturedImages.get(viewPager2.getCurrentItem());
+        RecyclerImageFile file = ScannerState.capturedImages.get(viewPagerCrop.getCurrentItem());
 
         Log.d(" updatePolygon file", file.getAbsolutePath());
         MatOfPoint2f cropPolygon = getCroppedPolygon();
@@ -296,7 +295,7 @@ public class PolygonView extends FrameLayout {
             int eid = event.getAction();
             switch (eid) {
                 case MotionEvent.ACTION_MOVE:
-                    viewPager2.setUserInputEnabled(false);
+                    viewPagerCrop.setUserInputEnabled(false);
                     PointF mv = new PointF(event.getX() - DownPT.x, event.getY() - DownPT.y);
 
                     if (Math.abs(mainPointer1.getX() - mainPointer2.getX()) > Math.abs(mainPointer1.getY() - mainPointer2.getY())) {
@@ -327,7 +326,7 @@ public class PolygonView extends FrameLayout {
                     DownPT.x = event.getX();
                     DownPT.y = event.getY();
                     StartPT = new PointF(v.getX(), v.getY());
-                    viewPager2.setUserInputEnabled(true);
+                    viewPagerCrop.setUserInputEnabled(true);
                     updatePolygon();
                     break;
                 case MotionEvent.ACTION_UP:
@@ -339,7 +338,7 @@ public class PolygonView extends FrameLayout {
                     }
                     paint.setColor(color);
                     dismissMag();
-                    viewPager2.setUserInputEnabled(true);
+                    viewPagerCrop.setUserInputEnabled(true);
                     updatePolygon();
                     break;
                 default:
@@ -369,7 +368,7 @@ public class PolygonView extends FrameLayout {
             int eid = event.getAction();
             switch (eid) {
                 case MotionEvent.ACTION_MOVE:
-                    viewPager2.setUserInputEnabled(false);
+                    viewPagerCrop.setUserInputEnabled(false);
                     PointF mv = new PointF(event.getX() - DownPT.x, event.getY() - DownPT.y);
                     if (((StartPT.x + mv.x + v.getWidth()) < polygonView.getWidth() && (StartPT.y + mv.y + v.getHeight() < polygonView.getHeight())) && ((StartPT.x + mv.x) > 0 && StartPT.y + mv.y > 0)) {
                         v.setX((int) (StartPT.x + mv.x));
@@ -382,7 +381,7 @@ public class PolygonView extends FrameLayout {
                     DownPT.x = event.getX();
                     DownPT.y = event.getY();
                     StartPT = new PointF(v.getX(), v.getY());
-                    viewPager2.setUserInputEnabled(true);
+                    viewPagerCrop.setUserInputEnabled(true);
                     updatePolygon();
                     break;
                 case MotionEvent.ACTION_UP:
@@ -394,7 +393,7 @@ public class PolygonView extends FrameLayout {
                     }
                     paint.setColor(color);
                     dismissMag();
-                    viewPager2.setUserInputEnabled(true);
+                    viewPagerCrop.setUserInputEnabled(true);
                     updatePolygon();
                     break;
                 default:

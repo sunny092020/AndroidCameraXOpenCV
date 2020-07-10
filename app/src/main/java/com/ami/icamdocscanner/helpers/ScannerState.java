@@ -16,6 +16,7 @@ public class ScannerState {
 
     public static List<RecyclerImageFile> capturedImages = new ArrayList<>();
     public static List<RecyclerImageFile> croppedImages = new ArrayList<>();
+    public static List<RecyclerImageFile> editedImages = new ArrayList<>();
 
     public static String cropText="Crop";
     public static String backText="Retake";
