@@ -10,9 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ScannerState {
-    public static List<RecyclerImageFile> capturedImages = new ArrayList<>();
-    public static List<RecyclerImageFile> croppedImages = new ArrayList<>();
-    public static List<RecyclerImageFile> editedImages = new ArrayList<>();
+    public static List<RecyclerImageFile> cropImages = new ArrayList<>();
+    public static List<RecyclerImageFile> editImages = new ArrayList<>();
+    public static List<RecyclerImageFile> doneImages = new ArrayList<>();
 
     public static String progressColor="#331199";
 

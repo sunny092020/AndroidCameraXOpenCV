@@ -49,13 +49,13 @@ public class ViewPagerCropAdapter extends RecyclerView.Adapter<ViewPagerCropAdap
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        RecyclerImageFile file = ScannerState.capturedImages.get(position);
+        RecyclerImageFile file = ScannerState.cropImages.get(position);
         holder.bind(file);
     }
 
     @Override
     public int getItemCount() {
-        return ScannerState.capturedImages.size();
+        return ScannerState.cropImages.size();
     }
 
     // stores and recycles views as they are scrolled off screen

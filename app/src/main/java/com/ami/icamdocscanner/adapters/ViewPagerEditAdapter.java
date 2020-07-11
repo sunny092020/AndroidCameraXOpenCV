@@ -34,7 +34,7 @@ public class ViewPagerEditAdapter extends RecyclerView.Adapter<ViewPagerEditAdap
     }
 
     public int getItemCount() {
-        return ScannerState.croppedImages.size();
+        return ScannerState.editImages.size();
     }
 
     // stores and recycles views as they are scrolled off screen
@@ -50,7 +50,7 @@ public class ViewPagerEditAdapter extends RecyclerView.Adapter<ViewPagerEditAdap
         }
 
         void bind(int currentImagePosition) {
-            RecyclerImageFile file = ScannerState.croppedImages.get(currentImagePosition);
+            RecyclerImageFile file = ScannerState.editImages.get(currentImagePosition);
             Bitmap bitmap = FileUtils.readBitmap(file.getAbsolutePath());
             imageView.setImageBitmap(bitmap);
         }

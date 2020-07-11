@@ -38,7 +38,7 @@ public class ImageCropActivity extends AppCompatActivity {
 
         viewPager2.setAdapter(adapter);
 
-        int currentImagePosition =  getIntent().getIntExtra("currentImagePosition", ScannerState.capturedImages.size());
+        int currentImagePosition =  getIntent().getIntExtra("currentImagePosition", ScannerState.cropImages.size());
         viewPager2.setCurrentItem(currentImagePosition, false);
     }
 
@@ -85,15 +85,15 @@ public class ImageCropActivity extends AppCompatActivity {
     private OnClickListener btnImageEnhanceClick = v -> toEditImage();
 
     private void toEditImage() {
-        for(RecyclerImageFile file: ScannerState.capturedImages) {
+        for(RecyclerImageFile file: ScannerState.cropImages) {
             Bitmap croppedBitmap = getCroppedImage(file);
 
             String editImageFilePath =  FileUtils.tempDir(this) + FileUtils.fileNameWithoutExtension(file.getName()) + "_edit.jpg";
             String doneImageFilePath =  FileUtils.tempDir(this) + FileUtils.fileNameWithoutExtension(file.getName()) + "_done.jpg";
             FileUtils.writeBitmap(croppedBitmap, editImageFilePath);
             FileUtils.writeBitmap(croppedBitmap, doneImageFilePath);
-            ScannerState.croppedImages.add(new RecyclerImageFile(editImageFilePath));
-            ScannerState.editedImages.add(new RecyclerImageFile(doneImageFilePath));
+            ScannerState.editImages.add(new RecyclerImageFile(editImageFilePath));
+            ScannerState.doneImages.add(new RecyclerImageFile(doneImageFilePath));
         }
 
         Intent cropIntent = new Intent(this, ImageEditActivity.class);

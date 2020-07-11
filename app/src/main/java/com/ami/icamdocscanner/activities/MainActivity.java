@@ -535,7 +535,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             FileUtils.writeBitmap(rotated90croppedBmp, fileName);
 
             RecyclerImageFile file = new RecyclerImageFile(fileName);
-            ScannerState.updateCroppedPolygon(file, ScannerState.capturedImages);
+            ScannerState.updateCroppedPolygon(file, ScannerState.cropImages);
 
             Intent cropIntent = new Intent(this, ImageCropActivity.class);
             cropIntent.putExtra("currentImagePosition", currentImagePosition);
@@ -547,7 +547,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         String fileName = FileUtils.tempDir(this) + batchNum + ".jpg";
 
         RecyclerImageFile file = new RecyclerImageFile(fileName);
-        ScannerState.capturedImages.add(file);
+        ScannerState.cropImages.add(file);
 
         FileUtils.ensureTempDir(this);
         FileUtils.writeBitmap(rotated90croppedBmp, fileName);
