@@ -5,14 +5,9 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
-import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
@@ -42,52 +37,28 @@ public class ImageEditActivity extends AppCompatActivity {
 
     private ScaleGestureDetector scaleGestureDetector;
     private float mScaleFactor = 1.0f;
-    private ImageView imageView;
-
-    private ImageView imgOrigin, imgGray, imgEnhance, imgBw;
     Context context;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_image_edit);
-
         context = this;
 
         viewPagerEdit = findViewById(R.id.viewPagerEdit);
         adapter = new ViewPagerEditAdapter(this);
         viewPagerEdit.setAdapter(adapter);
-        viewPagerEdit.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
-            @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-                super.onPageScrolled(position, positionOffset, positionOffsetPixels);
-                viewPagerEdit.post(() -> {
-                    displayFilterThumbnails(position);
-                    setFrameLayoutRatio();
-                    setupFilterButtonEvent(position);
-                    setupBottomButtonEvent(position);
-                });
-
-            }
-
-            @Override
-            public void onPageSelected(int position) {
-                super.onPageSelected(position);
-            }
-
-            @Override
-            public void onPageScrollStateChanged(int state) {
-                super.onPageScrollStateChanged(state);
-            }
-        });
+        displayFilterThumbnails();
+        setupFilterButtonEvent();
+        setupBottomButtonEvent();
 
         int currentImagePosition =  getIntent().getIntExtra("currentImagePosition", ScannerState.croppedImages.size());
         viewPagerEdit.setCurrentItem(currentImagePosition, false);
         scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
-
     }
 
-    private void displayFilterThumbnails(int currentImagePosition) {
+    private void displayFilterThumbnails() {
+        int currentImagePosition = viewPagerEdit.getCurrentItem();
         RecyclerImageFile currentImage = ScannerState.croppedImages.get(currentImagePosition);
         Bitmap currentBitmap = FileUtils.readBitmap(currentImage.getAbsolutePath());
 
@@ -114,10 +85,10 @@ public class ImageEditActivity extends AppCompatActivity {
         VisionUtils.toBw(smallOrigin, bwThumbnail);
         Bitmap bwBitmap = VisionUtils.matToBitmap(bwThumbnail);
 
-        imgOrigin = findViewById(R.id.imgOrigin);
-        imgGray = findViewById(R.id.imgGray);
-        imgEnhance = findViewById(R.id.imgEnhance);
-        imgBw = findViewById(R.id.imgBw);
+        ImageView imgOrigin = findViewById(R.id.imgOrigin);
+        ImageView imgGray = findViewById(R.id.imgGray);
+        ImageView imgEnhance = findViewById(R.id.imgEnhance);
+        ImageView imgBw = findViewById(R.id.imgBw);
 
         imgOrigin.setImageBitmap(smallOriginBitmap);
         imgGray.setImageBitmap(grayThumbnailBitmap);
@@ -125,7 +96,9 @@ public class ImageEditActivity extends AppCompatActivity {
         imgBw.setImageBitmap(bwBitmap);
     }
 
-    private void setupFilterButtonEvent(int currentImagePosition) {
+    private void setupFilterButtonEvent() {
+        int currentImagePosition = viewPagerEdit.getCurrentItem();
+
         ImageView imgOrigin = findViewById(R.id.imgOrigin);
         ImageView imgGray = findViewById(R.id.imgGray);
         ImageView imgEnhance = findViewById(R.id.imgEnhance);
@@ -134,12 +107,10 @@ public class ImageEditActivity extends AppCompatActivity {
         RecyclerImageFile currentImage = ScannerState.croppedImages.get(currentImagePosition);
         Bitmap currentBitmap = FileUtils.readBitmap(currentImage.getAbsolutePath());
 
-        imageView = findViewById(R.id.imageView);
         imgOrigin.setOnClickListener(v -> {
+            ImageView imageView = findViewById(R.id.imageView);
             imageView.setImageBitmap(currentBitmap);
         });
-
-        imgOrigin.setOnClickListener(null);
 
         imgGray.setOnClickListener(v -> {
             Mat gray = new Mat();
@@ -147,8 +118,8 @@ public class ImageEditActivity extends AppCompatActivity {
             Utils.bitmapToMat(currentBitmap, origin);
             VisionUtils.toGray(origin, gray);
             Bitmap grayBitmap = VisionUtils.matToBitmap(gray);
+            ImageView imageView = findViewById(R.id.imageView);
             imageView.setImageBitmap(grayBitmap);
-
             String doneImageFilePath =  FileUtils.tempDir(context) + FileUtils.fileNameWithoutExtension(currentImage.getName()) + "_done.jpg";
             FileUtils.writeBitmap(grayBitmap, doneImageFilePath);
         });
@@ -159,8 +130,8 @@ public class ImageEditActivity extends AppCompatActivity {
             Utils.bitmapToMat(currentBitmap, origin);
             VisionUtils.enhance(origin, enhance);
             Bitmap enhanceBitmap = VisionUtils.matToBitmap(enhance);
+            ImageView imageView = findViewById(R.id.imageView);
             imageView.setImageBitmap(enhanceBitmap);
-
             String doneImageFilePath =  FileUtils.tempDir(context) + FileUtils.fileNameWithoutExtension(currentImage.getName()) + "_done.jpg";
             FileUtils.writeBitmap(enhanceBitmap, doneImageFilePath);
 
@@ -172,15 +143,17 @@ public class ImageEditActivity extends AppCompatActivity {
             Utils.bitmapToMat(currentBitmap, origin);
             VisionUtils.toBw(origin, bw);
             Bitmap bwBitmap = VisionUtils.matToBitmap(bw);
+            ImageView imageView = findViewById(R.id.imageView);
             imageView.setImageBitmap(bwBitmap);
-
             String doneImageFilePath =  FileUtils.tempDir(context) + FileUtils.fileNameWithoutExtension(currentImage.getName()) + "_done.jpg";
             FileUtils.writeBitmap(bwBitmap, doneImageFilePath);
 
         });
     }
 
-    private void setupBottomButtonEvent(int currentImagePosition) {
+    private void setupBottomButtonEvent() {
+        int currentImagePosition = viewPagerEdit.getCurrentItem();
+
         RecyclerImageFile currentImage = ScannerState.croppedImages.get(currentImagePosition);
 
         LinearLayout cropBtn = findViewById(R.id.cropBtn);
@@ -195,6 +168,8 @@ public class ImageEditActivity extends AppCompatActivity {
         if(rotateBtn==null) return;
 
         rotateBtn.setOnClickListener(v -> {
+            ImageView imageView = findViewById(R.id.imageView);
+
             Bitmap currentFilteredImg = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
             currentFilteredImg = VisionUtils.rotateBitmap(currentFilteredImg, 90);
             imageView.setImageBitmap(currentFilteredImg);
@@ -218,7 +193,6 @@ public class ImageEditActivity extends AppCompatActivity {
 
                 Bitmap currentFilteredImg = FileUtils.readBitmap(file.getAbsolutePath());
 
-
                 try (FileOutputStream out = context.openFileOutput(filename + "_" + FileUtils.fileNameWithoutExtension(file.getName()) + ".jpg", Context.MODE_PRIVATE)) {
                     currentFilteredImg.compress(Bitmap.CompressFormat.JPEG, 99, out);
                 } catch (IOException e) {
@@ -231,23 +205,6 @@ public class ImageEditActivity extends AppCompatActivity {
         });
     }
 
-    private void setFrameLayoutRatio() {
-        FrameLayout frameLayout = findViewById(R.id.frameLayout);
-
-        // Gets the layout params that will allow you to resize the layout
-        ViewGroup.LayoutParams params = frameLayout.getLayoutParams();
-
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        int width = displayMetrics.widthPixels;
-
-        // Changes the height and width to the specified *pixels*
-        params.width = width;
-        params.height = width*4/3;
-
-        frameLayout.setLayoutParams(params);
-    }
-
     public boolean onTouchEvent(MotionEvent motionEvent) {
         scaleGestureDetector.onTouchEvent(motionEvent);
         return true;
@@ -258,6 +215,8 @@ public class ImageEditActivity extends AppCompatActivity {
         public boolean onScale(ScaleGestureDetector scaleGestureDetector) {
             mScaleFactor *= scaleGestureDetector.getScaleFactor();
             mScaleFactor = Math.max(0.1f, Math.min(mScaleFactor, 10.0f));
+            ImageView imageView = findViewById(R.id.imageView);
+
             imageView.setScaleX(mScaleFactor);
             imageView.setScaleY(mScaleFactor);
             return true;

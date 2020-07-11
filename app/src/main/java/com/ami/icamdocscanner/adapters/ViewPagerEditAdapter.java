@@ -1,10 +1,13 @@
 package com.ami.icamdocscanner.adapters;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 import androidx.recyclerview.widget.RecyclerView;
@@ -43,6 +46,7 @@ public class ViewPagerEditAdapter extends RecyclerView.Adapter<ViewPagerEditAdap
             super(itemView);
             this.itemView = itemView;
             imageView = itemView.findViewById(R.id.imageView);
+            setFrameLayoutRatio();
         }
 
         void bind(int currentImagePosition) {
@@ -50,5 +54,24 @@ public class ViewPagerEditAdapter extends RecyclerView.Adapter<ViewPagerEditAdap
             Bitmap bitmap = FileUtils.readBitmap(file.getAbsolutePath());
             imageView.setImageBitmap(bitmap);
         }
+
+        void setFrameLayoutRatio() {
+            FrameLayout frameLayout = itemView.findViewById(R.id.frameLayout);
+
+            // Gets the layout params that will allow you to resize the layout
+            ViewGroup.LayoutParams params = frameLayout.getLayoutParams();
+
+            DisplayMetrics displayMetrics = new DisplayMetrics();
+            Activity activity = (Activity) itemView.getContext();
+            activity.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+            int width = displayMetrics.widthPixels;
+
+            // Changes the height and width to the specified *pixels*
+            params.width = width;
+            params.height = width*4/3;
+
+            frameLayout.setLayoutParams(params);
+        }
+
     }
 }
