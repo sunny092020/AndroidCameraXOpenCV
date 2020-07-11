@@ -47,19 +47,53 @@ public class ImageEditActivity extends AppCompatActivity {
         viewPagerEdit = findViewById(R.id.viewPagerEdit);
         adapter = new ViewPagerEditAdapter(this);
         viewPagerEdit.setAdapter(adapter);
-        displayFilterThumbnails();
         setupFilterButtonEvent();
         setupBottomButtonEvent();
 
+        viewPagerEdit.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}
+
+            @Override
+            public void onPageSelected(int position) {
+                super.onPageSelected(position);
+                new Thread(() -> displayFilterThumbnails(position)).start();
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+                super.onPageScrollStateChanged(state);
+            }
+        });
+
         int currentImagePosition =  getIntent().getIntExtra("currentImagePosition", ScannerState.editImages.size());
         viewPagerEdit.setCurrentItem(currentImagePosition, false);
+
         scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
     }
 
-    private void displayFilterThumbnails() {
-        int currentImagePosition = viewPagerEdit.getCurrentItem();
+    private void displayFilterThumbnails(int currentImagePosition) {
         RecyclerImageFile currentImage = ScannerState.editImages.get(currentImagePosition);
+
+        while (!currentImage.exists()) {
+            try {
+                Thread.sleep(100);
+                currentImage = ScannerState.editImages.get(currentImagePosition);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
         Bitmap currentBitmap = FileUtils.readBitmap(currentImage.getAbsolutePath());
+
+        while (currentBitmap== null) {
+            try {
+                Thread.sleep(100);
+                currentBitmap = FileUtils.readBitmap(currentImage.getAbsolutePath());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
 
         Mat origin = new Mat();
         Utils.bitmapToMat(currentBitmap, origin);
@@ -84,36 +118,41 @@ public class ImageEditActivity extends AppCompatActivity {
         VisionUtils.toBw(smallOrigin, bwThumbnail);
         Bitmap bwBitmap = VisionUtils.matToBitmap(bwThumbnail);
 
-        ImageView imgOrigin = findViewById(R.id.imgOrigin);
-        ImageView imgGray = findViewById(R.id.imgGray);
-        ImageView imgEnhance = findViewById(R.id.imgEnhance);
-        ImageView imgBw = findViewById(R.id.imgBw);
-
-        imgOrigin.setImageBitmap(smallOriginBitmap);
-        imgGray.setImageBitmap(grayThumbnailBitmap);
-        imgEnhance.setImageBitmap(enhanceBitmap);
-        imgBw.setImageBitmap(bwBitmap);
+        runOnUiThread(() -> {
+            ImageView imgOrigin = findViewById(R.id.imgOrigin);
+            ImageView imgGray = findViewById(R.id.imgGray);
+            ImageView imgEnhance = findViewById(R.id.imgEnhance);
+            ImageView imgBw = findViewById(R.id.imgBw);
+            imgOrigin.setImageBitmap(smallOriginBitmap);
+            imgGray.setImageBitmap(grayThumbnailBitmap);
+            imgEnhance.setImageBitmap(enhanceBitmap);
+            imgBw.setImageBitmap(bwBitmap);
+        });
     }
 
     private void setupFilterButtonEvent() {
-        int currentImagePosition = viewPagerEdit.getCurrentItem();
-
         ImageView imgOrigin = findViewById(R.id.imgOrigin);
         ImageView imgGray = findViewById(R.id.imgGray);
         ImageView imgEnhance = findViewById(R.id.imgEnhance);
         ImageView imgBw = findViewById(R.id.imgBw);
 
-        RecyclerImageFile currentImage = ScannerState.editImages.get(currentImagePosition);
-        Bitmap currentBitmap = FileUtils.readBitmap(currentImage.getAbsolutePath());
 
         imgOrigin.setOnClickListener(v -> {
             ImageView imageView = findViewById(R.id.imageView);
+
+            int currentImagePosition = viewPagerEdit.getCurrentItem();
+            RecyclerImageFile currentImage = ScannerState.editImages.get(currentImagePosition);
+            Bitmap currentBitmap = FileUtils.readBitmap(currentImage.getAbsolutePath());
             imageView.setImageBitmap(currentBitmap);
         });
 
         imgGray.setOnClickListener(v -> {
             Mat gray = new Mat();
             Mat origin = new Mat();
+
+            int currentImagePosition = viewPagerEdit.getCurrentItem();
+            RecyclerImageFile currentImage = ScannerState.editImages.get(currentImagePosition);
+            Bitmap currentBitmap = FileUtils.readBitmap(currentImage.getAbsolutePath());
             Utils.bitmapToMat(currentBitmap, origin);
             VisionUtils.toGray(origin, gray);
             Bitmap grayBitmap = VisionUtils.matToBitmap(gray);
@@ -126,6 +165,10 @@ public class ImageEditActivity extends AppCompatActivity {
         imgEnhance.setOnClickListener(v -> {
             Mat enhance = new Mat();
             Mat origin = new Mat();
+
+            int currentImagePosition = viewPagerEdit.getCurrentItem();
+            RecyclerImageFile currentImage = ScannerState.editImages.get(currentImagePosition);
+            Bitmap currentBitmap = FileUtils.readBitmap(currentImage.getAbsolutePath());
             Utils.bitmapToMat(currentBitmap, origin);
             VisionUtils.enhance(origin, enhance);
             Bitmap enhanceBitmap = VisionUtils.matToBitmap(enhance);
@@ -139,6 +182,10 @@ public class ImageEditActivity extends AppCompatActivity {
         imgBw.setOnClickListener(v -> {
             Mat bw = new Mat();
             Mat origin = new Mat();
+
+            int currentImagePosition = viewPagerEdit.getCurrentItem();
+            RecyclerImageFile currentImage = ScannerState.editImages.get(currentImagePosition);
+            Bitmap currentBitmap = FileUtils.readBitmap(currentImage.getAbsolutePath());
             Utils.bitmapToMat(currentBitmap, origin);
             VisionUtils.toBw(origin, bw);
             Bitmap bwBitmap = VisionUtils.matToBitmap(bw);
@@ -151,21 +198,14 @@ public class ImageEditActivity extends AppCompatActivity {
     }
 
     private void setupBottomButtonEvent() {
-        int currentImagePosition = viewPagerEdit.getCurrentItem();
-
-        RecyclerImageFile currentImage = ScannerState.editImages.get(currentImagePosition);
 
         LinearLayout cropBtn = findViewById(R.id.cropBtn);
-        if(cropBtn==null) return;
-
         cropBtn.setOnClickListener(v -> {
             Intent cropIntent = new Intent(context, ImageCropActivity.class);
             context.startActivity(cropIntent);
         });
 
         LinearLayout rotateBtn = findViewById(R.id.rotateBtn);
-        if(rotateBtn==null) return;
-
         rotateBtn.setOnClickListener(v -> {
             ImageView imageView = findViewById(R.id.imageView);
 
@@ -173,6 +213,8 @@ public class ImageEditActivity extends AppCompatActivity {
             currentFilteredImg = VisionUtils.rotateBitmap(currentFilteredImg, 90);
             imageView.setImageBitmap(currentFilteredImg);
 
+            int currentImagePosition = viewPagerEdit.getCurrentItem();
+            RecyclerImageFile currentImage = ScannerState.editImages.get(currentImagePosition);
             String doneImageFilePath =  FileUtils.tempDir(this) + FileUtils.fileNameWithoutExtension(currentImage.getName()) + "_done.jpg";
             FileUtils.writeBitmap(currentFilteredImg, doneImageFilePath);
         });

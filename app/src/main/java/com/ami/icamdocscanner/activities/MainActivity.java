@@ -223,6 +223,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         capturedView.setImageBitmap(lastFrameBitmap);
     }
 
+    private void unfreezePreview() {
+        previewView.setVisibility(View.VISIBLE);
+        ivBitmap.setVisibility(View.VISIBLE);
+        capturedView.setVisibility(View.INVISIBLE);
+    }
+
     private void setupPaint() {
         // Setup paint with color and stroke styles
         fillPaint = new Paint();
@@ -529,6 +535,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void batchModeCapture(Bitmap previewBitmap, Bitmap rotated90croppedBmp) {
+        runOnUiThread(() -> freezePreview(previewBitmap));
         // retake existing capture
         if(currentImagePosition >= 0) {
             String fileName = FileUtils.tempDir(this) + currentImagePosition + ".jpg";
@@ -553,7 +560,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         FileUtils.writeBitmap(rotated90croppedBmp, fileName);
 
         if(Preferences.getIsCropAfterEachCapture(this)) {
-            runOnUiThread(() -> freezePreview(previewBitmap));
             startCropActivity();
             return;
         }
@@ -569,6 +575,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             batchNumTxt.setText(String.format(Locale.US, "%d", batchNum));
             batchNumTxt.setVisibility(View.VISIBLE);
             resetCaptureTime();
+            unfreezePreview();
         });
     }
 

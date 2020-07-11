@@ -1,5 +1,6 @@
 package com.ami.icamdocscanner.activities;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
@@ -26,11 +27,14 @@ import java.util.Objects;
 public class ImageCropActivity extends AppCompatActivity {
     ViewPager2 viewPager2;
     ViewPagerCropAdapter adapter;
+    Context context;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_image_crop);
+
+        context = this;
         initView();
         viewPager2 = findViewById(R.id.viewPagerCrop);
 
@@ -85,13 +89,21 @@ public class ImageCropActivity extends AppCompatActivity {
     private OnClickListener btnImageEnhanceClick = v -> toEditImage();
 
     private void toEditImage() {
-        for(RecyclerImageFile file: ScannerState.cropImages) {
-            Bitmap croppedBitmap = getCroppedImage(file);
+        new Thread(() -> {
+            for(int i=ScannerState.cropImages.size()-1; i>=0; i--) {
+                RecyclerImageFile file = ScannerState.cropImages.get(i);
+                Bitmap croppedBitmap = getCroppedImage(file);
+                String editImageFilePath =  FileUtils.tempDir(context) + FileUtils.fileNameWithoutExtension(file.getName()) + "_edit.jpg";
+                String doneImageFilePath =  FileUtils.tempDir(context) + FileUtils.fileNameWithoutExtension(file.getName()) + "_done.jpg";
+                FileUtils.writeBitmap(croppedBitmap, editImageFilePath);
+                FileUtils.writeBitmap(croppedBitmap, doneImageFilePath);
+            }
 
+        }).start();
+
+        for(RecyclerImageFile file: ScannerState.cropImages) {
             String editImageFilePath =  FileUtils.tempDir(this) + FileUtils.fileNameWithoutExtension(file.getName()) + "_edit.jpg";
             String doneImageFilePath =  FileUtils.tempDir(this) + FileUtils.fileNameWithoutExtension(file.getName()) + "_done.jpg";
-            FileUtils.writeBitmap(croppedBitmap, editImageFilePath);
-            FileUtils.writeBitmap(croppedBitmap, doneImageFilePath);
             ScannerState.editImages.add(new RecyclerImageFile(editImageFilePath));
             ScannerState.doneImages.add(new RecyclerImageFile(doneImageFilePath));
         }
