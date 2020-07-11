@@ -152,4 +152,8 @@ public class FileUtils {
         return context.getFilesDir().getAbsolutePath() + "/" +  "temp_dir" + "/";
     }
 
+    public static String cropPath(String fileName) {
+        return "";
+    }
+
 }
