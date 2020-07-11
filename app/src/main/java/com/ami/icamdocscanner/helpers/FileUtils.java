@@ -152,8 +152,29 @@ public class FileUtils {
         return context.getFilesDir().getAbsolutePath() + "/" +  "temp_dir" + "/";
     }
 
-    public static String cropPath(String fileName) {
-        return "";
+    public static String cropImagePath(Context context, String fileName) {
+        return FileUtils.tempDir(context) + FileUtils.fileNameWithoutExtension(fileName) + "_crop.jpg";
     }
+
+    public static String editImagePath(Context context, String fileName) {
+        return FileUtils.tempDir(context) + FileUtils.fileNameWithoutExtension(fileName) + "_edit.jpg";
+    }
+
+    public static String doneImagePath(Context context, String fileName) {
+        return FileUtils.tempDir(context) + FileUtils.fileNameWithoutExtension(fileName) + "_done.jpg";
+    }
+
+    public static String cropImagePath(Context context, String subDir, String fileName) {
+        return FileUtils.tempDir(context) + subDir + FileUtils.fileNameWithoutExtension(fileName) + "_crop.jpg";
+    }
+
+    public static String editImagePath(Context context, String subDir, String fileName) {
+        return FileUtils.tempDir(context) + subDir + FileUtils.fileNameWithoutExtension(fileName) + "_edit.jpg";
+    }
+
+    public static String doneImagePath(Context context, String subDir, String fileName) {
+        return FileUtils.tempDir(context) + subDir + FileUtils.fileNameWithoutExtension(fileName) + "_done.jpg";
+    }
+
 
 }
