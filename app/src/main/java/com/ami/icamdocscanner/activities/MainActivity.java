@@ -536,9 +536,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void batchModeCapture(Bitmap previewBitmap, Bitmap rotated90croppedBmp) {
         runOnUiThread(() -> freezePreview(previewBitmap));
+
         // retake existing capture
         if(currentImagePosition >= 0) {
-            String fileName = FileUtils.tempDir(this) + currentImagePosition + ".jpg";
+            String fileName = FileUtils.cropImagePath(context, currentImagePosition + ".jpg");
             FileUtils.writeBitmap(rotated90croppedBmp, fileName);
 
             RecyclerImageFile file = new RecyclerImageFile(fileName);
@@ -554,8 +555,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
 
-        String fileName = FileUtils.tempDir(this) + batchNum + ".jpg";
-
+        String fileName =  FileUtils.cropImagePath(context, batchNum + ".jpg");
         RecyclerImageFile file = new RecyclerImageFile(fileName);
         MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, this);
         file.setCroppedPolygon(contour);
