@@ -21,7 +21,28 @@
         <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/viewPagerCrop"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="wrap_content"/>
+
+        <LinearLayout
+            android:id="@+id/pagerHolder"
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="20dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+            <TextView
+                android:id="@+id/pager"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="1dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="Pager"
+                android:textSize="14sp"
+                android:textColor="#FFFFFF"/>
+        </LinearLayout>
 
     </RelativeLayout>
 

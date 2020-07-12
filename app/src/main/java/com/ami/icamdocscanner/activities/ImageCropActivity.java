@@ -5,11 +5,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class ImageCropActivity extends AppCompatActivity {
-    ViewPager2 viewPager2;
+    ViewPager2 viewPagerCrop;
     ViewPagerCropAdapter adapter;
     Context context;
 
@@ -40,19 +40,36 @@ public class ImageCropActivity extends AppCompatActivity {
 
         context = this;
         initView();
-        viewPager2 = findViewById(R.id.viewPagerCrop);
+        viewPagerCrop = findViewById(R.id.viewPagerCrop);
 
-        adapter = new ViewPagerCropAdapter(this, viewPager2);
-        viewPager2.setAdapter(adapter);
+        adapter = new ViewPagerCropAdapter(this, viewPagerCrop);
+        viewPagerCrop.setAdapter(adapter);
 
-        viewPager2.setCurrentItem(ScannerState.getCropImages().size(), false);
+        viewPagerCrop.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}
+
+            @Override
+            public void onPageSelected(int position) {
+                super.onPageSelected(position);
+                TextView pager = findViewById(R.id.pager);
+                pager.setText(position+1 + "/" + ScannerState.getCropImages().size());
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+                super.onPageScrollStateChanged(state);
+            }
+        });
+
+        viewPagerCrop.setCurrentItem(ScannerState.getCropImages().size(), false);
     }
 
     // user go back to re-crop
     protected void onStart() {
         super.onStart();
         int currentImagePosition =  getIntent().getIntExtra("currentImagePosition", ScannerState.getCropImages().size());
-        viewPager2.setCurrentItem(currentImagePosition, false);
+        viewPagerCrop.setCurrentItem(currentImagePosition, false);
     }
 
     private void initView() {
@@ -68,7 +85,7 @@ public class ImageCropActivity extends AppCompatActivity {
 
     private OnClickListener btnCloseClick = v -> {
         Intent intent = new Intent(this, MainActivity.class);
-        int currentImagePosition = viewPager2.getCurrentItem();
+        int currentImagePosition = viewPagerCrop.getCurrentItem();
         intent.putExtra("currentImagePosition", currentImagePosition);
         startActivityForResult(intent, ScannerConstant.RETAKE_PHOTO);
     };
@@ -86,7 +103,7 @@ public class ImageCropActivity extends AppCompatActivity {
         if (requestCode == ScannerConstant.RETAKE_PHOTO) {
             if(resultCode == Activity.RESULT_OK){
                 int currentImagePosition =  data.getIntExtra("currentImagePosition", ScannerState.getCropImages().size());
-                viewPager2.setCurrentItem(currentImagePosition);
+                viewPagerCrop.setCurrentItem(currentImagePosition);
                 adapter.notifyItemChanged(currentImagePosition);
             }
             if (resultCode == Activity.RESULT_CANCELED) {}

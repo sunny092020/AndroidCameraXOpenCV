@@ -10,6 +10,7 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
@@ -60,6 +61,8 @@ public class ImageEditActivity extends AppCompatActivity {
             public void onPageSelected(int position) {
                 super.onPageSelected(position);
                 new Thread(() -> displayFilterThumbnails(position)).start();
+                TextView pager = findViewById(R.id.pager);
+                pager.setText(position+1 + "/" + ScannerState.getCropImages().size());
             }
 
             @Override
