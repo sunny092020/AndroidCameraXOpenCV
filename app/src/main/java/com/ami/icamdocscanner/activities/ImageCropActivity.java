@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -107,12 +108,29 @@ public class ImageCropActivity extends AppCompatActivity {
 
             if(imageFile.getCroppedPolygon() == null) return imageFileBitmap;
 
+            Log.d("imageFileBitmap w", "" + imageFileBitmap.getWidth());
+            Log.d("imageFileBitmap h", "" + imageFileBitmap.getHeight());
+            Log.d("imageFile length", "" + imageFile.length());
+
             List<Point> points = imageFile.getCroppedPolygon().toList();
 
             ImageView imageView = findViewById(R.id.imageView);
+            Log.d("imageView w", "" + imageView.getWidth());
+            Log.d("imageView h", "" + imageView.getHeight());
+
+            Log.d("points.get(0).x", "" + points.get(0).x);
+            Log.d("points.get(1).x", "" + points.get(0).y);
+            Log.d("points.get(2).x", "" + points.get(0).x);
+            Log.d("points.get(3).x", "" + points.get(0).y);
+            Log.d("points.get(0).x", "" + points.get(0).x);
+            Log.d("points.get(1).x", "" + points.get(0).y);
+            Log.d("points.get(2).x", "" + points.get(0).x);
+            Log.d("points.get(3).x", "" + points.get(0).y);
 
             float xRatio = (float) imageFileBitmap.getWidth() / imageView.getWidth();
             float yRatio = (float) imageFileBitmap.getHeight() / imageView.getHeight();
+            Log.d("xRatio", "" + xRatio);
+            Log.d("yRatio", "" + yRatio);
 
             float x1 = (float) ((Objects.requireNonNull(points.get(0)).x) * xRatio);
             float x2 = (float) ((Objects.requireNonNull(points.get(1)).x) * xRatio);
