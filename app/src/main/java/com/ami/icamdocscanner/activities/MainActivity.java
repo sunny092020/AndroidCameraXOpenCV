@@ -542,6 +542,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             FileUtils.writeBitmap(rotated90croppedBmp, fileName);
 
             RecyclerImageFile file = new RecyclerImageFile(fileName);
+
+            MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, this);
+            file.setCroppedPolygon(contour);
             ScannerState.updateCroppedPolygon(file, ScannerState.cropImages);
 
             Intent cropIntent = new Intent(this, ImageCropActivity.class);
@@ -554,6 +557,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         String fileName = FileUtils.tempDir(this) + batchNum + ".jpg";
 
         RecyclerImageFile file = new RecyclerImageFile(fileName);
+        MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, this);
+        file.setCroppedPolygon(contour);
+
         ScannerState.cropImages.add(file);
 
         FileUtils.ensureTempDir(this);

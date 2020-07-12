@@ -45,19 +45,7 @@ public class ImageCropActivity extends AppCompatActivity {
         int currentImagePosition =  getIntent().getIntExtra("currentImagePosition", ScannerState.cropImages.size());
         viewPager2.setCurrentItem(currentImagePosition, false);
     }
-
-    private List<RecyclerImageFile> setContours(List<RecyclerImageFile> files) {
-        for (RecyclerImageFile file : files) {
-            // already set contours
-            if(file.getCroppedPolygon() != null) continue;
-
-            Bitmap rotated90croppedBmp = FileUtils.readBitmap(file.getAbsolutePath());
-            MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, this);
-            file.setCroppedPolygon(contour);
-        }
-        return files;
-    }
-
+    
     private void initView() {
         Button btnImageCrop = findViewById(R.id.btnImageCrop);
         Button btnClose = findViewById(R.id.btnClose);
