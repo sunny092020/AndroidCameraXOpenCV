@@ -252,6 +252,7 @@ public class ImageEditActivity extends AppCompatActivity {
             }
 
             FileUtils.deleteTempDir(context);
+            ScannerState.resetScannerState();
 
             Intent cropIntent = new Intent(context, ImageDoneActivity.class);
             context.startActivity(cropIntent);

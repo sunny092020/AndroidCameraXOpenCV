@@ -17,7 +17,11 @@ public class ScannerState {
     public static String progressColor="#331199";
 
     // retake image, back to main activity from crop activity
-    public static void resetScannerState() {}
+    public static void resetScannerState() {
+        cropImages = new ArrayList<>();
+        editImages = new ArrayList<>();
+        doneImages = new ArrayList<>();
+    }
 
     public static void updateCroppedPolygon(RecyclerImageFile file, List<RecyclerImageFile> files) {
         for(RecyclerImageFile f: files) {
