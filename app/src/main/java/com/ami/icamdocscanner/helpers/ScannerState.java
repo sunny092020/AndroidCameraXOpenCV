@@ -41,7 +41,6 @@ public class ScannerState {
         };
         Collections.sort(files, nameComparator);
         int nameInt = Integer.parseInt(files.get(0).getName().split("_")[0]);
-        Log.d("nameInt", "" + nameInt);
         return nameInt+1;
     }
 }
