@@ -90,9 +90,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public Bitmap overlay;
     public Paint fillPaint, strokePaint;
 
-    int currentImagePosition = -1;
-    boolean add = false;
-
     private static long lastManualCaptureTime, lastAutoCaptureTime;
 
     static {
@@ -171,16 +168,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         RelativeLayout btnBatchThumbnails = findViewById(R.id.batchThumbnailsHolder);
+        btnBatchThumbnails.setOnClickListener(v -> startCropActivity());
 
-        // for retake image
-        currentImagePosition =  getIntent().getIntExtra("currentImagePosition", -1);
-        if(currentImagePosition == -1) {
-            btnBatchThumbnails.setOnClickListener(v -> startCropActivity());
-        }
         // add more images
-        add = getIntent().getBooleanExtra("add", false);
+        boolean add = getIntent().getBooleanExtra("add", false);
         if(add) {
-            List<RecyclerImageFile> files = ScannerState.cropImages;
+            List<RecyclerImageFile> files = ScannerState.getCropImages();
             RecyclerImageFile latestFile = files.get(files.size() -1);
 
             Bitmap latestFileBitmap = FileUtils.readBitmap(latestFile.getAbsolutePath());
@@ -191,15 +184,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             batchThumbnails.setImageBitmap(smallOriginBitmap);
 
             TextView batchNumTxt = findViewById(R.id.batchNum);
-            batchNumTxt.setText(String.format(Locale.US, "%d", ScannerState.cropImages.size()));
+            batchNumTxt.setText(String.format(Locale.US, "%d", ScannerState.getCropImages().size()));
             batchNumTxt.setVisibility(View.VISIBLE);
         }
     }
 
     private void deleteTempDir() {
         // for retake image
-        currentImagePosition =  getIntent().getIntExtra("currentImagePosition", -1);
-        add = getIntent().getBooleanExtra("add", false);
+        int currentImagePosition =  getIntent().getIntExtra("currentImagePosition", -1);
+        boolean add = getIntent().getBooleanExtra("add", false);
 
         if(add) return;
         if(currentImagePosition>=0) return;
@@ -527,9 +520,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void batchModeCapture(Bitmap previewBitmap, Bitmap rotated90croppedBmp) {
         runOnUiThread(() -> freezePreview(previewBitmap));
 
+        int currentImagePosition =  getIntent().getIntExtra("currentImagePosition", -1);
+
         // retake existing capture
         if(currentImagePosition >= 0) {
-            RecyclerImageFile retakingFile = ScannerState.cropImages.get(currentImagePosition);
+            RecyclerImageFile retakingFile = ScannerState.getCropImages().get(currentImagePosition);
             FileUtils.writeBitmap(rotated90croppedBmp, retakingFile.getAbsolutePath());
 
             MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, this);
@@ -537,17 +532,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             Intent cropIntent = new Intent(this, ImageCropActivity.class);
             cropIntent.putExtra("currentImagePosition", currentImagePosition);
-            startActivity(cropIntent);
+            setResult(Activity.RESULT_OK,cropIntent);
             finish();
             return;
         }
 
-        String fileName =  FileUtils.cropImagePath(context, ScannerState.getNextFileName(ScannerState.cropImages) + ".jpg");
+        String fileName =  FileUtils.cropImagePath(context, ScannerState.getNextFileName(ScannerState.getCropImages()) + ".jpg");
         RecyclerImageFile file = new RecyclerImageFile(fileName);
         MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, this);
         file.setCroppedPolygon(contour);
 
-        ScannerState.cropImages.add(file);
+        ScannerState.getCropImages().add(file);
 
         FileUtils.ensureTempDir(this);
         FileUtils.writeBitmap(rotated90croppedBmp, fileName);
@@ -564,7 +559,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             ImageView batchThumbnails = findViewById(R.id.batchThumbnails);
             batchThumbnails.setImageBitmap(smallOriginBitmap);
             TextView batchNumTxt = findViewById(R.id.batchNum);
-            batchNumTxt.setText(String.format(Locale.US, "%d", ScannerState.cropImages.size()));
+            batchNumTxt.setText(String.format(Locale.US, "%d", ScannerState.getCropImages().size()));
             batchNumTxt.setVisibility(View.VISIBLE);
             resetCaptureTime();
             unfreezePreview();

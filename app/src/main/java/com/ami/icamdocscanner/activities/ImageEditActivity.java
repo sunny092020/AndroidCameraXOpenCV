@@ -1,5 +1,6 @@
 package com.ami.icamdocscanner.activities;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -16,6 +17,7 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.ami.icamdocscanner.R;
 import com.ami.icamdocscanner.adapters.ViewPagerEditAdapter;
 import com.ami.icamdocscanner.helpers.FileUtils;
+import com.ami.icamdocscanner.helpers.ScannerConstant;
 import com.ami.icamdocscanner.helpers.ScannerState;
 import com.ami.icamdocscanner.helpers.VisionUtils;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
@@ -66,19 +68,17 @@ public class ImageEditActivity extends AppCompatActivity {
             }
         });
 
-        int currentImagePosition =  getIntent().getIntExtra("currentImagePosition", ScannerState.editImages.size());
-        viewPagerEdit.setCurrentItem(currentImagePosition, false);
-
+        viewPagerEdit.setCurrentItem(ScannerState.getEditImages().size(), false);
         scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
     }
 
     private void displayFilterThumbnails(int currentImagePosition) {
-        RecyclerImageFile currentImage = ScannerState.editImages.get(currentImagePosition);
+        RecyclerImageFile currentImage = ScannerState.getEditImages().get(currentImagePosition);
 
         while (!currentImage.exists()) {
             try {
                 Thread.sleep(100);
-                currentImage = ScannerState.editImages.get(currentImagePosition);
+                currentImage = ScannerState.getEditImages().get(currentImagePosition);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -141,8 +141,8 @@ public class ImageEditActivity extends AppCompatActivity {
             ImageView imageView = findViewById(R.id.imageView);
 
             int currentImagePosition = viewPagerEdit.getCurrentItem();
-            RecyclerImageFile currentImageEdit = ScannerState.editImages.get(currentImagePosition);
-            RecyclerImageFile currentImageDone = ScannerState.doneImages.get(currentImagePosition);
+            RecyclerImageFile currentImageEdit = ScannerState.getEditImages().get(currentImagePosition);
+            RecyclerImageFile currentImageDone = ScannerState.getDoneImages().get(currentImagePosition);
 
             Bitmap currentImageEditBitmap = FileUtils.readBitmap(currentImageEdit.getAbsolutePath());
             imageView.setImageBitmap(currentImageEditBitmap);
@@ -154,7 +154,7 @@ public class ImageEditActivity extends AppCompatActivity {
             Mat origin = new Mat();
 
             int currentImagePosition = viewPagerEdit.getCurrentItem();
-            RecyclerImageFile currentImageEdit = ScannerState.editImages.get(currentImagePosition);
+            RecyclerImageFile currentImageEdit = ScannerState.getEditImages().get(currentImagePosition);
             Bitmap currentImageEditBitmap = FileUtils.readBitmap(currentImageEdit.getAbsolutePath());
 
             Utils.bitmapToMat(currentImageEditBitmap, origin);
@@ -163,7 +163,7 @@ public class ImageEditActivity extends AppCompatActivity {
             ImageView imageView = findViewById(R.id.imageView);
             imageView.setImageBitmap(grayBitmap);
 
-            RecyclerImageFile currentImageDone = ScannerState.doneImages.get(currentImagePosition);
+            RecyclerImageFile currentImageDone = ScannerState.getDoneImages().get(currentImagePosition);
             FileUtils.writeBitmap(grayBitmap, currentImageDone.getAbsolutePath());
         });
 
@@ -172,7 +172,7 @@ public class ImageEditActivity extends AppCompatActivity {
             Mat origin = new Mat();
 
             int currentImagePosition = viewPagerEdit.getCurrentItem();
-            RecyclerImageFile currentImageEdit = ScannerState.editImages.get(currentImagePosition);
+            RecyclerImageFile currentImageEdit = ScannerState.getEditImages().get(currentImagePosition);
             Bitmap currentImageEditBitmap = FileUtils.readBitmap(currentImageEdit.getAbsolutePath());
 
             Utils.bitmapToMat(currentImageEditBitmap, origin);
@@ -181,7 +181,7 @@ public class ImageEditActivity extends AppCompatActivity {
             ImageView imageView = findViewById(R.id.imageView);
             imageView.setImageBitmap(enhanceBitmap);
 
-            RecyclerImageFile currentImageDone = ScannerState.doneImages.get(currentImagePosition);
+            RecyclerImageFile currentImageDone = ScannerState.getDoneImages().get(currentImagePosition);
             FileUtils.writeBitmap(enhanceBitmap, currentImageDone.getAbsolutePath());
         });
 
@@ -190,7 +190,7 @@ public class ImageEditActivity extends AppCompatActivity {
             Mat origin = new Mat();
 
             int currentImagePosition = viewPagerEdit.getCurrentItem();
-            RecyclerImageFile currentImageEdit = ScannerState.editImages.get(currentImagePosition);
+            RecyclerImageFile currentImageEdit = ScannerState.getEditImages().get(currentImagePosition);
             Bitmap currentImageEditBitmap = FileUtils.readBitmap(currentImageEdit.getAbsolutePath());
 
             Utils.bitmapToMat(currentImageEditBitmap, origin);
@@ -199,17 +199,18 @@ public class ImageEditActivity extends AppCompatActivity {
             ImageView imageView = findViewById(R.id.imageView);
             imageView.setImageBitmap(bwBitmap);
 
-            RecyclerImageFile currentImageDone = ScannerState.doneImages.get(currentImagePosition);
+            RecyclerImageFile currentImageDone = ScannerState.getDoneImages().get(currentImagePosition);
             FileUtils.writeBitmap(bwBitmap, currentImageDone.getAbsolutePath());
         });
     }
 
     private void setupBottomButtonEvent() {
-
         LinearLayout cropBtn = findViewById(R.id.cropBtn);
         cropBtn.setOnClickListener(v -> {
             Intent cropIntent = new Intent(context, ImageCropActivity.class);
-            context.startActivity(cropIntent);
+            int currentImagePosition = viewPagerEdit.getCurrentItem();
+            cropIntent.putExtra("currentImagePosition", currentImagePosition);
+            startActivityForResult(cropIntent, ScannerConstant.RECROP_PHOTO);
         });
 
         LinearLayout rotateBtn = findViewById(R.id.rotateBtn);
@@ -220,8 +221,8 @@ public class ImageEditActivity extends AppCompatActivity {
             imageView.setImageBitmap(currentFilteredImg);
 
             int currentImagePosition = viewPagerEdit.getCurrentItem();
-            RecyclerImageFile currentImageDone = ScannerState.doneImages.get(currentImagePosition);
-            RecyclerImageFile currentImageEdit = ScannerState.editImages.get(currentImagePosition);
+            RecyclerImageFile currentImageDone = ScannerState.getDoneImages().get(currentImagePosition);
+            RecyclerImageFile currentImageEdit = ScannerState.getEditImages().get(currentImagePosition);
             Bitmap currentImageEditBitmap = FileUtils.readBitmap(currentImageEdit.getAbsolutePath());
             currentImageEditBitmap = VisionUtils.rotateBitmap(currentImageEditBitmap, 90);
 
@@ -235,7 +236,7 @@ public class ImageEditActivity extends AppCompatActivity {
             // Get a Calendar and set it to the current time.
             Calendar cal = Calendar.getInstance();
 
-            for(RecyclerImageFile file: ScannerState.doneImages) {
+            for(RecyclerImageFile file: ScannerState.getDoneImages()) {
                 cal.setTime(Date.from(Instant.now()));
 
                 // Create a filename from a format string.
@@ -257,6 +258,19 @@ public class ImageEditActivity extends AppCompatActivity {
             Intent cropIntent = new Intent(context, ImageDoneActivity.class);
             context.startActivity(cropIntent);
         });
+    }
+
+    //onActivityResult
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == ScannerConstant.RECROP_PHOTO) {
+            if(resultCode == Activity.RESULT_OK){
+                int currentImagePosition =  data.getIntExtra("currentImagePosition", ScannerState.getEditImages().size());
+                viewPagerEdit.setCurrentItem(currentImagePosition);
+                adapter.notifyItemChanged(currentImagePosition);
+            }
+            if (resultCode == Activity.RESULT_CANCELED) {}
+        }
     }
 
     public boolean onTouchEvent(MotionEvent motionEvent) {

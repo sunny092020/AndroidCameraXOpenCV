@@ -1,9 +1,11 @@
 package com.ami.icamdocscanner.activities;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -15,6 +17,7 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.ami.icamdocscanner.R;
 import com.ami.icamdocscanner.adapters.ViewPagerCropAdapter;
 import com.ami.icamdocscanner.helpers.FileUtils;
+import com.ami.icamdocscanner.helpers.ScannerConstant;
 import com.ami.icamdocscanner.helpers.ScannerState;
 import com.ami.icamdocscanner.helpers.VisionUtils;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
@@ -40,13 +43,17 @@ public class ImageCropActivity extends AppCompatActivity {
         viewPager2 = findViewById(R.id.viewPagerCrop);
 
         adapter = new ViewPagerCropAdapter(this, viewPager2);
-
         viewPager2.setAdapter(adapter);
+        viewPager2.setCurrentItem(ScannerState.getCropImages().size(), false);
+    }
 
-        int currentImagePosition =  getIntent().getIntExtra("currentImagePosition", ScannerState.cropImages.size());
+    // user go back to re-crop
+    protected void onStart() {
+        super.onStart();
+        int currentImagePosition =  getIntent().getIntExtra("currentImagePosition", -1);
         viewPager2.setCurrentItem(currentImagePosition, false);
     }
-    
+
     private void initView() {
         Button btnImageCrop = findViewById(R.id.btnImageCrop);
         Button btnClose = findViewById(R.id.btnClose);
@@ -62,8 +69,7 @@ public class ImageCropActivity extends AppCompatActivity {
         Intent intent = new Intent(this, MainActivity.class);
         int currentImagePosition = viewPager2.getCurrentItem();
         intent.putExtra("currentImagePosition", currentImagePosition);
-        startActivity(intent);
-        finish();
+        startActivityForResult(intent, ScannerConstant.RETAKE_PHOTO);
     };
 
     private OnClickListener btnAddClick = v -> {
@@ -73,12 +79,43 @@ public class ImageCropActivity extends AppCompatActivity {
         finish();
     };
 
-    private OnClickListener btnImageEnhanceClick = v -> toEditImage();
+    //onActivityResult
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == ScannerConstant.RETAKE_PHOTO) {
+            if(resultCode == Activity.RESULT_OK){
+                int currentImagePosition =  data.getIntExtra("currentImagePosition", ScannerState.getCropImages().size());
+                viewPager2.setCurrentItem(currentImagePosition);
+                adapter.notifyItemChanged(currentImagePosition);
+            }
+            if (resultCode == Activity.RESULT_CANCELED) {}
+        }
+    }
+
+    private OnClickListener btnImageEnhanceClick = v -> {
+        int currentImagePosition =  getIntent().getIntExtra("currentImagePosition", -1);
+        if(currentImagePosition == -1) {
+            toEditImage();
+        } else {
+            RecyclerImageFile file = ScannerState.getCropImages().get(currentImagePosition);
+            Bitmap croppedBitmap = getCroppedImage(file);
+
+            String editImageFilePath =  FileUtils.editImagePath(context, file.getName());
+            String doneImageFilePath =  FileUtils.doneImagePath(context, file.getName());
+
+            FileUtils.writeBitmap(croppedBitmap, editImageFilePath);
+            FileUtils.writeBitmap(croppedBitmap, doneImageFilePath);
+            Intent cropIntent = new Intent(this, ImageEditActivity.class);
+            cropIntent.putExtra("currentImagePosition", currentImagePosition);
+            setResult(Activity.RESULT_OK,cropIntent);
+            finish();
+        }
+    };
 
     private void toEditImage() {
         new Thread(() -> {
-            for(int i=ScannerState.cropImages.size()-1; i>=0; i--) {
-                RecyclerImageFile file = ScannerState.cropImages.get(i);
+            for(int i=ScannerState.getCropImages().size()-1; i>=0; i--) {
+                RecyclerImageFile file = ScannerState.getCropImages().get(i);
                 Bitmap croppedBitmap = getCroppedImage(file);
 
                 String editImageFilePath =  FileUtils.editImagePath(context, file.getName());
@@ -90,11 +127,11 @@ public class ImageCropActivity extends AppCompatActivity {
 
         }).start();
 
-        for(RecyclerImageFile file: ScannerState.cropImages) {
+        for(RecyclerImageFile file: ScannerState.getCropImages()) {
             String editImageFilePath =  FileUtils.editImagePath(context, file.getName());
             String doneImageFilePath =  FileUtils.doneImagePath(context, file.getName());
-            ScannerState.editImages.add(new RecyclerImageFile(editImageFilePath));
-            ScannerState.doneImages.add(new RecyclerImageFile(doneImageFilePath));
+            ScannerState.getEditImages().add(new RecyclerImageFile(editImageFilePath));
+            ScannerState.getDoneImages().add(new RecyclerImageFile(doneImageFilePath));
         }
 
         Intent cropIntent = new Intent(this, ImageEditActivity.class);

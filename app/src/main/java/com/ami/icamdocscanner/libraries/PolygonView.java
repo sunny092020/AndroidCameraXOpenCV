@@ -82,7 +82,7 @@ public class PolygonView extends FrameLayout {
     }
 
     private void updatePolygon() {
-        RecyclerImageFile file = ScannerState.cropImages.get(viewPagerCrop.getCurrentItem());
+        RecyclerImageFile file = ScannerState.getCropImages().get(viewPagerCrop.getCurrentItem());
         file.setCroppedPolygon(getCroppedPolygon());
     }
 
