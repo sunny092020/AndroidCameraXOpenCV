@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PointF;
 import android.graphics.drawable.BitmapDrawable;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -49,13 +50,13 @@ public class ViewPagerCropAdapter extends RecyclerView.Adapter<ViewPagerCropAdap
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        RecyclerImageFile file = ScannerState.cropImages.get(position);
+        RecyclerImageFile file = ScannerState.getCropImages().get(position);
         holder.bind(file);
     }
 
     @Override
     public int getItemCount() {
-        return ScannerState.cropImages.size();
+        return ScannerState.getCropImages().size();
     }
 
     // stores and recycles views as they are scrolled off screen

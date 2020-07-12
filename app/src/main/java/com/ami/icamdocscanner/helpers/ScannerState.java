@@ -10,9 +10,9 @@ import java.util.Comparator;
 import java.util.List;
 
 public class ScannerState {
-    public static List<RecyclerImageFile> cropImages = new ArrayList<>();
-    public static List<RecyclerImageFile> editImages = new ArrayList<>();
-    public static List<RecyclerImageFile> doneImages = new ArrayList<>();
+    private static List<RecyclerImageFile> cropImages = new ArrayList<>();
+    private static List<RecyclerImageFile> editImages = new ArrayList<>();
+    private static List<RecyclerImageFile> doneImages = new ArrayList<>();
 
     public static String progressColor="#331199";
 
@@ -23,13 +23,16 @@ public class ScannerState {
         doneImages = new ArrayList<>();
     }
 
-    public static void updateCroppedPolygon(RecyclerImageFile file, List<RecyclerImageFile> files) {
-        for(RecyclerImageFile f: files) {
-            if(f.equals(file)) {
-                f.setCroppedPolygon(null);
-                return;
-            }
-        }
+    public static List<RecyclerImageFile> getCropImages() {
+        return cropImages;
+    }
+
+    public static List<RecyclerImageFile> getEditImages() {
+        return editImages;
+    }
+
+    public static List<RecyclerImageFile> getDoneImages() {
+        return doneImages;
     }
 
     public static int getNextFileName(List<RecyclerImageFile> files) {
@@ -37,10 +40,10 @@ public class ScannerState {
         Comparator<RecyclerImageFile> nameComparator = (o1, o2) -> {
             int nameInt1 = Integer.parseInt(((RecyclerImageFile)o1).getName().split("_")[0]);
             int nameInt2 = Integer.parseInt(((RecyclerImageFile)o2).getName().split("_")[0]);
-            return Integer.compare(nameInt2, nameInt1);
+            return Integer.compare(nameInt1, nameInt2);
         };
         Collections.sort(files, nameComparator);
-        int nameInt = Integer.parseInt(files.get(0).getName().split("_")[0]);
+        int nameInt = Integer.parseInt(files.get(files.size()-1).getName().split("_")[0]);
         return nameInt+1;
     }
 }

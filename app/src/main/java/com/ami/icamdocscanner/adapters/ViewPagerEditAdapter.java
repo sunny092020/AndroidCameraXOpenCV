@@ -41,7 +41,7 @@ public class ViewPagerEditAdapter extends RecyclerView.Adapter<ViewPagerEditAdap
     }
 
     public int getItemCount() {
-        return ScannerState.editImages.size();
+        return ScannerState.getEditImages().size();
     }
 
     // stores and recycles views as they are scrolled off screen
@@ -57,12 +57,12 @@ public class ViewPagerEditAdapter extends RecyclerView.Adapter<ViewPagerEditAdap
         }
 
         void bind(int currentImagePosition) {
-            RecyclerImageFile file = ScannerState.editImages.get(currentImagePosition);
+            RecyclerImageFile file = ScannerState.getEditImages().get(currentImagePosition);
 
             while (!file.exists()) {
                 try {
                     Thread.sleep(100);
-                    file = ScannerState.editImages.get(currentImagePosition);
+                    file = ScannerState.getEditImages().get(currentImagePosition);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
