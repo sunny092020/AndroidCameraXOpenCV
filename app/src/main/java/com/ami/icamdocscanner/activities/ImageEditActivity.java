@@ -62,7 +62,7 @@ public class ImageEditActivity extends AppCompatActivity {
                 super.onPageSelected(position);
                 new Thread(() -> displayFilterThumbnails(position)).start();
                 TextView pager = findViewById(R.id.pager);
-                pager.setText(position+1 + "/" + ScannerState.getCropImages().size());
+                pager.setText(position+1 + "/" + ScannerState.getEditImages().size());
             }
 
             @Override

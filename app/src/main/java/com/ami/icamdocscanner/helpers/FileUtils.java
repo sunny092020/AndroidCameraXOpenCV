@@ -153,28 +153,33 @@ public class FileUtils {
     }
 
     public static String cropImagePath(Context context, String fileName) {
-        return FileUtils.tempDir(context) + FileUtils.fileNameWithoutExtension(fileName) + "_crop.jpg";
+        return FileUtils.tempDir(context) + FileUtils.getNumberFromFileName(fileName) + "_crop.jpg";
     }
 
     public static String editImagePath(Context context, String fileName) {
-        return FileUtils.tempDir(context) + FileUtils.fileNameWithoutExtension(fileName) + "_edit.jpg";
+        return FileUtils.tempDir(context) + FileUtils.getNumberFromFileName(fileName) + "_edit.jpg";
     }
 
     public static String doneImagePath(Context context, String fileName) {
-        return FileUtils.tempDir(context) + FileUtils.fileNameWithoutExtension(fileName) + "_done.jpg";
+        return FileUtils.tempDir(context) + FileUtils.getNumberFromFileName(fileName) + "_done.jpg";
     }
 
     public static String cropImagePath(Context context, String subDir, String fileName) {
-        return FileUtils.tempDir(context) + subDir + FileUtils.fileNameWithoutExtension(fileName) + "_crop.jpg";
+        return FileUtils.tempDir(context) + subDir + FileUtils.getNumberFromFileName(fileName) + "_crop.jpg";
     }
 
     public static String editImagePath(Context context, String subDir, String fileName) {
-        return FileUtils.tempDir(context) + subDir + FileUtils.fileNameWithoutExtension(fileName) + "_edit.jpg";
+        return FileUtils.tempDir(context) + subDir + FileUtils.getNumberFromFileName(fileName) + "_edit.jpg";
     }
 
     public static String doneImagePath(Context context, String subDir, String fileName) {
-        return FileUtils.tempDir(context) + subDir + FileUtils.fileNameWithoutExtension(fileName) + "_done.jpg";
+        return FileUtils.tempDir(context) + subDir + FileUtils.getNumberFromFileName(fileName) + "_done.jpg";
     }
 
-
+    private static String getNumberFromFileName(String fileName) {
+        String fileNameWithoutExtension = FileUtils.fileNameWithoutExtension(fileName);
+        if (fileNameWithoutExtension.indexOf("_") > 0)
+            return fileNameWithoutExtension.split("_")[0];
+        return fileNameWithoutExtension;
+    }
 }

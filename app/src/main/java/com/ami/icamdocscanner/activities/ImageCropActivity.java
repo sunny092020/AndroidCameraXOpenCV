@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -131,14 +132,15 @@ public class ImageCropActivity extends AppCompatActivity {
     };
 
     private void toEditImage() {
+        ScannerState.getEditImages().clear();
+        ScannerState.getDoneImages().clear();
+
         new Thread(() -> {
             for(int i=ScannerState.getCropImages().size()-1; i>=0; i--) {
                 RecyclerImageFile file = ScannerState.getCropImages().get(i);
                 Bitmap croppedBitmap = getCroppedImage(file);
-
                 String editImageFilePath =  FileUtils.editImagePath(context, file.getName());
                 String doneImageFilePath =  FileUtils.doneImagePath(context, file.getName());
-
                 FileUtils.writeBitmap(croppedBitmap, editImageFilePath);
                 FileUtils.writeBitmap(croppedBitmap, doneImageFilePath);
             }
@@ -146,8 +148,8 @@ public class ImageCropActivity extends AppCompatActivity {
         }).start();
 
         for(RecyclerImageFile file: ScannerState.getCropImages()) {
-            String editImageFilePath =  FileUtils.editImagePath(context, file.getName());
             String doneImageFilePath =  FileUtils.doneImagePath(context, file.getName());
+            String editImageFilePath =  FileUtils.editImagePath(context, file.getName());
             ScannerState.getEditImages().add(new RecyclerImageFile(editImageFilePath));
             ScannerState.getDoneImages().add(new RecyclerImageFile(doneImageFilePath));
         }

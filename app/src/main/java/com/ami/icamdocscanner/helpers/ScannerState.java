@@ -18,9 +18,9 @@ public class ScannerState {
 
     // retake image, back to main activity from crop activity
     public static void resetScannerState() {
-        cropImages = new ArrayList<>();
-        editImages = new ArrayList<>();
-        doneImages = new ArrayList<>();
+        cropImages.clear();
+        editImages.clear();
+        doneImages.clear();
     }
 
     public static List<RecyclerImageFile> getCropImages() {
