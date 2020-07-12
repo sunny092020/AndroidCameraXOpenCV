@@ -381,11 +381,6 @@ public class VisionUtils {
 
     private static double maxDistance(List<Line> lines) {
         double ret;
-
-//        for(Line l:lines) {
-//            ret = ret+l.distance();
-//        }
-
         List<Object> xs = new ArrayList<>();
         List<Object> ys = new ArrayList<>();
 
@@ -395,7 +390,6 @@ public class VisionUtils {
             ys.add(line._p1.y);
             ys.add(line._p2.y);
         }
-
 
         Comparator<Object> xyComparator = (o1, o2) -> {
             double xy1 = (double)o1;

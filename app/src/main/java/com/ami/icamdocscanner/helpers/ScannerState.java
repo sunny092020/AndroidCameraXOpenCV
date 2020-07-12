@@ -1,12 +1,12 @@
 package com.ami.icamdocscanner.helpers;
 
-import android.graphics.Bitmap;
+import android.util.Log;
 
 import com.ami.icamdocscanner.models.RecyclerImageFile;
 
-import org.opencv.core.MatOfPoint2f;
-
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class ScannerState {
@@ -30,5 +30,18 @@ public class ScannerState {
                 return;
             }
         }
+    }
+
+    public static int getNextFileName(List<RecyclerImageFile> files) {
+        if(files.size()==0) return 0;
+        Comparator<RecyclerImageFile> nameComparator = (o1, o2) -> {
+            int nameInt1 = Integer.parseInt(((RecyclerImageFile)o1).getName().split("_")[0]);
+            int nameInt2 = Integer.parseInt(((RecyclerImageFile)o2).getName().split("_")[0]);
+            return Integer.compare(nameInt2, nameInt1);
+        };
+        Collections.sort(files, nameComparator);
+        int nameInt = Integer.parseInt(files.get(0).getName().split("_")[0]);
+        Log.d("nameInt", "" + nameInt);
+        return nameInt+1;
     }
 }

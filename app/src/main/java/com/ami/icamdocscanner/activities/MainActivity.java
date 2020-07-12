@@ -90,7 +90,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public Bitmap overlay;
     public Paint fillPaint, strokePaint;
 
-    private int batchNum = 0;
     int currentImagePosition = -1;
     boolean add = false;
 
@@ -192,10 +191,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             ImageView batchThumbnails = findViewById(R.id.batchThumbnails);
             batchThumbnails.setImageBitmap(smallOriginBitmap);
-            batchNum=files.size();
 
             TextView batchNumTxt = findViewById(R.id.batchNum);
-            batchNumTxt.setText(String.format(Locale.US, "%d", batchNum));
+            batchNumTxt.setText(String.format(Locale.US, "%d", ScannerState.cropImages.size()));
             batchNumTxt.setVisibility(View.VISIBLE);
         }
     }
@@ -549,7 +547,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
 
-        String fileName =  FileUtils.cropImagePath(context, batchNum + ".jpg");
+        String fileName =  FileUtils.cropImagePath(context, ScannerState.getNextFileName(ScannerState.cropImages) + ".jpg");
         RecyclerImageFile file = new RecyclerImageFile(fileName);
         MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, this);
         file.setCroppedPolygon(contour);
@@ -570,9 +568,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         runOnUiThread(() -> {
             ImageView batchThumbnails = findViewById(R.id.batchThumbnails);
             batchThumbnails.setImageBitmap(smallOriginBitmap);
-            batchNum++;
             TextView batchNumTxt = findViewById(R.id.batchNum);
-            batchNumTxt.setText(String.format(Locale.US, "%d", batchNum));
+            batchNumTxt.setText(String.format(Locale.US, "%d", ScannerState.cropImages.size()));
             batchNumTxt.setVisibility(View.VISIBLE);
             resetCaptureTime();
             unfreezePreview();
