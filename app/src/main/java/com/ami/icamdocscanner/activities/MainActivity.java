@@ -14,7 +14,6 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.SystemClock;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
@@ -177,13 +176,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // for retake image
         currentImagePosition =  getIntent().getIntExtra("currentImagePosition", -1);
         if(currentImagePosition == -1) {
-            btnBatchThumbnails.setOnClickListener(v -> {
-                Activity activity = (Activity) context;
-                // set text to "" to make way for other hint
-                startCropActivity();
-            });
+            btnBatchThumbnails.setOnClickListener(v -> startCropActivity());
         }
-
         // add more images
         add = getIntent().getBooleanExtra("add", false);
         if(add) {
@@ -426,20 +420,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private boolean lastManualCaptureEarly() {
-        return (SystemClock.elapsedRealtime() - lastManualCaptureTime) <= 12000000;
+        return (System.currentTimeMillis() - lastManualCaptureTime) <= 12000000;
     }
 
     private boolean lastCaptureEarly() {
-        return (((SystemClock.elapsedRealtime() - lastAutoCaptureTime) <= 12000000)
-                || ((SystemClock.elapsedRealtime() - lastManualCaptureTime) <= 12000000));
+        return (((System.currentTimeMillis() - lastAutoCaptureTime) <= 12000000)
+                || ((System.currentTimeMillis() - lastManualCaptureTime) <= 12000000));
     }
 
     private void markAutoCaptureTime() {
-        lastAutoCaptureTime = SystemClock.elapsedRealtime();
+        lastAutoCaptureTime = System.currentTimeMillis();
     }
 
     private void markManualCaptureTime() {
-        lastManualCaptureTime = SystemClock.elapsedRealtime();
+        lastManualCaptureTime = System.currentTimeMillis();
     }
 
     private void resetManualCaptureTime() {
