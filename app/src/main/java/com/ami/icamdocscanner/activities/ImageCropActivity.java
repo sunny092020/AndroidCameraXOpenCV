@@ -4,9 +4,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,9 +19,9 @@ import com.ami.icamdocscanner.helpers.ScannerState;
 import com.ami.icamdocscanner.helpers.VisionUtils;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
 
-import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -105,32 +105,22 @@ public class ImageCropActivity extends AppCompatActivity {
     private Bitmap getCroppedImage(RecyclerImageFile imageFile) {
         try {
             Bitmap imageFileBitmap = FileUtils.readBitmap(imageFile.getAbsolutePath());
-
             if(imageFile.getCroppedPolygon() == null) return imageFileBitmap;
+            List<Point> cropPolygonPoints = imageFile.getCroppedPolygon().toList();
+            FrameLayout holderImageCrop = findViewById(R.id.holderImageCrop);
+            float kx = (float) holderImageCrop.getWidth()/imageFileBitmap.getWidth();
+            float ky = (float) holderImageCrop.getHeight()/imageFileBitmap.getHeight();
+            float k = (Math.min(kx, ky));
 
-            Log.d("imageFileBitmap w", "" + imageFileBitmap.getWidth());
-            Log.d("imageFileBitmap h", "" + imageFileBitmap.getHeight());
-            Log.d("imageFile length", "" + imageFile.length());
-
-            List<Point> points = imageFile.getCroppedPolygon().toList();
+            List<Point> points = new ArrayList<>();
+            points.add(new Point(cropPolygonPoints.get(0).x*k, cropPolygonPoints.get(0).y*k));
+            points.add(new Point(cropPolygonPoints.get(1).x*k, cropPolygonPoints.get(1).y*k));
+            points.add(new Point(cropPolygonPoints.get(2).x*k, cropPolygonPoints.get(2).y*k));
+            points.add(new Point(cropPolygonPoints.get(3).x*k, cropPolygonPoints.get(3).y*k));
 
             ImageView imageView = findViewById(R.id.imageView);
-            Log.d("imageView w", "" + imageView.getWidth());
-            Log.d("imageView h", "" + imageView.getHeight());
-
-            Log.d("points.get(0).x", "" + points.get(0).x);
-            Log.d("points.get(1).x", "" + points.get(0).y);
-            Log.d("points.get(2).x", "" + points.get(0).x);
-            Log.d("points.get(3).x", "" + points.get(0).y);
-            Log.d("points.get(0).x", "" + points.get(0).x);
-            Log.d("points.get(1).x", "" + points.get(0).y);
-            Log.d("points.get(2).x", "" + points.get(0).x);
-            Log.d("points.get(3).x", "" + points.get(0).y);
-
             float xRatio = (float) imageFileBitmap.getWidth() / imageView.getWidth();
             float yRatio = (float) imageFileBitmap.getHeight() / imageView.getHeight();
-            Log.d("xRatio", "" + xRatio);
-            Log.d("yRatio", "" + yRatio);
 
             float x1 = (float) ((Objects.requireNonNull(points.get(0)).x) * xRatio);
             float x2 = (float) ((Objects.requireNonNull(points.get(1)).x) * xRatio);
