@@ -59,7 +59,6 @@ public class ImageCropActivity extends AppCompatActivity {
     }
 
     private OnClickListener btnCloseClick = v -> {
-        ScannerState.resetScannerState();
         Intent intent = new Intent(this, MainActivity.class);
         int currentImagePosition = viewPager2.getCurrentItem();
         intent.putExtra("currentImagePosition", currentImagePosition);
@@ -68,7 +67,6 @@ public class ImageCropActivity extends AppCompatActivity {
     };
 
     private OnClickListener btnAddClick = v -> {
-        ScannerState.resetScannerState();
         Intent intent = new Intent(this, MainActivity.class);
         intent.putExtra("add", true);
         startActivity(intent);

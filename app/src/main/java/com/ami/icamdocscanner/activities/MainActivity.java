@@ -180,9 +180,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // add more images
         add = getIntent().getBooleanExtra("add", false);
         if(add) {
-            File tempDir = new File(FileUtils.tempDir(this));
-            List<RecyclerImageFile> files = FileUtils.listFilesByName(tempDir);
-
+            List<RecyclerImageFile> files = ScannerState.cropImages;
             RecyclerImageFile latestFile = files.get(files.size() -1);
 
             Bitmap latestFileBitmap = FileUtils.readBitmap(latestFile.getAbsolutePath());
@@ -531,14 +529,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         // retake existing capture
         if(currentImagePosition >= 0) {
-            String fileName = FileUtils.cropImagePath(context, currentImagePosition + ".jpg");
-            FileUtils.writeBitmap(rotated90croppedBmp, fileName);
-
-            RecyclerImageFile file = new RecyclerImageFile(fileName);
+            RecyclerImageFile retakingFile = ScannerState.cropImages.get(currentImagePosition);
+            FileUtils.writeBitmap(rotated90croppedBmp, retakingFile.getAbsolutePath());
 
             MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, this);
-            file.setCroppedPolygon(contour);
-            ScannerState.updateCroppedPolygon(file, ScannerState.cropImages);
+            retakingFile.setCroppedPolygon(contour);
 
             Intent cropIntent = new Intent(this, ImageCropActivity.class);
             cropIntent.putExtra("currentImagePosition", currentImagePosition);
