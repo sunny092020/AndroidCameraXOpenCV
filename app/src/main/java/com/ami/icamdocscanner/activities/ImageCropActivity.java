@@ -44,13 +44,14 @@ public class ImageCropActivity extends AppCompatActivity {
 
         adapter = new ViewPagerCropAdapter(this, viewPager2);
         viewPager2.setAdapter(adapter);
+
         viewPager2.setCurrentItem(ScannerState.getCropImages().size(), false);
     }
 
     // user go back to re-crop
     protected void onStart() {
         super.onStart();
-        int currentImagePosition =  getIntent().getIntExtra("currentImagePosition", -1);
+        int currentImagePosition =  getIntent().getIntExtra("currentImagePosition", ScannerState.getCropImages().size());
         viewPager2.setCurrentItem(currentImagePosition, false);
     }
 
