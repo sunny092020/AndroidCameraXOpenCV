@@ -64,7 +64,7 @@ dependencies {
     implementation 'io.reactivex.rxjava3:rxandroid:3.0.0'
     implementation 'androidx.viewpager2:viewpager2:1.0.0'
 
-    implementation 'com.rmtheis:tess-two:9.0.0'
+    implementation 'com.rmtheis:tess-two:9.1.0'
 }
 repositories {
     mavenCentral()
