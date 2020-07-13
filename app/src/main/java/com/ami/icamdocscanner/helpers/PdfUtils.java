@@ -8,7 +8,6 @@ import com.ami.icamdocscanner.models.RecyclerImageFile;
 import com.lowagie.text.Document;
 import com.lowagie.text.DocumentException;
 import com.lowagie.text.Image;
-import com.lowagie.text.Paragraph;
 import com.lowagie.text.Rectangle;
 import com.lowagie.text.pdf.PdfName;
 import com.lowagie.text.pdf.PdfString;
@@ -22,6 +21,14 @@ import java.util.List;
 
 public class PdfUtils {
     public static void toPDFMulti(List<RecyclerImageFile> imageFiles, String outPath) {
+        toPDFMultiOpenPdf(imageFiles, outPath);
+    }
+
+    public static void toPDFSingle(RecyclerImageFile imgFile, String outPath) {
+        toPDFSingleOpenPdf(imgFile, outPath);
+    }
+
+    private static void toPDFMultiOpenPdf(List<RecyclerImageFile> imageFiles, String outPath) {
         // step 1: creation of a document-object
         Document document = new Document();
 
@@ -54,7 +61,7 @@ public class PdfUtils {
 
                 document.open();
 
-                if(i>0) document.newPage();
+                if (i > 0) document.newPage();
 
                 Image img = Image.getInstance(byteArr);
                 document.add(img);
@@ -73,7 +80,7 @@ public class PdfUtils {
         document.close();
     }
 
-    public static void toPDFSingle(RecyclerImageFile imgFile, String outPath) {
+    private static void toPDFSingleOpenPdf(RecyclerImageFile imgFile, String outPath) {
         // step 1: creation of a document-object
         Document document = new Document();
 
@@ -116,6 +123,4 @@ public class PdfUtils {
 
         document.close();
     }
-
-
 }
