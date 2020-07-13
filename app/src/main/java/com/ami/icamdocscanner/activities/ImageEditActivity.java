@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.widget.ImageView;
@@ -75,6 +76,14 @@ public class ImageEditActivity extends AppCompatActivity {
         scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
     }
 
+    protected void onStart() {
+        super.onStart();
+    }
+
+    protected void onResume() {
+        super.onResume();
+    }
+
     private void displayFilterThumbnails(int currentImagePosition) {
         RecyclerImageFile currentImage = ScannerState.getEditImages().get(currentImagePosition);
 
@@ -138,7 +147,6 @@ public class ImageEditActivity extends AppCompatActivity {
         ImageView imgGray = findViewById(R.id.imgGray);
         ImageView imgEnhance = findViewById(R.id.imgEnhance);
         ImageView imgBw = findViewById(R.id.imgBw);
-
 
         imgOrigin.setOnClickListener(v -> {
             ImageView imageView = findViewById(R.id.imageView);
@@ -270,9 +278,8 @@ public class ImageEditActivity extends AppCompatActivity {
             if(resultCode == Activity.RESULT_OK){
                 int currentImagePosition =  data.getIntExtra("currentImagePosition", ScannerState.getEditImages().size());
                 viewPagerEdit.setCurrentItem(currentImagePosition);
-                adapter.notifyItemChanged(currentImagePosition);
+                adapter.notifyDataSetChanged();
             }
-            if (resultCode == Activity.RESULT_CANCELED) {}
         }
     }
 
