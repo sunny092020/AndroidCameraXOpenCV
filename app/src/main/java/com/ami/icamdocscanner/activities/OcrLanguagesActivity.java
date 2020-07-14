@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.ami.icamdocscanner.R;
 import com.ami.icamdocscanner.adapters.OcrLanguageAdapter;
+import com.ami.icamdocscanner.helpers.ScannerConstant;
 import com.ami.icamdocscanner.models.OcrLanguage;
 
 import java.util.ArrayList;
@@ -17,22 +18,6 @@ import java.util.List;
 
 public class OcrLanguagesActivity extends AppCompatActivity {
     private OcrLanguageAdapter adapter;
-    private static String[][] LANGS = {
-        {"eng", "English"},
-        {"vie", "Tiếng Việt"},
-        {"jpn", "日本語"},
-        {"chi_sim", "简化字"},
-        {"chi_tra", "繁体字"},
-        {"deu", "Deutsch"},
-        {"fra", "Français"},
-        {"rus", "Русский"},
-        {"spa", "Español"},
-        {"por", "Português"},
-        {"hin", "हिन्दी"},
-        {"kor", "한국어"},
-        {"ita", "Italiano"}
-    };
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,7 +37,7 @@ public class OcrLanguagesActivity extends AppCompatActivity {
 
         List<OcrLanguage> langs = new ArrayList<>();
 
-        for(String[] lang: LANGS) {
+        for(String[] lang: ScannerConstant.LANGS) {
             OcrLanguage localLang = new OcrLanguage(lang[0], lang[1]);
             langs.add(localLang);
         }
