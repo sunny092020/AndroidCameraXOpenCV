@@ -14,9 +14,11 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.ami.icamdocscanner.R;
+import com.ami.icamdocscanner.helpers.FileUtils;
 import com.ami.icamdocscanner.helpers.Preferences;
 import com.ami.icamdocscanner.models.OcrLanguage;
 
+import java.io.File;
 import java.util.List;
 
 public class OcrLanguageAdapter extends RecyclerView.Adapter<OcrLanguageAdapter.ViewHolder> {
@@ -72,17 +74,17 @@ public class OcrLanguageAdapter extends RecyclerView.Adapter<OcrLanguageAdapter.
             name.setText(lang.getName());
             used.setChecked(Preferences.getLangUsed((Activity) itemView.getContext(), lang.getLang()));
 
-            used.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    if ( isChecked ) {
-                        Preferences.setlangUsed((Activity) itemView.getContext(), lang.getLang(), true);
-                    } else {
-                        Preferences.setlangUsed((Activity) itemView.getContext(), lang.getLang(), false);
-                    }
+            used.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if ( isChecked ) {
+                    Preferences.setlangUsed((Activity) itemView.getContext(), lang.getLang(), true);
+                } else {
+                    Preferences.setlangUsed((Activity) itemView.getContext(), lang.getLang(), false);
+
+                    File trainFile = new File(FileUtils.ocrFile(itemView.getContext(), lang.getLang()));
+                    if(trainFile.exists()) trainFile.delete();
                 }
             });
             Log.d("bind", lang.getName());
         }
-
     }
 }
