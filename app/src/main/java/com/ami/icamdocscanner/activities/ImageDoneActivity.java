@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.util.Log;
@@ -25,11 +26,18 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.ami.icamdocscanner.R;
 import com.ami.icamdocscanner.adapters.FileRecyclerViewAdapter;
 import com.ami.icamdocscanner.helpers.FileUtils;
+import com.ami.icamdocscanner.helpers.OcrUtils;
 import com.ami.icamdocscanner.helpers.ScannerState;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -93,10 +101,40 @@ public class ImageDoneActivity extends AppCompatActivity {
     }
 
     private void setupButtonListener() {
+        setupOcrButtonListener();
         setupDeleteButtonListener();
         setupShareButtonListener();
         setupRetakeButtonListener();
         setupPdfButtonListener();
+    }
+
+    private void setupOcrButtonListener() {
+        LinearLayout ocrBtn = findViewById(R.id.ocrBtn);
+
+        ocrBtn.setOnClickListener(v -> {
+            if(adapter.getSelectedByExtension("jpg").size() == 0) {
+                showToast("No Images Selection");
+                return;
+            }
+
+            String lang = "vie";
+
+            File trainFile = new File(FileUtils.ocrFile(this, lang));
+            Log.d("trainFile", trainFile.getAbsolutePath() + " " + trainFile.exists());
+            Log.d("trainFile size", " " + trainFile.length());
+
+            String text = OcrUtils.ocr(context, adapter.getSelected().get(0), "eng+vie");
+            Log.d("ocr text", text);
+
+//            trainFile.delete();
+//
+//            if(!trainFile.exists()) {
+//                Log.d("trainFile", "not exists");
+//
+//                FileUtils.ensureOcrDir(context);
+//                new DownloadFileFromURL(lang).execute();
+//            }
+        });
     }
 
     private void setupPdfButtonListener() {
@@ -211,5 +249,95 @@ public class ImageDoneActivity extends AppCompatActivity {
         Toast toast = Toast.makeText(this, msg, Toast.LENGTH_SHORT);
         toast.setGravity(Gravity.CENTER, 0, 0);
         toast.show();
+    }
+
+
+    /**
+     * Background Async Task to download file
+     * */
+    class DownloadFileFromURL extends AsyncTask<String, String, String> {
+        String lang;
+
+        DownloadFileFromURL(String lang) {
+            this.lang = lang;
+        }
+
+        /**
+         * Before starting background thread Show Progress Bar Dialog
+         * */
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        /**
+         * Downloading file in background thread
+         * */
+        @Override
+        protected String doInBackground(String... f_url) {
+            int count;
+            try {
+                String fileUrl = "https://github.com/tesseract-ocr/tessdata/raw/4.0.0/" + lang + ".traineddata";
+
+                URL url = new URL(fileUrl);
+                URLConnection connection = url.openConnection();
+                connection.connect();
+
+                // this will be useful so that you can show a tipical 0-100%
+                // progress bar
+                int lenghtOfFile = connection.getContentLength();
+
+                // download the file
+                InputStream input = new BufferedInputStream(url.openStream(),
+                        8192);
+
+                // Output stream
+                OutputStream output = new FileOutputStream(FileUtils.ocrFile(context, lang));
+
+                byte data[] = new byte[1024];
+
+                long total = 0;
+
+                while ((count = input.read(data)) != -1) {
+                    total += count;
+                    // publishing the progress....
+                    // After this onProgressUpdate will be called
+                    publishProgress("" + (int) ((total * 100) / lenghtOfFile));
+
+                    // writing data to file
+                    output.write(data, 0, count);
+                }
+
+                // flushing output
+                output.flush();
+
+                // closing streams
+                output.close();
+                input.close();
+
+            } catch (Exception e) {
+                Log.e("Error: ", e.getMessage());
+            }
+
+            return null;
+        }
+
+        /**
+         * Updating progress bar
+         * */
+        protected void onProgressUpdate(String... progress) {
+            // setting progress percentage
+            Log.d("download progress", progress[0]);
+        }
+
+        /**
+         * After completing background task Dismiss the progress dialog
+         * **/
+        @Override
+        protected void onPostExecute(String file_url) {
+            // dismiss the dialog after the file was downloaded
+            Log.d("download completed", "");
+        }
+
     }
 }

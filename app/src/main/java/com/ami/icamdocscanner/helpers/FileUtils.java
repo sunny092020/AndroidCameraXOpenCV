@@ -182,4 +182,21 @@ public class FileUtils {
             return fileNameWithoutExtension.split("_")[0];
         return fileNameWithoutExtension;
     }
+
+    public static String ocrDir(Context context) {
+        return context.getFilesDir().getAbsolutePath() + "/ocr/";
+    }
+
+    public static void ensureOcrDir(Context context) {
+        File directory = new File(ocrDir(context) + "tessdata/");
+        Log.d("directory", "" + directory.exists());
+
+        if (!directory.exists()){
+            if (!directory.mkdir()) return;
+        }
+    }
+
+    public static String ocrFile(Context context, String lang) {
+        return ocrDir(context) + "tessdata/" + lang + ".traineddata";
+    }
 }
