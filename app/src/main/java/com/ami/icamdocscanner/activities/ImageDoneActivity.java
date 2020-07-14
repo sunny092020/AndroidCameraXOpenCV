@@ -92,7 +92,8 @@ public class ImageDoneActivity extends AppCompatActivity {
             int id=menuItem.getItemId();
 
             if (id==R.id.settings){
-
+                Intent i = new Intent(this, SettingsActivity.class);
+                startActivity(i);
             }
             drawerLayout.closeDrawer(GravityCompat.START);
             return true;
