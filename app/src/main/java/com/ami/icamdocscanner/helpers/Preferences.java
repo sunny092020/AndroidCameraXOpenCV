@@ -34,4 +34,17 @@ public class Preferences {
         return activity.getSharedPreferences(
                 activity.getString(R.string.preference_file_key), Context.MODE_PRIVATE);
     }
+
+    public static boolean getLangUsed(Activity activity, String lang) {
+        return getSharedPreferences(activity).getBoolean(lang, false);
+    }
+
+    public static void setlangUsed(Activity activity, String lang, boolean value) {
+        SharedPreferences sharedPref  = getSharedPreferences(activity);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putBoolean(lang, value);
+        editor.commit();
+    }
+
+
 }
