@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">VHG Experimental Scanner</string>
+    <string name="app_name">Ami document scanner</string>
 
     <string name="finding_rect">Use darker background</string>
     <string name="move_away">Move away</string>
