@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import com.ami.icamdocscanner.R;
+import com.ami.icamdocscanner.models.OcrLanguage;
 
 public class Preferences {
 
@@ -44,6 +45,19 @@ public class Preferences {
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putBoolean(lang, value);
         editor.commit();
+    }
+
+    public static String getUsedLangs(Activity activity) {
+        String result = "";
+        for(int i=0; i<ScannerConstant.LANGS.length; i++) {
+            String lang = ScannerConstant.LANGS[i][0];
+            //lang, name
+            if(getLangUsed(activity, lang)) {
+                result += lang;
+                if(i<ScannerConstant.LANGS.length-1) result += "+";
+            }
+        }
+        return result;
     }
 
 

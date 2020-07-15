@@ -1,5 +1,10 @@
 package com.ami.icamdocscanner.activities;
 
+import android.app.DownloadManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -10,11 +15,13 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.ami.icamdocscanner.R;
 import com.ami.icamdocscanner.adapters.OcrLanguageAdapter;
+import com.ami.icamdocscanner.helpers.Downloader;
 import com.ami.icamdocscanner.helpers.ScannerConstant;
 import com.ami.icamdocscanner.models.OcrLanguage;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class OcrLanguagesActivity extends AppCompatActivity {
     private OcrLanguageAdapter adapter;
@@ -24,6 +31,8 @@ public class OcrLanguagesActivity extends AppCompatActivity {
         setContentView(R.layout.activity_ocr_languages);
         Log.d("onCreate", "onCreate");
         setupAdapter();
+
+
     }
 
     private void setupAdapter() {
@@ -44,4 +53,5 @@ public class OcrLanguagesActivity extends AppCompatActivity {
         adapter.setLangs(langs);
         recyclerView.setAdapter(adapter);
     }
+
 }

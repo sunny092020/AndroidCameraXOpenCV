@@ -2,9 +2,11 @@ package com.ami.icamdocscanner.activities;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -28,8 +30,10 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.ami.icamdocscanner.R;
 import com.ami.icamdocscanner.adapters.FileRecyclerViewAdapter;
+import com.ami.icamdocscanner.helpers.Downloader;
 import com.ami.icamdocscanner.helpers.FileUtils;
 import com.ami.icamdocscanner.helpers.OcrUtils;
+import com.ami.icamdocscanner.helpers.Preferences;
 import com.ami.icamdocscanner.helpers.ScannerState;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
 import com.google.android.material.navigation.NavigationView;
@@ -147,13 +151,16 @@ public class ImageDoneActivity extends AppCompatActivity {
                 return;
             }
 
-            String lang = "vie";
+            DownloadManager.Query query = new DownloadManager.Query();
+            query.setFilterByStatus(DownloadManager.STATUS_RUNNING|DownloadManager.STATUS_PENDING|DownloadManager.STATUS_PAUSED);
 
-            File trainFile = new File(FileUtils.ocrFile(this, lang));
-            Log.d("trainFile", trainFile.getAbsolutePath() + " " + trainFile.exists());
-            Log.d("trainFile size", " " + trainFile.length());
+            Cursor cursor = Downloader.downloadManager.query(query);
+            if(cursor.getCount()>0) {
+                showToast("Downloading Ocr Data ...");
+                return;
+            }
 
-            String text = OcrUtils.ocr(context, adapter.getSelected().get(0), "eng+vie");
+            String text = OcrUtils.ocr(context, adapter.getSelected().get(0), Preferences.getUsedLangs(this));
             Log.d("ocr text", text);
         });
     }

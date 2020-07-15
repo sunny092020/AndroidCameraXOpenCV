@@ -1,7 +1,11 @@
 package com.ami.icamdocscanner.adapters;
 
 import android.app.Activity;
+import android.app.DownloadManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,17 +13,20 @@ import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.ami.icamdocscanner.R;
+import com.ami.icamdocscanner.helpers.Downloader;
 import com.ami.icamdocscanner.helpers.FileUtils;
 import com.ami.icamdocscanner.helpers.Preferences;
 import com.ami.icamdocscanner.models.OcrLanguage;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 public class OcrLanguageAdapter extends RecyclerView.Adapter<OcrLanguageAdapter.ViewHolder> {
     public List<OcrLanguage> getLangs() {
@@ -77,14 +84,21 @@ public class OcrLanguageAdapter extends RecyclerView.Adapter<OcrLanguageAdapter.
             used.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 if ( isChecked ) {
                     Preferences.setlangUsed((Activity) itemView.getContext(), lang.getLang(), true);
+                    Downloader.downloadFile(lang.getLang(), itemView.getContext());
                 } else {
                     Preferences.setlangUsed((Activity) itemView.getContext(), lang.getLang(), false);
-
                     File trainFile = new File(FileUtils.ocrFile(itemView.getContext(), lang.getLang()));
                     if(trainFile.exists()) trainFile.delete();
+
+                    Long downloadId = Downloader.downloadIdLangMap.get(lang.getLang());
+                    if(downloadId==null) return;
+                    Downloader.downloadManager.remove(downloadId);
+                    Downloader.downloadIdLangMap.remove(lang.getLang());
                 }
             });
             Log.d("bind", lang.getName());
         }
+
     }
+
 }
