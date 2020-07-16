@@ -7,14 +7,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.appcompat.app.ActionBarDrawerToggle;
@@ -145,6 +148,8 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
 
     private void setupOcrButtonListener() {
         LinearLayout ocrBtn = findViewById(R.id.ocrBtn);
+        LinearLayout progressBarHolder = findViewById(R.id.progressBarHolder);
+        progressBarHolder.setVisibility(View.GONE);
 
         ocrBtn.setOnClickListener(v -> {
             if(adapter.getSelectedByExtension("jpg").size() == 0) {
@@ -168,8 +173,17 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
                 }
             }
 
-            String text = OcrUtils.ocr(context, adapter.getSelected().get(0), Preferences.getUsedLangs(this));
-            Log.d("ocr text", text);
+            progressBarHolder.setVisibility(View.VISIBLE);
+            new Thread(() -> {
+                String text = OcrUtils.ocr(context, adapter.getSelected().get(0), Preferences.getUsedLangs(this));
+                runOnUiThread(() -> {
+                    progressBarHolder.setVisibility(View.GONE);
+                });
+
+                Intent intent = new Intent(this, OcrResultActivity.class);
+                intent.putExtra("ocr_text", text);
+                startActivity(intent);
+            }).start();
         });
     }
 
@@ -289,6 +303,7 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
 
     @Override
     public void onProgressValues(TessBaseAPI.ProgressValues progressValues) {
-        Log.d("progressValues", "" + progressValues.getPercent());
+        ProgressBar progressBar = findViewById(R.id.progressBar);
+        progressBar.setProgress(progressValues.getPercent());
     }
 }

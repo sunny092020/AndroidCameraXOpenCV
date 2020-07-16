@@ -22,6 +22,6 @@
         android:layout_gravity="start">
 
     </com.google.android.material.navigation.NavigationView>
-
+    <include layout="@layout/progress_bar_determint"/>
 
 </androidx.drawerlayout.widget.DrawerLayout>

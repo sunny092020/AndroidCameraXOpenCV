@@ -9,16 +9,24 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".activities.OcrLanguagesActivity"
+        <activity android:name=".activities.OcrResultActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activities.ImageDoneActivity" />
+        </activity>
+        <activity
+            android:name=".activities.OcrLanguagesActivity"
             android:label="@string/title_activity_ocr_languages">
-            <meta-data android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activities.SettingsActivity"/>
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activities.SettingsActivity" />
         </activity>
         <activity
             android:name=".activities.SettingsActivity"
             android:label="@string/title_activity_settings">
-            <meta-data android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activities.ImageDoneActivity"/>
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activities.ImageDoneActivity" />
         </activity>
         <activity android:name=".activities.PdfActivity" />
         <activity
@@ -51,10 +59,10 @@
                 android:resource="@xml/images_provider_paths" />
         </provider>
     </application>
-    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <uses-permission android:name="android.permission.CAMERA" />
 
 </manifest>
