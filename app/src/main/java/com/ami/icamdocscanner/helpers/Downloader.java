@@ -22,7 +22,7 @@ public class Downloader {
     public static HashMap<String, Long> downloadIdLangMap = new HashMap<>();
 
     public static void downloadFile(String lang, Context context) {
-        context.registerReceiver(onDownloadComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+        context.getApplicationContext().registerReceiver(onDownloadComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
 
         downloadManager = (DownloadManager)context.getSystemService(DOWNLOAD_SERVICE);
 
@@ -55,6 +55,13 @@ public class Downloader {
 
                     Cursor cursor = downloadManager.query(q);
                     cursor.moveToFirst();
+
+                    // if user cancel downloading
+                    if(cursor.getCount() == 0) {
+                        cursor.close();
+                        break;
+                    }
+
                     int bytes_downloaded = cursor.getInt(cursor
                             .getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
                     int bytes_total = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
@@ -65,7 +72,7 @@ public class Downloader {
 
                     final int dl_progress = (int) ((bytes_downloaded * 100l) / bytes_total);
 
-                    Log.d("dl_progress", "" + dl_progress);
+                    Log.d("dl_progress", lang + " " + dl_progress);
                     cursor.close();
                 }
 
@@ -87,15 +94,7 @@ public class Downloader {
                 }
             }
             Downloader.downloadIdLangMap.remove(lang);
-            showToast(context,lang + "download completed!");
-            Log.d("download completed", lang);
         }
     };
-
-    private static void showToast(Context context, String msg) {
-        Toast toast = Toast.makeText(context, msg, Toast.LENGTH_SHORT);
-        toast.setGravity(Gravity.CENTER, 0, 0);
-        toast.show();
-    }
 
 }
