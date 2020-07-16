@@ -53,12 +53,10 @@ public class Preferences {
             String lang = ScannerConstant.LANGS[i][0];
             //lang, name
             if(getLangUsed(activity, lang)) {
+                if(i>0) result = result + "+";
                 result += lang;
-                if(i<ScannerConstant.LANGS.length-1) result += "+";
             }
         }
         return result;
     }
-
-
 }

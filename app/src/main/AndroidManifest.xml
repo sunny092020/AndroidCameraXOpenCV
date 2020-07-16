@@ -21,7 +21,9 @@
                 android:value=".activities.ImageDoneActivity"/>
         </activity>
         <activity android:name=".activities.PdfActivity" />
-        <activity android:name=".activities.ImageDoneActivity">
+        <activity
+            android:name=".activities.ImageDoneActivity"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

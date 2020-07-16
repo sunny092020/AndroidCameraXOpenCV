@@ -37,6 +37,7 @@ import com.ami.icamdocscanner.helpers.Preferences;
 import com.ami.icamdocscanner.helpers.ScannerState;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
 import com.google.android.material.navigation.NavigationView;
+import com.googlecode.tesseract.android.TessBaseAPI;
 
 import java.io.File;
 import java.io.Serializable;
@@ -45,7 +46,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
-public class ImageDoneActivity extends AppCompatActivity {
+public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.ProgressNotifier {
     FileRecyclerViewAdapter adapter;
     private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 1;
     Context context;
@@ -151,13 +152,20 @@ public class ImageDoneActivity extends AppCompatActivity {
                 return;
             }
 
+            if(adapter.getSelectedByExtension("jpg").size() > 1) {
+                showToast("can only ocr 1 Image at a time");
+                return;
+            }
+
             DownloadManager.Query query = new DownloadManager.Query();
             query.setFilterByStatus(DownloadManager.STATUS_RUNNING|DownloadManager.STATUS_PENDING|DownloadManager.STATUS_PAUSED);
 
-            Cursor cursor = Downloader.downloadManager.query(query);
-            if(cursor.getCount()>0) {
-                showToast("Downloading Ocr Data ...");
-                return;
+            if(Downloader.downloadManager != null) {
+                Cursor cursor = Downloader.downloadManager.query(query);
+                if(cursor.getCount()>0) {
+                    showToast("Downloading Ocr Data ...");
+                    return;
+                }
             }
 
             String text = OcrUtils.ocr(context, adapter.getSelected().get(0), Preferences.getUsedLangs(this));
@@ -277,5 +285,10 @@ public class ImageDoneActivity extends AppCompatActivity {
         Toast toast = Toast.makeText(this, msg, Toast.LENGTH_SHORT);
         toast.setGravity(Gravity.CENTER, 0, 0);
         toast.show();
+    }
+
+    @Override
+    public void onProgressValues(TessBaseAPI.ProgressValues progressValues) {
+        Log.d("progressValues", "" + progressValues.getPercent());
     }
 }

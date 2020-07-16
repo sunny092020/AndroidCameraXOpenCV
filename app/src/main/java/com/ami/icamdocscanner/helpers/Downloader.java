@@ -5,16 +5,14 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Environment;
+import android.util.Log;
+import android.view.Gravity;
 import android.widget.Toast;
 
-import com.ami.icamdocscanner.libraries.Line;
-import com.ami.icamdocscanner.libraries.LinePolar;
-
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static android.content.Context.DOWNLOAD_SERVICE;
@@ -30,6 +28,8 @@ public class Downloader {
 
         String Url = "https://github.com/tesseract-ocr/tessdata/raw/4.0.0/" + lang + ".traineddata";
 
+        FileUtils.ensureOcrDir(context);
+
         String fileName = Url.substring(Url.lastIndexOf('/') + 1);
         try {
             Uri Download_Uri = Uri.parse(Url);
@@ -39,9 +39,38 @@ public class Downloader {
             request.setTitle(fileName);
             request.setDescription("Downloading...");
             request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
+            request.setDestinationInExternalFilesDir(context, null, "ocr/tessdata/" + fileName);
+
             long downloadReference = downloadManager.enqueue(request);
             downloadIdLangMap.put(lang, downloadReference);
+
+            new Thread(() -> {
+
+                boolean downloading = true;
+
+                while (downloading) {
+
+                    DownloadManager.Query q = new DownloadManager.Query();
+                    q.setFilterById(downloadReference);
+
+                    Cursor cursor = downloadManager.query(q);
+                    cursor.moveToFirst();
+                    int bytes_downloaded = cursor.getInt(cursor
+                            .getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
+                    int bytes_total = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
+
+                    if (cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)) == DownloadManager.STATUS_SUCCESSFUL) {
+                        downloading = false;
+                    }
+
+                    final int dl_progress = (int) ((bytes_downloaded * 100l) / bytes_total);
+
+                    Log.d("dl_progress", "" + dl_progress);
+                    cursor.close();
+                }
+
+            }).start();
+
         } catch (IllegalArgumentException e) {}
     }
 
@@ -58,6 +87,15 @@ public class Downloader {
                 }
             }
             Downloader.downloadIdLangMap.remove(lang);
+            showToast(context,lang + "download completed!");
+            Log.d("download completed", lang);
         }
     };
+
+    private static void showToast(Context context, String msg) {
+        Toast toast = Toast.makeText(context, msg, Toast.LENGTH_SHORT);
+        toast.setGravity(Gravity.CENTER, 0, 0);
+        toast.show();
+    }
+
 }

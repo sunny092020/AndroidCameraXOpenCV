@@ -29,7 +29,6 @@ public class OcrLanguagesActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ocr_languages);
-        Log.d("onCreate", "onCreate");
         setupAdapter();
 
 

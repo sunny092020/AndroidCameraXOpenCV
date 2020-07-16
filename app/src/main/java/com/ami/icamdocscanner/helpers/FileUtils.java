@@ -184,7 +184,7 @@ public class FileUtils {
     }
 
     public static String ocrDir(Context context) {
-        return context.getFilesDir().getAbsolutePath() + "/ocr/";
+        return context.getExternalFilesDir(null).getAbsolutePath() + "/ocr/";
     }
 
     public static void ensureOcrDir(Context context) {
