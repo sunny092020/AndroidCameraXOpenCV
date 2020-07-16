@@ -4,18 +4,12 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.Log;
 
-import androidx.recyclerview.widget.RecyclerView;
-
 import com.ami.icamdocscanner.models.RecyclerImageFile;
-import com.googlecode.leptonica.android.Pix;
-import com.googlecode.leptonica.android.Skew;
 import com.googlecode.tesseract.android.TessBaseAPI;
 
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
-
-import java.io.File;
 
 // https://www.programcreek.com/java-api-examples/index.php?api=com.googlecode.tesseract.android.TessBaseAPI
 public class OcrUtils {
