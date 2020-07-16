@@ -17,6 +17,7 @@ import org.opencv.core.Mat;
 
 import java.io.File;
 
+// https://www.programcreek.com/java-api-examples/index.php?api=com.googlecode.tesseract.android.TessBaseAPI
 public class OcrUtils {
     public static TessBaseAPI baseApi;
 
