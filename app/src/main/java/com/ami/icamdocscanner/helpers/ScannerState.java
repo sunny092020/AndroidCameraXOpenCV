@@ -38,8 +38,8 @@ public class ScannerState {
     public static int getNextFileName(List<RecyclerImageFile> files) {
         if(files.size()==0) return 0;
         Comparator<RecyclerImageFile> nameComparator = (o1, o2) -> {
-            int nameInt1 = Integer.parseInt(((RecyclerImageFile)o1).getName().split("_")[0]);
-            int nameInt2 = Integer.parseInt(((RecyclerImageFile)o2).getName().split("_")[0]);
+            int nameInt1 = Integer.parseInt(o1.getName().split("_")[0]);
+            int nameInt2 = Integer.parseInt(o2.getName().split("_")[0]);
             return Integer.compare(nameInt1, nameInt2);
         };
         Collections.sort(files, nameComparator);
