@@ -3,14 +3,17 @@ package com.ami.icamdocscanner.activities;
 import android.Manifest;
 import android.app.Activity;
 import android.app.DownloadManager;
+import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.provider.OpenableColumns;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.MenuItem;
@@ -35,15 +38,23 @@ import com.ami.icamdocscanner.R;
 import com.ami.icamdocscanner.adapters.FileRecyclerViewAdapter;
 import com.ami.icamdocscanner.helpers.Downloader;
 import com.ami.icamdocscanner.helpers.FileUtils;
+import com.ami.icamdocscanner.helpers.FilenameUtils;
 import com.ami.icamdocscanner.helpers.OcrUtils;
 import com.ami.icamdocscanner.helpers.Preferences;
 import com.ami.icamdocscanner.helpers.ScannerState;
+import com.ami.icamdocscanner.helpers.VisionUtils;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
 import com.google.android.material.navigation.NavigationView;
 import com.googlecode.tesseract.android.TessBaseAPI;
 
+import org.opencv.android.OpenCVLoader;
+import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.Point;
+
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -54,15 +65,22 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
     private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 1;
     Context context;
     private final int LAUNCH_SECOND_ACTIVITY = 1;
+    private final int LAUNCH_FILE_PICKER = 2;
 
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle actionBarDrawerToggle;
+
+    static {
+        if (!OpenCVLoader.initDebug())
+            Log.d("ERROR", "Unable to load OpenCV");
+        else
+            Log.d("SUCCESS", "OpenCV loaded");
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_image_done);
-
         context = this;
 
         if(ContextCompat.checkSelfPermission(ImageDoneActivity.this,
@@ -143,6 +161,7 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
         setupDeleteButtonListener();
         setupShareButtonListener();
         setupRetakeButtonListener();
+        setupChoosePhotoButtonListener();
         setupPdfButtonListener();
     }
 
@@ -215,6 +234,90 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
         });
     }
 
+    private void setupChoosePhotoButtonListener() {
+        ImageView choosePhotoBtn = findViewById(R.id.choosePhotoBtn);
+        choosePhotoBtn.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            // The MIME data type filter
+            intent.setType("image/*");
+            intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+
+            // Only return URIs that can be opened with ContentResolver
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            startActivityForResult(intent, LAUNCH_FILE_PICKER);
+        });
+    }
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == LAUNCH_SECOND_ACTIVITY) {
+            if(resultCode == Activity.RESULT_OK){
+                Log.d("result", "OK");
+            }
+            if (resultCode == Activity.RESULT_CANCELED) {
+                //Write your code if there's no result
+                Log.d("result", "cancel");
+            }
+        } else if (requestCode == LAUNCH_FILE_PICKER) {
+            if(resultCode == Activity.RESULT_OK) {
+                List<Uri> uris = new ArrayList<>();
+                if(data.getData() != null) {
+                    Uri uri = data.getData();
+                    uris.add(uri);
+                    Log.d("data uri", "" + uri);
+                }
+
+                if(data.getClipData() != null) {
+                    for(int i = 0; i<data.getClipData().getItemCount(); i++) {
+                        ClipData.Item item = data.getClipData().getItemAt(i);
+                        Uri uri = item.getUri();
+                        Log.d("item uri", "" + uri);
+                        uris.add(uri);
+                    }
+                }
+
+                new Thread(() -> {
+                    FileUtils.ensureTempDir(this);
+                    for(int i=uris.size()-1; i>=0; i--) {
+                        Uri uri = uris.get(i);
+                        String fileName = FileUtils.cropImagePath(context, fileNameFromUri(uri) + ".jpg");
+                        RecyclerImageFile file = new RecyclerImageFile(fileName);
+                        try {
+                            FileUtils.copyFileStream(context, file, uri);
+                            Bitmap bitmap = FileUtils.readBitmap(file.getAbsolutePath());
+                            MatOfPoint2f contour = VisionUtils.findContours(bitmap, this);
+                            if(contour == null) {
+                                int originW = bitmap.getWidth();
+                                int originH = bitmap.getHeight();
+                                contour = dummyContour(originW, originH);
+                            }
+                            ScannerState.getCropImages().get(i).setCroppedPolygon(contour);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }).start();
+
+                for(int i=uris.size()-1; i>=0; i--) {
+                    Uri uri = uris.get(i);
+                    String fileName = FileUtils.cropImagePath(context, fileNameFromUri(uri) + ".jpg");
+                    RecyclerImageFile file = new RecyclerImageFile(fileName);
+                    ScannerState.getCropImages().add(file);
+                }
+
+                Intent cropIntent = new Intent(this, ImageCropActivity.class);
+                Log.d("startActivity", "cropIntent");
+                startActivity(cropIntent);
+                finish();
+            }
+            if (resultCode == Activity.RESULT_CANCELED) {
+                //Write your code if there's no result
+                Log.d("LAUNCH_FILE_PICKER result", "cancel");
+            }
+        }
+    }
+
     private void setupShareButtonListener() {
         LinearLayout shareBtn = findViewById(R.id.shareBtn);
 
@@ -245,19 +348,37 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
         });
     }
 
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
+    private MatOfPoint2f dummyContour(int width, int height) {
+        MatOfPoint2f contour = new MatOfPoint2f();
+        List<Point> cornerPoints = new ArrayList<>();
 
-        if (requestCode == LAUNCH_SECOND_ACTIVITY) {
-            if(resultCode == Activity.RESULT_OK){
-                Log.d("result", "OK");
+        cornerPoints.add(new Point((float)width/5, (float)height/5));
+        cornerPoints.add(new Point((float)width*4/5, (float)height/5));
+        cornerPoints.add(new Point((float)width/5, (float)height*4/5));
+        cornerPoints.add(new Point((float)width*4/5, (float)height*4/5));
+        contour.fromList(cornerPoints);
+        return contour;
+    }
+
+    private String fileNameFromUri(Uri uri) {
+        String mimeType = context.getContentResolver().getType(uri);
+        String filename;
+        if (mimeType == null) {
+            String path = FileUtils.getPath(context, uri);
+            if (path == null) {
+                filename = FilenameUtils.getName(uri.toString());
+            } else {
+                File file = new File(path);
+                filename = file.getName();
             }
-            if (resultCode == Activity.RESULT_CANCELED) {
-                //Write your code if there's no result
-                Log.d("result", "cancel");
-            }
+        } else {
+            Cursor returnCursor = context.getContentResolver().query(uri, null, null, null, null);
+            int nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+            returnCursor.moveToFirst();
+            filename = returnCursor.getString(nameIndex);
         }
-    }//onActivityResult
+        return filename;
+    }
 
     private void setupDeleteButtonListener() {
         LinearLayout deleteBtn = findViewById(R.id.deleteBtn);
@@ -306,4 +427,5 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
         ProgressBar progressBar = findViewById(R.id.progressBar);
         progressBar.setProgress(progressValues.getPercent());
     }
+
 }

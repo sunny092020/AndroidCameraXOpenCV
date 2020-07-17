@@ -50,8 +50,7 @@ public class ViewPagerCropAdapter extends RecyclerView.Adapter<ViewPagerCropAdap
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        RecyclerImageFile file = ScannerState.getCropImages().get(position);
-        holder.bind(file);
+        holder.bind(position);
     }
 
     @Override
@@ -85,8 +84,43 @@ public class ViewPagerCropAdapter extends RecyclerView.Adapter<ViewPagerCropAdap
                 progressBar.getProgressDrawable().setColorFilter(Color.parseColor(ScannerState.progressColor), android.graphics.PorterDuff.Mode.MULTIPLY);
         }
 
-        void bind(RecyclerImageFile file) {
+        void bind(int position) {
+            RecyclerImageFile file = ScannerState.getCropImages().get(position);
+            Log.d("bind", "1");
+            while (!file.exists()) {
+                try {
+                    Thread.sleep(100);
+                    file = ScannerState.getCropImages().get(position);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            Log.d("bind", "2");
+
             Bitmap bitmap = FileUtils.readBitmap(file.getAbsolutePath());
+            while (bitmap== null) {
+                try {
+                    Thread.sleep(100);
+                    bitmap = FileUtils.readBitmap(file.getAbsolutePath());
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            Log.d("bind", "3");
+
+            MatOfPoint2f croppedPolygon = file.getCroppedPolygon();
+            while (croppedPolygon== null) {
+                try {
+                    Thread.sleep(100);
+                    croppedPolygon = file.getCroppedPolygon();
+                    Log.d("croppedPolygon", "" + croppedPolygon);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
             polygonView.setOriginSize(bitmap.getWidth(), bitmap.getHeight());
             drawPolygonAsync(bitmap, file);
         }
