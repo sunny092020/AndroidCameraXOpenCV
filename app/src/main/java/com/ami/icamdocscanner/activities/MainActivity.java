@@ -1,6 +1,7 @@
 package com.ami.icamdocscanner.activities;
 
 import android.app.Activity;
+import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -10,6 +11,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
@@ -49,6 +51,7 @@ import androidx.core.content.ContextCompat;
 import com.ami.icamdocscanner.R;
 import com.ami.icamdocscanner.helpers.FileUtils;
 import com.ami.icamdocscanner.helpers.Preferences;
+import com.ami.icamdocscanner.helpers.ScannerConstant;
 import com.ami.icamdocscanner.helpers.ScannerState;
 import com.ami.icamdocscanner.helpers.VisionUtils;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
@@ -60,6 +63,8 @@ import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutionException;
@@ -186,6 +191,81 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             TextView batchNumTxt = findViewById(R.id.batchNum);
             batchNumTxt.setText(String.format(Locale.US, "%d", ScannerState.getCropImages().size()));
             batchNumTxt.setVisibility(View.VISIBLE);
+        }
+
+        ImageView btnChoosePhoto = findViewById(R.id.btnChoosePhoto);
+        btnChoosePhoto.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            // The MIME data type filter
+            intent.setType("image/*");
+            intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+
+            // Only return URIs that can be opened with ContentResolver
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            startActivityForResult(intent, ScannerConstant.LAUNCH_FILE_PICKER);
+        });
+    }
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        Log.d("onActivityResult", "onActivityResult");
+
+        if (requestCode == ScannerConstant.LAUNCH_FILE_PICKER) {
+            if(resultCode == Activity.RESULT_OK) {
+                List<Uri> uris = new ArrayList<>();
+                if(data.getData() != null) {
+                    Uri uri = data.getData();
+                    uris.add(uri);
+                    Log.d("data uri", "" + uri);
+                }
+
+                if(data.getClipData() != null) {
+                    for(int i = 0; i<data.getClipData().getItemCount(); i++) {
+                        ClipData.Item item = data.getClipData().getItemAt(i);
+                        Uri uri = item.getUri();
+                        Log.d("item uri", "" + uri);
+                        uris.add(uri);
+                    }
+                }
+
+                new Thread(() -> {
+                    FileUtils.ensureTempDir(this);
+                    for(int i=uris.size()-1; i>=0; i--) {
+                        Uri uri = uris.get(i);
+                        Log.d("uri", i + ": " + uri);
+
+                        String fileName = FileUtils.cropImagePath(context, FileUtils.fileNameFromUri(context, uri) + ".jpg");
+                        RecyclerImageFile file = new RecyclerImageFile(fileName);
+                        try {
+                            FileUtils.copyFileStream(context, file, uri);
+                            Bitmap bitmap = FileUtils.readBitmap(file.getAbsolutePath());
+                            MatOfPoint2f contour = VisionUtils.findContours(bitmap, this);
+                            if(contour == null) {
+                                int originW = bitmap.getWidth();
+                                int originH = bitmap.getHeight();
+                                contour = VisionUtils.dummyContour(originW, originH);
+                            }
+                            ScannerState.getCropImages().get(i+ScannerState.getCropImages().size()-1).setCroppedPolygon(contour);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }).start();
+
+                for(int i=uris.size()-1; i>=0; i--) {
+                    Uri uri = uris.get(i);
+                    String fileName = FileUtils.cropImagePath(context, FileUtils.fileNameFromUri(context, uri) + ".jpg");
+                    RecyclerImageFile file = new RecyclerImageFile(fileName);
+                    ScannerState.getCropImages().add(file);
+                }
+
+                startCropActivity();
+            }
+            else if (resultCode == Activity.RESULT_CANCELED) {
+                //Write your code if there's no result
+                Log.d("LAUNCH_FILE_PICKER result", "cancel");
+            }
         }
     }
 
