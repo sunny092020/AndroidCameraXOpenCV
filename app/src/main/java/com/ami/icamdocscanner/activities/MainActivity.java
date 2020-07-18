@@ -528,6 +528,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             FileUtils.writeBitmap(rotated90croppedBmp, retakingFile.getAbsolutePath());
 
             MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, this);
+            if(contour == null) {
+                int originW = rotated90croppedBmp.getWidth();
+                int originH = rotated90croppedBmp.getHeight();
+                contour = VisionUtils.dummyContour(originW, originH);
+            }
+
             retakingFile.setCroppedPolygon(contour);
 
             Intent cropIntent = new Intent(this, ImageCropActivity.class);
@@ -540,6 +546,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         String fileName =  FileUtils.cropImagePath(context, ScannerState.getNextFileName(ScannerState.getCropImages()) + ".jpg");
         RecyclerImageFile file = new RecyclerImageFile(fileName);
         MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, this);
+        if(contour == null) {
+            int originW = rotated90croppedBmp.getWidth();
+            int originH = rotated90croppedBmp.getHeight();
+            contour = VisionUtils.dummyContour(originW, originH);
+        }
+
         file.setCroppedPolygon(contour);
 
         ScannerState.getCropImages().add(file);

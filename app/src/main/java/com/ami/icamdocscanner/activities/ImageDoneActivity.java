@@ -290,7 +290,7 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
                             if(contour == null) {
                                 int originW = bitmap.getWidth();
                                 int originH = bitmap.getHeight();
-                                contour = dummyContour(originW, originH);
+                                contour = VisionUtils.dummyContour(originW, originH);
                             }
                             ScannerState.getCropImages().get(i).setCroppedPolygon(contour);
                         } catch (IOException e) {
@@ -346,18 +346,6 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
             intent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, (ArrayList<? extends Parcelable>) files);
             startActivityForResult(intent, LAUNCH_SECOND_ACTIVITY);
         });
-    }
-
-    private MatOfPoint2f dummyContour(int width, int height) {
-        MatOfPoint2f contour = new MatOfPoint2f();
-        List<Point> cornerPoints = new ArrayList<>();
-
-        cornerPoints.add(new Point((float)width/5, (float)height/5));
-        cornerPoints.add(new Point((float)width*4/5, (float)height/5));
-        cornerPoints.add(new Point((float)width/5, (float)height*4/5));
-        cornerPoints.add(new Point((float)width*4/5, (float)height*4/5));
-        contour.fromList(cornerPoints);
-        return contour;
     }
 
     private String fileNameFromUri(Uri uri) {

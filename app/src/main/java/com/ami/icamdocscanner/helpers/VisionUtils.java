@@ -493,4 +493,17 @@ public class VisionUtils {
     public static void toGray(Mat mat, Mat gray) {
         Imgproc.cvtColor(mat, gray, Imgproc.COLOR_RGB2GRAY);
     }
+
+    public static MatOfPoint2f dummyContour(int width, int height) {
+        MatOfPoint2f contour = new MatOfPoint2f();
+        List<Point> cornerPoints = new ArrayList<>();
+
+        cornerPoints.add(new Point((float)width/5, (float)height/5));
+        cornerPoints.add(new Point((float)width*4/5, (float)height/5));
+        cornerPoints.add(new Point((float)width/5, (float)height*4/5));
+        cornerPoints.add(new Point((float)width*4/5, (float)height*4/5));
+        contour.fromList(cornerPoints);
+        return contour;
+    }
+
 }
