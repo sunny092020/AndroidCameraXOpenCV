@@ -331,5 +331,24 @@ public class FileUtils {
         }
     }
 
+    public static String fileNameFromUri(Context context, Uri uri) {
+        String mimeType = context.getContentResolver().getType(uri);
+        String filename;
+        if (mimeType == null) {
+            String path = FileUtils.getPath(context, uri);
+            if (path == null) {
+                filename = FilenameUtils.getName(uri.toString());
+            } else {
+                File file = new File(path);
+                filename = file.getName();
+            }
+        } else {
+            Cursor returnCursor = context.getContentResolver().query(uri, null, null, null, null);
+            int nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+            returnCursor.moveToFirst();
+            filename = returnCursor.getString(nameIndex);
+        }
+        return filename;
+    }
 
 }

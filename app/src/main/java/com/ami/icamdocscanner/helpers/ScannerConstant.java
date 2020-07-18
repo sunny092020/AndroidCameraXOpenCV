@@ -3,6 +3,8 @@ package com.ami.icamdocscanner.helpers;
 public class ScannerConstant {
     public static final int RETAKE_PHOTO = 1;
     public static final int RECROP_PHOTO = 2;
+    public static final int LAUNCH_SECOND_ACTIVITY = 1;
+    public static final int LAUNCH_FILE_PICKER = 2;
 
     public static String[][] LANGS = {
             {"eng", "English"},

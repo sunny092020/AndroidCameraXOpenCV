@@ -40,6 +40,7 @@ import com.ami.icamdocscanner.helpers.FileUtils;
 import com.ami.icamdocscanner.helpers.FilenameUtils;
 import com.ami.icamdocscanner.helpers.OcrUtils;
 import com.ami.icamdocscanner.helpers.Preferences;
+import com.ami.icamdocscanner.helpers.ScannerConstant;
 import com.ami.icamdocscanner.helpers.ScannerState;
 import com.ami.icamdocscanner.helpers.VisionUtils;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
@@ -60,8 +61,6 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
     FileRecyclerViewAdapter adapter;
     private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 1;
     Context context;
-    private final int LAUNCH_SECOND_ACTIVITY = 1;
-    private final int LAUNCH_FILE_PICKER = 2;
 
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle actionBarDrawerToggle;
@@ -238,14 +237,14 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
 
             // Only return URIs that can be opened with ContentResolver
             intent.addCategory(Intent.CATEGORY_OPENABLE);
-            startActivityForResult(intent, LAUNCH_FILE_PICKER);
+            startActivityForResult(intent, ScannerConstant.LAUNCH_FILE_PICKER);
         });
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == LAUNCH_SECOND_ACTIVITY) {
+        if (requestCode == ScannerConstant.LAUNCH_SECOND_ACTIVITY) {
             if(resultCode == Activity.RESULT_OK){
                 Log.d("result", "OK");
             }
@@ -253,7 +252,7 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
                 //Write your code if there's no result
                 Log.d("result", "cancel");
             }
-        } else if (requestCode == LAUNCH_FILE_PICKER) {
+        } else if (requestCode == ScannerConstant.LAUNCH_FILE_PICKER) {
             if(resultCode == Activity.RESULT_OK) {
                 List<Uri> uris = new ArrayList<>();
                 if(data.getData() != null) {
@@ -275,7 +274,7 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
                     FileUtils.ensureTempDir(this);
                     for(int i=uris.size()-1; i>=0; i--) {
                         Uri uri = uris.get(i);
-                        String fileName = FileUtils.cropImagePath(context, fileNameFromUri(uri) + ".jpg");
+                        String fileName = FileUtils.cropImagePath(context, FileUtils.fileNameFromUri(context, uri) + ".jpg");
                         RecyclerImageFile file = new RecyclerImageFile(fileName);
                         try {
                             FileUtils.copyFileStream(context, file, uri);
@@ -295,7 +294,7 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
 
                 for(int i=uris.size()-1; i>=0; i--) {
                     Uri uri = uris.get(i);
-                    String fileName = FileUtils.cropImagePath(context, fileNameFromUri(uri) + ".jpg");
+                    String fileName = FileUtils.cropImagePath(context, FileUtils.fileNameFromUri(context, uri) + ".jpg");
                     RecyclerImageFile file = new RecyclerImageFile(fileName);
                     ScannerState.getCropImages().add(file);
                 }
@@ -338,28 +337,8 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
             }
 
             intent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, (ArrayList<? extends Parcelable>) files);
-            startActivityForResult(intent, LAUNCH_SECOND_ACTIVITY);
+            startActivityForResult(intent, ScannerConstant.LAUNCH_SECOND_ACTIVITY);
         });
-    }
-
-    private String fileNameFromUri(Uri uri) {
-        String mimeType = context.getContentResolver().getType(uri);
-        String filename;
-        if (mimeType == null) {
-            String path = FileUtils.getPath(context, uri);
-            if (path == null) {
-                filename = FilenameUtils.getName(uri.toString());
-            } else {
-                File file = new File(path);
-                filename = file.getName();
-            }
-        } else {
-            Cursor returnCursor = context.getContentResolver().query(uri, null, null, null, null);
-            int nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
-            returnCursor.moveToFirst();
-            filename = returnCursor.getString(nameIndex);
-        }
-        return filename;
     }
 
     private void setupDeleteButtonListener() {
