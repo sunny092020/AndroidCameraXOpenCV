@@ -10,7 +10,6 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.provider.OpenableColumns;
@@ -49,15 +48,12 @@ import com.googlecode.tesseract.android.TessBaseAPI;
 
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.MatOfPoint2f;
-import org.opencv.core.Point;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 
 public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.ProgressNotifier {
@@ -104,7 +100,7 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
 
         NavigationView navigationView = findViewById(R.id.navigationView);
 
-        navigationView.setNavigationItemSelectedListener((NavigationView.OnNavigationItemSelectedListener) menuItem -> {
+        navigationView.setNavigationItemSelectedListener(menuItem -> {
             int id=menuItem.getItemId();
 
             if (id==R.id.settings){
@@ -141,9 +137,9 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
     private List<RecyclerImageFile> listFiles(File directory) {
         File[] files = directory.listFiles(File::isFile);
         assert files != null;
-        Arrays.sort( files, (Comparator<File>) (o1, o2) -> {
-            long lastModified1 = ((File)o1).lastModified();
-            long lastModified2 = ((File)o2).lastModified();
+        Arrays.sort( files, (o1, o2) -> {
+            long lastModified1 = o1.lastModified();
+            long lastModified2 = o2.lastModified();
             return Long.compare(lastModified2, lastModified1);
         });
 
@@ -195,9 +191,7 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
             progressBarHolder.setVisibility(View.VISIBLE);
             new Thread(() -> {
                 String text = OcrUtils.ocr(context, adapter.getSelected().get(0), Preferences.getUsedLangs(this));
-                runOnUiThread(() -> {
-                    progressBarHolder.setVisibility(View.GONE);
-                });
+                runOnUiThread(() -> progressBarHolder.setVisibility(View.GONE));
 
                 Intent intent = new Intent(this, OcrResultActivity.class);
                 intent.putExtra("ocr_text", text);
