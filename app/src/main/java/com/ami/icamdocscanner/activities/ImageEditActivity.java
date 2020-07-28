@@ -87,25 +87,15 @@ public class ImageEditActivity extends AppCompatActivity {
     private void displayFilterThumbnails(int currentImagePosition) {
         RecyclerImageFile currentImage = ScannerState.getEditImages().get(currentImagePosition);
 
-        while (!currentImage.exists()) {
+        Bitmap currentBitmap = null;
+         do{
             try {
                 Thread.sleep(100);
-                currentImage = ScannerState.getEditImages().get(currentImagePosition);
+                currentBitmap = FileUtils.readBitmap(currentImage);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-        }
-
-        Bitmap currentBitmap = FileUtils.readBitmap(currentImage.getAbsolutePath());
-
-        while (currentBitmap== null) {
-            try {
-                Thread.sleep(100);
-                currentBitmap = FileUtils.readBitmap(currentImage.getAbsolutePath());
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        } while (currentBitmap == null);
 
         Mat origin = new Mat();
         Utils.bitmapToMat(currentBitmap, origin);

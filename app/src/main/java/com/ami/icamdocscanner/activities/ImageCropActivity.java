@@ -116,11 +116,11 @@ public class ImageCropActivity extends AppCompatActivity {
         if(currentImagePosition == -1) {
             toEditImage();
         } else {
-            RecyclerImageFile file = ScannerState.getCropImages().get(currentImagePosition);
-            Bitmap croppedBitmap = getCroppedImage(file);
+            RecyclerImageFile croppedFile = ScannerState.getCropImages().get(currentImagePosition);
+            Bitmap croppedBitmap = getCroppedImage(croppedFile);
 
-            String editImageFilePath =  FileUtils.editImagePath(context, file.getName());
-            String doneImageFilePath =  FileUtils.doneImagePath(context, file.getName());
+            String editImageFilePath =  FileUtils.editImagePath(context, croppedFile.getName());
+            String doneImageFilePath =  FileUtils.doneImagePath(context, croppedFile.getName());
 
             FileUtils.writeBitmap(croppedBitmap, editImageFilePath);
             FileUtils.writeBitmap(croppedBitmap, doneImageFilePath);
@@ -137,19 +137,19 @@ public class ImageCropActivity extends AppCompatActivity {
 
         new Thread(() -> {
             for(int i=ScannerState.getCropImages().size()-1; i>=0; i--) {
-                RecyclerImageFile file = ScannerState.getCropImages().get(i);
-                Bitmap croppedBitmap = getCroppedImage(file);
-                String editImageFilePath =  FileUtils.editImagePath(context, file.getName());
-                String doneImageFilePath =  FileUtils.doneImagePath(context, file.getName());
+                RecyclerImageFile croppedFile = ScannerState.getCropImages().get(i);
+                Bitmap croppedBitmap = getCroppedImage(croppedFile);
+                String editImageFilePath =  FileUtils.editImagePath(context, croppedFile.getName());
+                String doneImageFilePath =  FileUtils.doneImagePath(context, croppedFile.getName());
                 FileUtils.writeBitmap(croppedBitmap, editImageFilePath);
                 FileUtils.writeBitmap(croppedBitmap, doneImageFilePath);
             }
 
         }).start();
 
-        for(RecyclerImageFile file: ScannerState.getCropImages()) {
-            String doneImageFilePath =  FileUtils.doneImagePath(context, file.getName());
-            String editImageFilePath =  FileUtils.editImagePath(context, file.getName());
+        for(RecyclerImageFile croppedFile: ScannerState.getCropImages()) {
+            String doneImageFilePath =  FileUtils.doneImagePath(context, croppedFile.getName());
+            String editImageFilePath =  FileUtils.editImagePath(context, croppedFile.getName());
             ScannerState.getEditImages().add(new RecyclerImageFile(editImageFilePath));
             ScannerState.getDoneImages().add(new RecyclerImageFile(doneImageFilePath));
         }

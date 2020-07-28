@@ -48,10 +48,7 @@ public class FileUtils {
     }
 
     public static String fileNameWithoutExtension(String fileName) {
-        if (fileName.indexOf(".") > 0)
-            return fileName.substring(0, fileName.lastIndexOf("."));
-
-        return fileName;
+        return FilenameUtils.getBaseName(fileName);
     }
 
     public static String fileExtension(String fileName) {
@@ -144,6 +141,11 @@ public class FileUtils {
         return BitmapFactory.decodeFile(filename);
     }
 
+    public static Bitmap readBitmap(RecyclerImageFile image) {
+        if(!image.exists()) return null;
+        return BitmapFactory.decodeFile(image.getAbsolutePath());
+    }
+
     public static boolean writeBitmap(Bitmap bitmap, String filename) {
         try (FileOutputStream out = new FileOutputStream(filename)) {
             return bitmap.compress(Bitmap.CompressFormat.JPEG, 99, out); // bmp is your Bitmap instance
@@ -163,34 +165,25 @@ public class FileUtils {
     }
 
     public static String cropImagePath(Context context, String fileName) {
-        return FileUtils.tempDir(context) + FileUtils.getNumberFromFileName(fileName) + "_crop.jpg";
+        return FileUtils.tempDir(context) + FileUtils.getOriginFileName(fileName) + "_crop.jpg";
     }
 
     public static String editImagePath(Context context, String fileName) {
-        return FileUtils.tempDir(context) + FileUtils.getNumberFromFileName(fileName) + "_edit.jpg";
+        return FileUtils.tempDir(context) + FileUtils.getOriginFileName(fileName) + "_edit.jpg";
     }
 
     public static String doneImagePath(Context context, String fileName) {
-        return FileUtils.tempDir(context) + FileUtils.getNumberFromFileName(fileName) + "_done.jpg";
+        return FileUtils.tempDir(context) + FileUtils.getOriginFileName(fileName) + "_done.jpg";
     }
 
-    public static String cropImagePath(Context context, String subDir, String fileName) {
-        return FileUtils.tempDir(context) + subDir + FileUtils.getNumberFromFileName(fileName) + "_crop.jpg";
-    }
-
-    public static String editImagePath(Context context, String subDir, String fileName) {
-        return FileUtils.tempDir(context) + subDir + FileUtils.getNumberFromFileName(fileName) + "_edit.jpg";
-    }
-
-    public static String doneImagePath(Context context, String subDir, String fileName) {
-        return FileUtils.tempDir(context) + subDir + FileUtils.getNumberFromFileName(fileName) + "_done.jpg";
-    }
-
-    private static String getNumberFromFileName(String fileName) {
-        String fileNameWithoutExtension = FileUtils.fileNameWithoutExtension(fileName);
-        if (fileNameWithoutExtension.indexOf("_") > 0)
-            return fileNameWithoutExtension.split("_")[0];
-        return fileNameWithoutExtension;
+    private static String getOriginFileName(String fileName) {
+        if (fileName.indexOf("_crop") > 0)
+            return fileName.substring(0, fileName.lastIndexOf("_crop"));
+        if (fileName.indexOf("_edit") > 0)
+            return fileName.substring(0, fileName.lastIndexOf("_edit"));
+        if (fileName.indexOf("_done") > 0)
+            return fileName.substring(0, fileName.lastIndexOf("_done"));
+        return fileName;
     }
 
     public static String ocrDir(Context context) {
@@ -350,5 +343,4 @@ public class FileUtils {
         }
         return filename;
     }
-
 }

@@ -55,4 +55,22 @@ public class ScannerState {
         }
         return nameInt+1;
     }
+
+    public static RecyclerImageFile getFileByName(String fileName, List<RecyclerImageFile> files) {
+        for(RecyclerImageFile file: files) {
+            if(fileName.equalsIgnoreCase(file.getAbsolutePath())) {
+                return file;
+            }
+        }
+        return null;
+    }
+
+    public static boolean isFileExist(String fileName, List<RecyclerImageFile> files) {
+        for(RecyclerImageFile file: files) {
+            if(fileName.equalsIgnoreCase(file.getAbsolutePath())) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
