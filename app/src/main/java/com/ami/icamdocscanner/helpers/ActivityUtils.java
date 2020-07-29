@@ -45,16 +45,22 @@ public class ActivityUtils {
             for(int i=uris.size()-1; i>=0; i--) {
                 Uri uri = uris.get(i);
                 String fileName = FileUtils.cropImagePath(context, FileUtils.fileNameFromUri(context, uri) + ".jpg");
-                RecyclerImageFile file = new RecyclerImageFile(fileName);
                 try {
-                    FileUtils.copyFileStream(context, file, uri);
-                    Bitmap bitmap = FileUtils.readBitmap(file.getAbsolutePath());
+                    Bitmap bitmap = FileUtils.readBitmap(context, uri);
+                    int originW = bitmap.getWidth();
+                    int originH = bitmap.getHeight();
+                    if(originW > originH) {
+                        bitmap = VisionUtils.rotateBitmap(bitmap, 90);
+                        originW = bitmap.getWidth();
+                        originH = bitmap.getHeight();
+                    }
+
                     MatOfPoint2f contour = VisionUtils.findContours(bitmap, (Activity) context);
                     if(contour == null) {
-                        int originW = bitmap.getWidth();
-                        int originH = bitmap.getHeight();
                         contour = VisionUtils.dummyContour(originW, originH);
                     }
+
+                    FileUtils.writeBitmap(bitmap, fileName);
                     ScannerState.getFileByName(fileName, ScannerState.getCropImages()).setCroppedPolygon(contour);
                 } catch (IOException e) {
                     e.printStackTrace();

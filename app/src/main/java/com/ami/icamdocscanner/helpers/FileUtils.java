@@ -324,6 +324,19 @@ public class FileUtils {
         }
     }
 
+    public static Bitmap readBitmap(Context context, Uri uri) throws IOException {
+        InputStream is = null;
+        try {
+            is = context.getContentResolver().openInputStream(uri);
+            return BitmapFactory.decodeStream(is);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            is.close();
+        }
+        return null;
+    }
+
     public static String fileNameFromUri(Context context, Uri uri) {
         String mimeType = context.getContentResolver().getType(uri);
         String filename;
