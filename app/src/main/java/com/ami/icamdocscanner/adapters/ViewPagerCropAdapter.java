@@ -28,6 +28,7 @@ import com.ami.icamdocscanner.models.RecyclerImageFile;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -64,7 +65,6 @@ public class ViewPagerCropAdapter extends RecyclerView.Adapter<ViewPagerCropAdap
         RelativeLayout relativeLayout;
         ImageView imageView;
         PolygonView polygonView;
-        ProgressBar progressBar;
         View itemView;
 
         ViewHolder(View itemView, ViewPager2 viewCrop) {
@@ -77,16 +77,16 @@ public class ViewPagerCropAdapter extends RecyclerView.Adapter<ViewPagerCropAdap
             polygonView = itemView.findViewById(R.id.polygonView);
             polygonView.setViewPagerCrop(viewCrop);
             polygonView.setHolderImageCrop(holderImageCrop);
-            progressBar = itemView.findViewById(R.id.progressBar);
-            if (progressBar.getIndeterminateDrawable() != null && ScannerState.progressColor != null)
-                progressBar.getIndeterminateDrawable().setColorFilter(Color.parseColor(ScannerState.progressColor), android.graphics.PorterDuff.Mode.MULTIPLY);
-            else if (progressBar.getProgressDrawable() != null && ScannerState.progressColor != null)
-                progressBar.getProgressDrawable().setColorFilter(Color.parseColor(ScannerState.progressColor), android.graphics.PorterDuff.Mode.MULTIPLY);
         }
 
         void bind(int position) {
+            Log.d("#################>>>>>> position", "" + position);
+
+            Log.d("1", "" + new Timestamp(System.currentTimeMillis()));
             RecyclerImageFile file = ScannerState.getCropImages().get(position);
             MatOfPoint2f croppedPolygon = file.getCroppedPolygon();
+            Log.d("2", "" + new Timestamp(System.currentTimeMillis()));
+
             while (croppedPolygon== null) {
                 try {
                     Thread.sleep(100);
@@ -96,14 +96,20 @@ public class ViewPagerCropAdapter extends RecyclerView.Adapter<ViewPagerCropAdap
                     e.printStackTrace();
                 }
             }
+            Log.d("3", "" + new Timestamp(System.currentTimeMillis()));
+
 
             Bitmap bitmap = FileUtils.readBitmap(file.getAbsolutePath());
+            Log.d("4", "" + new Timestamp(System.currentTimeMillis()));
+
             polygonView.setOriginSize(bitmap.getWidth(), bitmap.getHeight());
+            Log.d("5", "" + new Timestamp(System.currentTimeMillis()));
+
             drawPolygonAsync(bitmap, file);
+            Log.d("#################<<<<<<<<<< position", "" + position);
         }
 
         private void drawPolygonAsync(Bitmap bitmap, RecyclerImageFile file) {
-            setProgressBar(true);
             drawPolygon(bitmap, file);
         }
 
@@ -114,29 +120,43 @@ public class ViewPagerCropAdapter extends RecyclerView.Adapter<ViewPagerCropAdap
             // finishes executing. Posting a Runnable to the UI thread will put the Runnable at the end of the message queue for the UI thread,
             // so will be executed after the screen has been drawn, thus everything has dimensions
             holderImageCrop.post(() -> {
+                Log.d("6", "" + new Timestamp(System.currentTimeMillis()));
+
                 Bitmap scaledBitmap = VisionUtils.scaledBitmap(originBitmap, holderImageCrop.getWidth(), holderImageCrop.getHeight());
+                Log.d("7", "" + new Timestamp(System.currentTimeMillis()));
+
                 imageView.setImageBitmap(scaledBitmap);
+                Log.d("8", "" + new Timestamp(System.currentTimeMillis()));
+
 
                 Bitmap tempBitmap = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
+                Log.d("9", "" + new Timestamp(System.currentTimeMillis()));
 
                 Map<Integer, PointF> pointFs;
                 try {
+                    Log.d("10", "" + new Timestamp(System.currentTimeMillis()));
+
                     pointFs = getEdgePoints(tempBitmap, originBitmap, file.getCroppedPolygon());
+
+                    Log.d("11", "" + new Timestamp(System.currentTimeMillis()));
 
                     polygonView.setPoints(pointFs);
                     polygonView.setVisibility(View.VISIBLE);
+
+                    Log.d("12", "" + new Timestamp(System.currentTimeMillis()));
 
                     int padding = (int) itemView.getResources().getDimension(R.dimen.scanPadding);
 
                     FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(tempBitmap.getWidth() + 2 * padding, tempBitmap.getHeight() + 2 * padding);
                     layoutParams.gravity = Gravity.CENTER;
 
+                    Log.d("13", "" + new Timestamp(System.currentTimeMillis()));
+
                     polygonView.setLayoutParams(layoutParams);
                     polygonView.setPointColor(itemView.getResources().getColor(R.color.orange));
+                    Log.d("14", "" + new Timestamp(System.currentTimeMillis()));
                 } catch (Exception e) {
                     e.printStackTrace();
-                } finally {
-                    setProgressBar(false);
                 }
             });
         }
@@ -170,34 +190,5 @@ public class ViewPagerCropAdapter extends RecyclerView.Adapter<ViewPagerCropAdap
             }
             return orderedPoints;
         }
-
-        private void showProgressBar() {
-            RelativeLayout rlContainer = itemView.findViewById(R.id.container);
-            setViewInteract(rlContainer, false);
-            progressBar.setVisibility(View.VISIBLE);
-        }
-
-        private void hideProgressBar() {
-            RelativeLayout rlContainer = itemView.findViewById(R.id.container);
-            setViewInteract(rlContainer, true);
-            progressBar.setVisibility(View.GONE);
-        }
-
-        private void setProgressBar(boolean isShow) {
-            if (isShow)
-                showProgressBar();
-            else
-                hideProgressBar();
-        }
-
-        private void setViewInteract(View view, boolean canDo) {
-            view.setEnabled(canDo);
-            if (view instanceof ViewGroup) {
-                for (int i = 0; i < ((ViewGroup) view).getChildCount(); i++) {
-                    setViewInteract(((ViewGroup) view).getChildAt(i), canDo);
-                }
-            }
-        }
-
     }
 }
