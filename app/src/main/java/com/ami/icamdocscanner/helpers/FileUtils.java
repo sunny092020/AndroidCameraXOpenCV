@@ -109,7 +109,7 @@ public class FileUtils {
         Bitmap smallOriginBitmap = VisionUtils.scaledBitmap(originBitmap, DOWNSCALE_IMAGE_SIZE, DOWNSCALE_IMAGE_SIZE);
 
         try (FileOutputStream out = new FileOutputStream(thumbnailPath)) {
-            smallOriginBitmap.compress(Bitmap.CompressFormat.JPEG, 30, out);
+            smallOriginBitmap.compress(Bitmap.CompressFormat.JPEG, 99, out);
         } catch (IOException e) {
             e.printStackTrace();
         }
