@@ -55,7 +55,6 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
     FileRecyclerViewAdapter adapter;
     private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 1;
     Context context;
-    boolean isLoading = true;
 
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle actionBarDrawerToggle;
@@ -126,28 +125,6 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
 
         adapter = new FileRecyclerViewAdapter(this, listFiles(directory));
         recyclerView.setAdapter(adapter);
-
-        new Thread(() -> {
-            while (isLoading) {
-                loadMore();
-            }
-        }).start();
-    }
-
-    private void loadMore() {
-        File directory = this.getFilesDir();
-        Log.d("loadMore", "loadMore");
-        adapter.setFiles(listFiles(directory));
-
-        runOnUiThread(() -> {
-            adapter.notifyDataSetChanged();
-        });
-
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     private List<RecyclerImageFile> listFiles(File directory) {

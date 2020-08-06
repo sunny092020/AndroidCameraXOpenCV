@@ -26,7 +26,6 @@ import com.ami.icamdocscanner.models.RecyclerImageFile;
 
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint2f;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -89,7 +88,7 @@ public class ImageEditActivity extends AppCompatActivity {
         RecyclerImageFile currentImage = ScannerState.getEditImages().get(currentImagePosition);
 
         Bitmap currentBitmap = null;
-         do{
+        do{
             try {
                 Thread.sleep(100);
                 currentBitmap = FileUtils.readBitmap(currentImage);
@@ -235,42 +234,30 @@ public class ImageEditActivity extends AppCompatActivity {
         LinearLayout checkBtn = findViewById(R.id.checkBtn);
         if(checkBtn==null) return;
         checkBtn.setOnClickListener(v -> {
+            // Get a Calendar and set it to the current time.
+            Calendar cal = Calendar.getInstance();
 
-            new Thread(() -> {
-                // Get a Calendar and set it to the current time.
-                Calendar cal = Calendar.getInstance();
+            for(RecyclerImageFile file: ScannerState.getDoneImages()) {
+                cal.setTime(Date.from(Instant.now()));
 
-                for(RecyclerImageFile file: ScannerState.getDoneImages()) {
-                    cal.setTime(Date.from(Instant.now()));
+                // Create a filename from a format string.
+                // ... Apply date formatting codes.
+                String filename = String.format(Locale.US, "AMI_ICAMDOC_SCANNER-%1$tY-%1$tm-%1$td-%1$tk-%1$tS-%1$tp", cal);
 
-                    // Create a filename from a format string.
-                    // ... Apply date formatting codes.
-                    String filename = String.format(Locale.US, "AMI_ICAMDOC_SCANNER-%1$tY-%1$tm-%1$td-%1$tk-%1$tS-%1$tp", cal);
+                Bitmap currentFilteredImg = FileUtils.readBitmap(file.getAbsolutePath());
 
-                    Bitmap currentFilteredImg = FileUtils.readBitmap(file);
-
-                    while (currentFilteredImg == null) {
-                        try {
-                            Thread.sleep(100);
-                            currentFilteredImg = FileUtils.readBitmap(file);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-
-                    try (FileOutputStream out = context.openFileOutput(filename + "_" + FileUtils.fileNameWithoutExtension(file.getName()) + ".jpg", Context.MODE_PRIVATE)) {
-                        currentFilteredImg.compress(Bitmap.CompressFormat.JPEG, 99, out);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                try (FileOutputStream out = context.openFileOutput(filename + "_" + FileUtils.fileNameWithoutExtension(file.getName()) + ".jpg", Context.MODE_PRIVATE)) {
+                    currentFilteredImg.compress(Bitmap.CompressFormat.JPEG, 99, out);
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
+            }
 
-                FileUtils.deleteTempDir(context);
-                ScannerState.resetScannerState();
-            }).start();
+            FileUtils.deleteTempDir(context);
+            ScannerState.resetScannerState();
 
-            Intent intent = new Intent(context, ImageDoneActivity.class);
-            context.startActivity(intent);
+            Intent cropIntent = new Intent(context, ImageDoneActivity.class);
+            context.startActivity(cropIntent);
         });
     }
 
