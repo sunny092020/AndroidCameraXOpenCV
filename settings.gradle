@@ -1,2 +1,2 @@
-include ':opencv43'
+include ':sdk'
 include ':app'
