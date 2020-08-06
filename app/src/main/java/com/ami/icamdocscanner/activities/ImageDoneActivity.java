@@ -7,8 +7,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Parcelable;
 import android.util.Log;
 import android.view.Gravity;
@@ -19,6 +21,7 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -46,15 +49,22 @@ import com.googlecode.tesseract.android.TessBaseAPI;
 import org.opencv.android.OpenCVLoader;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.Serializable;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.ProgressNotifier {
     FileRecyclerViewAdapter adapter;
     private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 1;
     Context context;
+    boolean isLoading = true;
 
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle actionBarDrawerToggle;
@@ -125,6 +135,28 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
 
         adapter = new FileRecyclerViewAdapter(this, listFiles(directory));
         recyclerView.setAdapter(adapter);
+
+        new Thread(() -> {
+            while (isLoading) {
+                loadMore();
+            }
+        }).start();
+    }
+
+    private void loadMore() {
+        File directory = this.getFilesDir();
+        Log.d("loadMore", "loadMore");
+        adapter.setFiles(listFiles(directory));
+
+        runOnUiThread(() -> {
+            adapter.notifyDataSetChanged();
+        });
+
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     private List<RecyclerImageFile> listFiles(File directory) {

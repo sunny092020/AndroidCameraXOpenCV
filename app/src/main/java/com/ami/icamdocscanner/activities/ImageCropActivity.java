@@ -23,6 +23,7 @@ import com.ami.icamdocscanner.helpers.ScannerState;
 import com.ami.icamdocscanner.helpers.VisionUtils;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
 
+import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 
 import java.util.ArrayList;
@@ -138,6 +139,17 @@ public class ImageCropActivity extends AppCompatActivity {
         new Thread(() -> {
             for(int i=ScannerState.getCropImages().size()-1; i>=0; i--) {
                 RecyclerImageFile croppedFile = ScannerState.getCropImages().get(i);
+
+                MatOfPoint2f croppedPolygon = croppedFile.getCroppedPolygon();
+                while (croppedPolygon== null) {
+                    try {
+                        Thread.sleep(100);
+                        croppedPolygon = croppedFile.getCroppedPolygon();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
                 Bitmap croppedBitmap = getCroppedImage(croppedFile);
                 String editImageFilePath =  FileUtils.editImagePath(context, croppedFile.getName());
                 String doneImageFilePath =  FileUtils.doneImagePath(context, croppedFile.getName());
@@ -162,7 +174,6 @@ public class ImageCropActivity extends AppCompatActivity {
     private Bitmap getCroppedImage(RecyclerImageFile imageFile) {
         try {
             Bitmap imageFileBitmap = FileUtils.readBitmap(imageFile.getAbsolutePath());
-            if(imageFile.getCroppedPolygon() == null) return imageFileBitmap;
             List<Point> cropPolygonPoints = imageFile.getCroppedPolygon().toList();
             FrameLayout holderImageCrop = findViewById(R.id.holderImageCrop);
             float kx = (float) holderImageCrop.getWidth()/imageFileBitmap.getWidth();

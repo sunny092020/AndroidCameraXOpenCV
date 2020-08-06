@@ -39,6 +39,10 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
         this.files = data;
     }
 
+    public void setFiles(List<RecyclerImageFile> files) {
+        this.files = files;
+    }
+
     // inflates the cell layout from xml when needed
     @Override
     @NonNull
