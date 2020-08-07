@@ -51,18 +51,8 @@ public class ViewPagerEditAdapter extends RecyclerView.Adapter<ViewPagerEditAdap
 
         void bind(int currentImagePosition) {
             RecyclerImageFile file = ScannerState.getEditImages().get(currentImagePosition);
-
+            file.waitUntilSaved();
             Bitmap bitmap = FileUtils.readBitmap(file);
-
-            while (bitmap == null) {
-                try {
-                    Thread.sleep(100);
-                    bitmap = FileUtils.readBitmap(file);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-
             imageView.setImageBitmap(bitmap);
         }
 
