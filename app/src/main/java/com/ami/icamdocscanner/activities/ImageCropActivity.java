@@ -23,6 +23,7 @@ import com.ami.icamdocscanner.helpers.ScannerState;
 import com.ami.icamdocscanner.helpers.VisionUtils;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
 
+import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 
 import java.util.ArrayList;
@@ -63,13 +64,14 @@ public class ImageCropActivity extends AppCompatActivity {
             }
         });
 
-        viewPagerCrop.setCurrentItem(ScannerState.getCropImages().size(), false);
+        viewPagerCrop.setCurrentItem(0, false);
     }
 
     // user go back to re-crop
     protected void onStart() {
         super.onStart();
-        int currentImagePosition =  getIntent().getIntExtra("currentImagePosition", ScannerState.getCropImages().size());
+        int currentImagePosition =  getIntent().getIntExtra("currentImagePosition", -1);
+        Log.d("onStart currentImagePosition", "" + currentImagePosition);
         viewPagerCrop.setCurrentItem(currentImagePosition, false);
     }
 
@@ -135,24 +137,36 @@ public class ImageCropActivity extends AppCompatActivity {
         ScannerState.getEditImages().clear();
         ScannerState.getDoneImages().clear();
 
-        new Thread(() -> {
-            for(int i=ScannerState.getCropImages().size()-1; i>=0; i--) {
-                RecyclerImageFile croppedFile = ScannerState.getCropImages().get(i);
-                Bitmap croppedBitmap = getCroppedImage(croppedFile);
-                String editImageFilePath =  FileUtils.editImagePath(context, croppedFile.getName());
-                String doneImageFilePath =  FileUtils.doneImagePath(context, croppedFile.getName());
-                FileUtils.writeBitmap(croppedBitmap, editImageFilePath);
-                FileUtils.writeBitmap(croppedBitmap, doneImageFilePath);
-            }
-
-        }).start();
-
         for(RecyclerImageFile croppedFile: ScannerState.getCropImages()) {
             String doneImageFilePath =  FileUtils.doneImagePath(context, croppedFile.getName());
             String editImageFilePath =  FileUtils.editImagePath(context, croppedFile.getName());
             ScannerState.getEditImages().add(new RecyclerImageFile(editImageFilePath));
             ScannerState.getDoneImages().add(new RecyclerImageFile(doneImageFilePath));
         }
+
+        new Thread(() -> {
+            for(RecyclerImageFile croppedFile: ScannerState.getCropImages()) {
+                MatOfPoint2f croppedPolygon = croppedFile.getCroppedPolygon();
+                while (croppedPolygon== null) {
+                    try {
+                        Thread.sleep(100);
+                        croppedPolygon = croppedFile.getCroppedPolygon();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                Bitmap croppedBitmap = getCroppedImage(croppedFile);
+                String editImageFilePath =  FileUtils.editImagePath(context, croppedFile.getName());
+                String doneImageFilePath =  FileUtils.doneImagePath(context, croppedFile.getName());
+                FileUtils.writeBitmap(croppedBitmap, editImageFilePath);
+                FileUtils.writeBitmap(croppedBitmap, doneImageFilePath);
+
+                ScannerState.getFileByName(editImageFilePath, ScannerState.getEditImages()).setSaved(true);
+                ScannerState.getFileByName(doneImageFilePath, ScannerState.getDoneImages()).setSaved(true);
+            }
+
+        }).start();
 
         Intent cropIntent = new Intent(this, ImageEditActivity.class);
         startActivity(cropIntent);

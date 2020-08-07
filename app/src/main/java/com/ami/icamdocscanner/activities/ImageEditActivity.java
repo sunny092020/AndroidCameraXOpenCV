@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.widget.ImageView;
@@ -26,13 +25,6 @@ import com.ami.icamdocscanner.models.RecyclerImageFile;
 
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
-
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.time.Instant;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Locale;
 
 public class ImageEditActivity extends AppCompatActivity {
     ViewPager2 viewPagerEdit;
@@ -72,7 +64,7 @@ public class ImageEditActivity extends AppCompatActivity {
             }
         });
 
-        viewPagerEdit.setCurrentItem(ScannerState.getEditImages().size(), false);
+        viewPagerEdit.setCurrentItem(0, false);
         scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
     }
 
@@ -234,28 +226,6 @@ public class ImageEditActivity extends AppCompatActivity {
         LinearLayout checkBtn = findViewById(R.id.checkBtn);
         if(checkBtn==null) return;
         checkBtn.setOnClickListener(v -> {
-            // Get a Calendar and set it to the current time.
-            Calendar cal = Calendar.getInstance();
-
-            for(RecyclerImageFile file: ScannerState.getDoneImages()) {
-                cal.setTime(Date.from(Instant.now()));
-
-                // Create a filename from a format string.
-                // ... Apply date formatting codes.
-                String filename = String.format(Locale.US, "AMI_ICAMDOC_SCANNER-%1$tY-%1$tm-%1$td-%1$tk-%1$tS-%1$tp", cal);
-
-                Bitmap currentFilteredImg = FileUtils.readBitmap(file.getAbsolutePath());
-
-                try (FileOutputStream out = context.openFileOutput(filename + "_" + FileUtils.fileNameWithoutExtension(file.getName()) + ".jpg", Context.MODE_PRIVATE)) {
-                    currentFilteredImg.compress(Bitmap.CompressFormat.JPEG, 99, out);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            FileUtils.deleteTempDir(context);
-            ScannerState.resetScannerState();
-
             Intent doneIntent = new Intent(context, ImageDoneActivity.class);
             context.startActivity(doneIntent);
         });

@@ -13,6 +13,7 @@ public class ScannerState {
     private static List<RecyclerImageFile> cropImages = new ArrayList<>();
     private static List<RecyclerImageFile> editImages = new ArrayList<>();
     private static List<RecyclerImageFile> doneImages = new ArrayList<>();
+    private static List<RecyclerImageFile> savedImages = new ArrayList<>();
 
     public static String progressColor="#331199";
 
@@ -21,6 +22,7 @@ public class ScannerState {
         cropImages.clear();
         editImages.clear();
         doneImages.clear();
+        savedImages.clear();
     }
 
     public static List<RecyclerImageFile> getCropImages() {
@@ -33,6 +35,10 @@ public class ScannerState {
 
     public static List<RecyclerImageFile> getDoneImages() {
         return doneImages;
+    }
+
+    public static List<RecyclerImageFile> getSavedImages() {
+        return savedImages;
     }
 
     public static int getNextFileName(List<RecyclerImageFile> files) {

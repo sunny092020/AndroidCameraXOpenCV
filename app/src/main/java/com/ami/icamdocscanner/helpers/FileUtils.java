@@ -83,6 +83,22 @@ public class FileUtils {
         }
     }
 
+    public static Bitmap getThumbnailNoCreate(RecyclerImageFile imageFile) {
+        String thumbnailPath = imageFile.getParent() + "/thumbnails/" + imageFile.getName();
+
+        if(FileUtils.isFileType(imageFile.getName(), "pdf")) {
+            thumbnailPath = imageFile.getParent() + "/thumbnails/" + FileUtils.fileNameWithoutExtension(imageFile.getName()) + "-pdf.jpg";
+        }
+
+        File thumbnailFile = new File(thumbnailPath);
+
+        if(thumbnailFile.exists()) {
+            return BitmapFactory.decodeFile(thumbnailFile.getAbsolutePath());
+        }else {
+            return null;
+        }
+    }
+
     public static void removeThumbnail(RecyclerImageFile imageFile) {
         String thumbnailPath = imageFile.getParent() + "/thumbnails/" + imageFile.getName();
 
@@ -108,10 +124,21 @@ public class FileUtils {
 
         Bitmap smallOriginBitmap = VisionUtils.scaledBitmap(originBitmap, DOWNSCALE_IMAGE_SIZE, DOWNSCALE_IMAGE_SIZE);
 
-        try (FileOutputStream out = new FileOutputStream(thumbnailPath)) {
+        FileOutputStream out = null;
+        try {
+            out = new FileOutputStream(thumbnailPath);
             smallOriginBitmap.compress(Bitmap.CompressFormat.JPEG, 99, out);
         } catch (IOException e) {
             e.printStackTrace();
+        }
+        finally {
+            if(out!=null) {
+                try {
+                    out.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
 
         return smallOriginBitmap;
@@ -119,6 +146,13 @@ public class FileUtils {
 
     public static void ensureTempDir(Context context) {
         File directory = new File(context.getFilesDir().getAbsolutePath() + "/" +  "temp_dir" + "/");
+        if (!directory.exists()){
+            if (!directory.mkdir()) return;
+        }
+    }
+
+    public static void ensureDir(Context context, String dir) {
+        File directory = new File(context.getFilesDir().getAbsolutePath() + "/" + dir + "/");
         if (!directory.exists()){
             if (!directory.mkdir()) return;
         }
@@ -147,12 +181,23 @@ public class FileUtils {
     }
 
     public static boolean writeBitmap(Bitmap bitmap, String filename) {
-        try (FileOutputStream out = new FileOutputStream(filename)) {
+        FileOutputStream out = null;
+        try {
+            out = new FileOutputStream(filename);
             return bitmap.compress(Bitmap.CompressFormat.JPEG, 99, out); // bmp is your Bitmap instance
             // PNG is a lossless format, the compression factor (100) is ignored
         } catch (IOException e) {
             e.printStackTrace();
             return false;
+        }
+        finally {
+            if(out != null) {
+                try {
+                    out.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
@@ -192,8 +237,6 @@ public class FileUtils {
 
     public static void ensureOcrDir(Context context) {
         File directory = new File(ocrDir(context) + "tessdata/");
-        Log.d("directory", "" + directory.exists());
-
         if (!directory.exists()){
             if (!directory.mkdir()) return;
         }

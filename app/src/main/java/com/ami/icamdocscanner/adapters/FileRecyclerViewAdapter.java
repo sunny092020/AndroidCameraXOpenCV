@@ -50,7 +50,7 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
     // binds the data to the TextView in each cell
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.bind(files.get(position));
+        holder.bind(position);
     }
 
     @Override
@@ -76,18 +76,24 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, ItemTouchHelperViewHolder {
         ImageView thumbnail, check;
         TextView fileName;
+        View itemView;
 
         ViewHolder(View itemView) {
             super(itemView);
             thumbnail = itemView.findViewById(R.id.fileThumbnail);
             check = itemView.findViewById(R.id.check);
             fileName = itemView.findViewById(R.id.fileName);
-            itemView.setOnClickListener(this);
+            this.itemView = itemView;
+            this.itemView.setOnClickListener(this);
         }
 
-        void bind(final RecyclerImageFile file) {
+        void bind(int position) {
+            RecyclerImageFile file = files.get(position);
+
             check.setVisibility(file.isChecked() ? View.VISIBLE : View.GONE);
-            Bitmap thumbnailBitmap = FileUtils.getThumbnail(file);
+
+            Bitmap thumbnailBitmap = FileUtils.getThumbnailNoCreate(file);
+            if(thumbnailBitmap == null) return;
             thumbnail.setImageBitmap(thumbnailBitmap);
 
             fileName.setText(file.getName());

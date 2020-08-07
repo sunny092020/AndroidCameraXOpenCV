@@ -107,7 +107,6 @@ public class PolygonView extends FrameLayout {
 
 
     private void init() {
-        Log.d("init ", "polygon");
         polygonView = this;
         pointer1 = getImageView(0, 0);
         pointer2 = getImageView(getWidth(), 0);

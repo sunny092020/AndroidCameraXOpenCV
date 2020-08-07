@@ -55,8 +55,6 @@ public class OcrLanguageAdapter extends RecyclerView.Adapter<OcrLanguageAdapter.
     @Override
     public void onBindViewHolder(@NonNull OcrLanguageAdapter.ViewHolder holder, int position) {
         OcrLanguage lang = langs.get(position);
-        Log.d("bind", "bind");
-
         holder.bind(lang);
     }
 
@@ -96,7 +94,6 @@ public class OcrLanguageAdapter extends RecyclerView.Adapter<OcrLanguageAdapter.
                     Downloader.downloadIdLangMap.remove(lang.getLang());
                 }
             });
-            Log.d("bind", lang.getName());
         }
 
     }

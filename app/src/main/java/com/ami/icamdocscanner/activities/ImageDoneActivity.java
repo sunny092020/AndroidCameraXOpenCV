@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -47,9 +48,13 @@ import org.opencv.android.OpenCVLoader;
 
 import java.io.File;
 import java.io.Serializable;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.ProgressNotifier {
     FileRecyclerViewAdapter adapter;
@@ -116,15 +121,50 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
     private void setupAdapter() {
         adapter = null;
 
-        File directory = this.getFilesDir();
-
         // set up the RecyclerView
         RecyclerView recyclerView = findViewById(R.id.files);
         int numberOfColumns = 2;
         recyclerView.setLayoutManager(new GridLayoutManager(this, numberOfColumns));
 
-        adapter = new FileRecyclerViewAdapter(this, listFiles(directory));
+        // Get a Calendar and set it to the current time.
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(Date.from(Instant.now()));
+
+        String folderName = String.format(Locale.US, "AMI_ICAMDOC_SCANNER-%1$tY-%1$tm-%1$td-%1$tk-%1$tS-%1$tp", cal);
+        FileUtils.ensureDir(context, folderName);
+
+        for(RecyclerImageFile file: ScannerState.getDoneImages()) {
+            String filename = FileUtils.home(context) + "/" + folderName + "/" + file.getName();
+            ScannerState.getSavedImages().add(new RecyclerImageFile(filename));
+        }
+
+        adapter = new FileRecyclerViewAdapter(this, ScannerState.getSavedImages());
         recyclerView.setAdapter(adapter);
+
+        new Thread(() -> {
+            int i = 1;
+
+            for(RecyclerImageFile file: ScannerState.getDoneImages()) {
+                String filename = FileUtils.home(context) + "/" + folderName + "/" + file.getName();
+                file.waitUntilSaved();
+                Bitmap currentFilteredImg = FileUtils.readBitmap(file);
+
+                FileUtils.writeBitmap(currentFilteredImg, filename);
+
+                RecyclerImageFile savedFile = ScannerState.getFileByName(filename, ScannerState.getSavedImages());
+                String thumbnailPath = savedFile.getParent() + "/thumbnails/" + savedFile.getName();
+                FileUtils.createThumbnail(savedFile, thumbnailPath);
+
+                runOnUiThread(() -> {
+                    adapter.notifyDataSetChanged();
+                });
+                Log.d("i position", "" + i);
+                i++;
+            }
+            FileUtils.deleteTempDir(context);
+//                ScannerState.resetScannerState();
+        }).start();
+
     }
 
     private List<RecyclerImageFile> listFiles(File directory) {
@@ -241,7 +281,6 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
             if(resultCode == Activity.RESULT_OK) {
                 ActivityUtils.filePickerProcessResult(context, data);
                 Intent cropIntent = new Intent(this, ImageCropActivity.class);
-                Log.d("startActivity", "cropIntent");
                 startActivity(cropIntent);
                 finish();
             }

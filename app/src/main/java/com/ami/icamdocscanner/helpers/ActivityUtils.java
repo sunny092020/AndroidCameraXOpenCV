@@ -42,8 +42,7 @@ public class ActivityUtils {
 
         new Thread(() -> {
             FileUtils.ensureTempDir(context);
-            for(int i=uris.size()-1; i>=0; i--) {
-                Uri uri = uris.get(i);
+            for(Uri uri: uris) {
                 String fileName = FileUtils.cropImagePath(context, FileUtils.fileNameFromUri(context, uri) + ".jpg");
                 try {
                     Bitmap bitmap = FileUtils.readBitmap(context, uri);

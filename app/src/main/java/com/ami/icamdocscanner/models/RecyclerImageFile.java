@@ -10,6 +10,17 @@ import java.io.Serializable;
 public class RecyclerImageFile extends File implements Serializable {
 
     private boolean isChecked = false;
+
+    public boolean isSaved() {
+        return isSaved;
+    }
+
+    public void setSaved(boolean saved) {
+        isSaved = saved;
+    }
+
+    private boolean isSaved = false;
+
     private MatOfPoint2f croppedPolygon;
 
     public RecyclerImageFile(@NonNull File file) {
@@ -34,6 +45,16 @@ public class RecyclerImageFile extends File implements Serializable {
 
     public void setCroppedPolygon(MatOfPoint2f croppedPolygon) {
         this.croppedPolygon = croppedPolygon;
+    }
+
+    public void waitUntilSaved() {
+        while (!isSaved()) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 }
