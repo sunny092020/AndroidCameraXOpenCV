@@ -176,7 +176,6 @@ public class FileUtils {
     }
 
     public static Bitmap readBitmap(RecyclerImageFile image) {
-        if(!image.exists()) return null;
         return BitmapFactory.decodeFile(image.getAbsolutePath());
     }
 
