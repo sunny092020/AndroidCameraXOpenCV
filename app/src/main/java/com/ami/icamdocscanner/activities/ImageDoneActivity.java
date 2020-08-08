@@ -142,8 +142,6 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
         recyclerView.setAdapter(adapter);
 
         new Thread(() -> {
-            int i = 1;
-
             for(RecyclerImageFile file: ScannerState.getDoneImages()) {
                 String filename = FileUtils.home(context) + "/" + folderName + "/" + file.getName();
                 file.waitUntilSaved();
@@ -158,8 +156,6 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
                 runOnUiThread(() -> {
                     adapter.notifyDataSetChanged();
                 });
-                Log.d("i position", "" + i);
-                i++;
             }
             FileUtils.deleteTempDir(context);
 //                ScannerState.resetScannerState();
