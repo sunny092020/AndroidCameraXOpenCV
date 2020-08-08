@@ -17,6 +17,7 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.ami.icamdocscanner.R;
 import com.ami.icamdocscanner.adapters.ViewPagerCropAdapter;
+import com.ami.icamdocscanner.helpers.ActivityUtils;
 import com.ami.icamdocscanner.helpers.FileUtils;
 import com.ami.icamdocscanner.helpers.ScannerConstant;
 import com.ami.icamdocscanner.helpers.ScannerState;
@@ -32,6 +33,11 @@ import java.util.Objects;
 
 public class ImageCropActivity extends AppCompatActivity {
     ViewPager2 viewPagerCrop;
+
+    public ViewPagerCropAdapter getAdapter() {
+        return adapter;
+    }
+
     ViewPagerCropAdapter adapter;
     Context context;
 
@@ -46,6 +52,7 @@ public class ImageCropActivity extends AppCompatActivity {
 
         adapter = new ViewPagerCropAdapter(this, viewPagerCrop);
         viewPagerCrop.setAdapter(adapter);
+        ActivityUtils.processImageFromUri(this);
 
         viewPagerCrop.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
