@@ -160,7 +160,7 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
                 });
             }
             FileUtils.deleteTempDir(context);
-//                ScannerState.resetScannerState();
+            ScannerState.resetScannerState();
         }).start();
 
     }
