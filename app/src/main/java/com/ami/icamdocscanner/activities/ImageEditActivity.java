@@ -25,6 +25,12 @@ import com.ami.icamdocscanner.models.RecyclerImageFile;
 
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.Point;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 public class ImageEditActivity extends AppCompatActivity {
     ViewPager2 viewPagerEdit;
@@ -43,6 +49,37 @@ public class ImageEditActivity extends AppCompatActivity {
         viewPagerEdit = findViewById(R.id.viewPagerEdit);
         adapter = new ViewPagerEditAdapter(this);
         viewPagerEdit.setAdapter(adapter);
+
+        new Thread(() -> {
+            for(int position=0; position<ScannerState.getCropImages().size(); position++) {
+                RecyclerImageFile croppedFile = ScannerState.getCropImages().get(position);
+                MatOfPoint2f croppedPolygon = croppedFile.getCroppedPolygon();
+                while (croppedPolygon== null) {
+                    try {
+                        Thread.sleep(100);
+                        croppedPolygon = croppedFile.getCroppedPolygon();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                Bitmap croppedBitmap = getCroppedImage(croppedFile);
+                String editImageFilePath =  FileUtils.editImagePath(context, croppedFile.getName());
+                String doneImageFilePath =  FileUtils.doneImagePath(context, croppedFile.getName());
+
+                FileUtils.writeBitmap(croppedBitmap, editImageFilePath);
+                FileUtils.writeBitmap(croppedBitmap, doneImageFilePath);
+
+                ScannerState.getFileByName(editImageFilePath, ScannerState.getEditImages()).setSaved(true);
+                ScannerState.getFileByName(doneImageFilePath, ScannerState.getDoneImages()).setSaved(true);
+
+                int finalPosition = position;
+                runOnUiThread(() -> {
+                    adapter.notifyItemChanged(finalPosition);
+                });
+            }
+        }).start();
+
         setupFilterButtonEvent();
         setupBottomButtonEvent();
 
@@ -66,6 +103,41 @@ public class ImageEditActivity extends AppCompatActivity {
 
         viewPagerEdit.setCurrentItem(0, false);
         scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
+    }
+
+    private Bitmap getCroppedImage(RecyclerImageFile imageFile) {
+        try {
+            Bitmap imageFileBitmap = FileUtils.readBitmap(imageFile.getAbsolutePath());
+            List<Point> cropPolygonPoints = imageFile.getCroppedPolygon().toList();
+            float kx = (float) ScannerState.holderCropWidth/imageFileBitmap.getWidth();
+            float ky = (float) ScannerState.holderCropHeight/imageFileBitmap.getHeight();
+            float k = (Math.min(kx, ky));
+
+            List<Point> points = new ArrayList<>();
+            points.add(new Point(cropPolygonPoints.get(0).x*k, cropPolygonPoints.get(0).y*k));
+            points.add(new Point(cropPolygonPoints.get(1).x*k, cropPolygonPoints.get(1).y*k));
+            points.add(new Point(cropPolygonPoints.get(2).x*k, cropPolygonPoints.get(2).y*k));
+            points.add(new Point(cropPolygonPoints.get(3).x*k, cropPolygonPoints.get(3).y*k));
+
+            int imageViewWidth =  getIntent().getIntExtra("imageViewWidth", -1);
+            int imageViewHeight =  getIntent().getIntExtra("imageViewHeight", -1);
+
+            float xRatio = (float) imageFileBitmap.getWidth() / imageViewWidth;
+            float yRatio = (float) imageFileBitmap.getHeight() / imageViewHeight;
+
+            float x1 = (float) ((Objects.requireNonNull(points.get(0)).x) * xRatio);
+            float x2 = (float) ((Objects.requireNonNull(points.get(1)).x) * xRatio);
+            float x3 = (float) ((Objects.requireNonNull(points.get(2)).x) * xRatio);
+            float x4 = (float) ((Objects.requireNonNull(points.get(3)).x) * xRatio);
+            float y1 = (float) ((Objects.requireNonNull(points.get(0)).y) * yRatio);
+            float y2 = (float) ((Objects.requireNonNull(points.get(1)).y) * yRatio);
+            float y3 = (float) ((Objects.requireNonNull(points.get(2)).y) * yRatio);
+            float y4 = (float) ((Objects.requireNonNull(points.get(3)).y) * yRatio);
+            return VisionUtils.getScannedBitmap(imageFileBitmap, x1, y1, x2, y2, x3, y3, x4, y4);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     protected void onStart() {
@@ -228,6 +300,16 @@ public class ImageEditActivity extends AppCompatActivity {
         if (requestCode == ScannerConstant.RECROP_PHOTO) {
             if(resultCode == Activity.RESULT_OK){
                 int currentImagePosition =  data.getIntExtra("currentImagePosition", ScannerState.getEditImages().size());
+
+                RecyclerImageFile croppedFile = ScannerState.getCropImages().get(currentImagePosition);
+                Bitmap croppedBitmap = getCroppedImage(croppedFile);
+
+                String editImageFilePath =  FileUtils.editImagePath(context, croppedFile.getName());
+                String doneImageFilePath =  FileUtils.doneImagePath(context, croppedFile.getName());
+
+                FileUtils.writeBitmap(croppedBitmap, editImageFilePath);
+                FileUtils.writeBitmap(croppedBitmap, doneImageFilePath);
+
                 viewPagerEdit.setCurrentItem(currentImagePosition);
                 adapter.notifyDataSetChanged();
             }
