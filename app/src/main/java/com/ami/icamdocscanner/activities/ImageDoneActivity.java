@@ -160,7 +160,9 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
                 });
             }
             FileUtils.deleteTempDir(context);
-            ScannerState.resetScannerState();
+            ScannerState.getCropImages().clear();
+            ScannerState.getEditImages().clear();
+            ScannerState.getDoneImages().clear();
         }).start();
 
     }
@@ -262,6 +264,7 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
     private void setupChoosePhotoButtonListener() {
         ImageView choosePhotoBtn = findViewById(R.id.choosePhotoBtn);
         choosePhotoBtn.setOnClickListener(v -> {
+            ScannerState.resetScannerState();
             Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
             // The MIME data type filter
             intent.setType("image/*");
