@@ -155,7 +155,7 @@ public class ImageCropActivity extends AppCompatActivity {
 
     private void waitImageLoad() {
         ImageView imageView = findViewById(R.id.imageView);
-        while (imageView.getWidth() < 5 && imageView.getHeight() < 5) {
+        while (imageView == null || imageView.getWidth() < 5 || imageView.getHeight() < 5) {
             try {
                 Thread.sleep(100);
                 imageView = findViewById(R.id.imageView);

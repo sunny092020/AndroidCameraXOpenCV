@@ -93,7 +93,6 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
             check.setVisibility(file.isChecked() ? View.VISIBLE : View.GONE);
 
             Bitmap thumbnailBitmap = FileUtils.getThumbnailNoCreate(file);
-            if(thumbnailBitmap == null) return;
             thumbnail.setImageBitmap(thumbnailBitmap);
 
             fileName.setText(file.getName());
