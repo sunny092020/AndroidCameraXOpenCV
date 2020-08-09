@@ -1,6 +1,5 @@
 package com.ami.icamdocscanner.helpers;
 
-import android.app.Activity;
 import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
@@ -12,9 +11,7 @@ import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
-import android.util.Log;
 
-import com.ami.icamdocscanner.R;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
 
 import java.io.File;
@@ -209,24 +206,24 @@ public class FileUtils {
     }
 
     public static String cropImagePath(Context context, String fileName) {
-        return FileUtils.tempDir(context) + FileUtils.getOriginFileName(fileName) + "_crop.jpg";
+        return FileUtils.tempDir(context) + "crop_" + FileUtils.getOriginFileName(fileName);
     }
 
     public static String editImagePath(Context context, String fileName) {
-        return FileUtils.tempDir(context) + FileUtils.getOriginFileName(fileName) + "_edit.jpg";
+        return FileUtils.tempDir(context) + "edit_" + FileUtils.getOriginFileName(fileName);
     }
 
     public static String doneImagePath(Context context, String fileName) {
-        return FileUtils.tempDir(context) + FileUtils.getOriginFileName(fileName) + "_done.jpg";
+        return FileUtils.tempDir(context) + "done_" + FileUtils.getOriginFileName(fileName);
     }
 
-    private static String getOriginFileName(String fileName) {
-        if (fileName.indexOf("_crop") > 0)
-            return fileName.substring(0, fileName.lastIndexOf("_crop"));
-        if (fileName.indexOf("_edit") > 0)
-            return fileName.substring(0, fileName.lastIndexOf("_edit"));
-        if (fileName.indexOf("_done") > 0)
-            return fileName.substring(0, fileName.lastIndexOf("_done"));
+    public static String getOriginFileName(String fileName) {
+        if (fileName.indexOf("crop_") > 0)
+            return fileName.substring(fileName.lastIndexOf("crop_") + 5);
+        if (fileName.indexOf("edit_") > 0)
+            return fileName.substring(fileName.lastIndexOf("edit_") + 5);
+        if (fileName.indexOf("done_") > 0)
+            return fileName.substring(fileName.lastIndexOf("done_") + 5);
         return fileName;
     }
 

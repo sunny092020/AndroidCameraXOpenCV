@@ -46,7 +46,7 @@ public class ActivityUtils {
 
         for(int i=0; i<uris.size(); i++) {
             Uri uri = uris.get(i);
-            String fileName = FileUtils.cropImagePath(context, FileUtils.fileNameFromUri(context, uri) + ".jpg");
+            String fileName = FileUtils.cropImagePath(context, FileUtils.fileNameFromUri(context, uri));
             if(ScannerState.isFileExist(fileName, ScannerState.getCropImages())) continue;
             RecyclerImageFile file = new RecyclerImageFile(fileName);
             file.setUri(uri);
@@ -60,7 +60,7 @@ public class ActivityUtils {
             for(int position=0; position<ScannerState.getCropImages().size(); position++) {
                 RecyclerImageFile file = ScannerState.getCropImages().get(position);
                 Uri uri = file.getUri();
-                String fileName = FileUtils.cropImagePath(activity, FileUtils.fileNameFromUri(activity, uri) + ".jpg");
+                String fileName = FileUtils.cropImagePath(activity, FileUtils.fileNameFromUri(activity, uri));
                 try {
                     Bitmap bitmap = FileUtils.readBitmap(activity, uri);
                     int originW = bitmap.getWidth();

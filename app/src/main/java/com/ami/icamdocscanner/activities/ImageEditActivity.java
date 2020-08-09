@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.widget.ImageView;
@@ -64,9 +65,9 @@ public class ImageEditActivity extends AppCompatActivity {
                 }
 
                 Bitmap croppedBitmap = getCroppedImage(croppedFile);
-                String editImageFilePath =  FileUtils.editImagePath(context, croppedFile.getName());
-                String doneImageFilePath =  FileUtils.doneImagePath(context, croppedFile.getName());
-
+                String editImageFilePath =  FileUtils.editImagePath(context, FileUtils.getOriginFileName(croppedFile.getName()));
+                String doneImageFilePath =  FileUtils.doneImagePath(context, FileUtils.getOriginFileName(croppedFile.getName()));
+                
                 FileUtils.writeBitmap(croppedBitmap, editImageFilePath);
                 FileUtils.writeBitmap(croppedBitmap, doneImageFilePath);
 
@@ -304,8 +305,8 @@ public class ImageEditActivity extends AppCompatActivity {
                 RecyclerImageFile croppedFile = ScannerState.getCropImages().get(currentImagePosition);
                 Bitmap croppedBitmap = getCroppedImage(croppedFile);
 
-                String editImageFilePath =  FileUtils.editImagePath(context, croppedFile.getName());
-                String doneImageFilePath =  FileUtils.doneImagePath(context, croppedFile.getName());
+                String editImageFilePath =  FileUtils.editImagePath(context, FileUtils.getOriginFileName(croppedFile.getName()));
+                String doneImageFilePath =  FileUtils.doneImagePath(context, FileUtils.getOriginFileName(croppedFile.getName()));
 
                 FileUtils.writeBitmap(croppedBitmap, editImageFilePath);
                 FileUtils.writeBitmap(croppedBitmap, doneImageFilePath);

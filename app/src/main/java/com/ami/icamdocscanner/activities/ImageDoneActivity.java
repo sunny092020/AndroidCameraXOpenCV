@@ -134,7 +134,7 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
         FileUtils.ensureDir(context, folderName);
 
         for(RecyclerImageFile file: ScannerState.getDoneImages()) {
-            String filename = FileUtils.home(context) + "/" + folderName + "/" + file.getName();
+            String filename = FileUtils.home(context) + "/" + folderName + "/" + FileUtils.getOriginFileName(file.getName());
             ScannerState.getSavedImages().add(new RecyclerImageFile(filename));
         }
 
@@ -144,7 +144,7 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
         new Thread(() -> {
             for(int position=0; position<ScannerState.getDoneImages().size(); position++) {
                 RecyclerImageFile file = ScannerState.getDoneImages().get(position);
-                String filename = FileUtils.home(context) + "/" + folderName + "/" + file.getName();
+                String filename = FileUtils.home(context) + "/" + folderName + "/" + FileUtils.getOriginFileName(file.getName());
                 file.waitUntilSaved();
                 Bitmap currentFilteredImg = FileUtils.readBitmap(file);
 
