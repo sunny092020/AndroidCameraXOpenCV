@@ -13,6 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.ami.icamdocscanner.R;
+import com.ami.icamdocscanner.activities.ImageDisplayActivity;
 import com.ami.icamdocscanner.activities.ImageDoneActivity;
 import com.ami.icamdocscanner.helpers.FileUtils;
 import com.ami.icamdocscanner.helpers.ItemTouchHelperViewHolder;
@@ -20,6 +21,7 @@ import com.ami.icamdocscanner.helpers.OnStartDragListener;
 import com.ami.icamdocscanner.helpers.ScannerState;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
 
+import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -108,7 +110,10 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
                         doneIntent.putExtra("directory", (Serializable) file);
                         context.startActivity(doneIntent);
                     } else if(file.isFile()) {
-
+                        Intent displayIntent = new Intent(context, ImageDisplayActivity.class);
+                        RecyclerImageFile parentDir = new RecyclerImageFile(file.getParent());
+                        displayIntent.putExtra("directory", (Serializable) parentDir);
+                        context.startActivity(displayIntent);
                     }
                     return;
                 }
