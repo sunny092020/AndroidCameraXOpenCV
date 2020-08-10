@@ -7,12 +7,13 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 
 import androidx.viewpager2.widget.ViewPager2;
 
-public class TouchViewPagerImageView extends androidx.appcompat.widget.AppCompatImageView {
+public class TouchViewPagerImageView extends androidx.appcompat.widget.AppCompatImageView implements GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener  {
 
     Matrix matrix;
 
@@ -42,6 +43,7 @@ public class TouchViewPagerImageView extends androidx.appcompat.widget.AppCompat
     int oldMeasuredWidth, oldMeasuredHeight;
 
     ScaleGestureDetector mScaleDetector;
+    GestureDetector mGestureDetector;
 
     Context context;
 
@@ -62,6 +64,9 @@ public class TouchViewPagerImageView extends androidx.appcompat.widget.AppCompat
     private void sharedConstructing(Context context) {
         super.setClickable(true);
         this.context = context;
+        mGestureDetector = new GestureDetector(context, this);
+        mGestureDetector.setOnDoubleTapListener(this);
+
         mScaleDetector = new ScaleGestureDetector(context, new ScaleListener());
         matrix = new Matrix();
         m = new float[9];
@@ -70,6 +75,8 @@ public class TouchViewPagerImageView extends androidx.appcompat.widget.AppCompat
         
         setOnTouchListener((v, event) -> {
             mScaleDetector.onTouchEvent(event);
+            mGestureDetector.onTouchEvent(event);
+            
             PointF curr = new PointF(event.getX(), event.getY());
 
             switch (event.getAction()) {
@@ -115,6 +122,68 @@ public class TouchViewPagerImageView extends androidx.appcompat.widget.AppCompat
 
     public void setMaxZoom(float x) {
         maxScale = x;
+    }
+
+    @Override
+    public boolean onSingleTapConfirmed(MotionEvent motionEvent) {
+        return false;
+    }
+
+    @Override
+    public boolean onDoubleTap(MotionEvent motionEvent) {
+        // Double tap is detected
+        Log.d("MAIN_TAG", "Double tap detected");
+        float origScale = saveScale;
+        float mScaleFactor;
+
+        if (saveScale == maxScale) {
+            saveScale = minScale;
+            mScaleFactor = minScale / origScale;
+        } else {
+            saveScale = maxScale;
+            mScaleFactor = maxScale / origScale;
+        }
+
+        matrix.postScale(mScaleFactor, mScaleFactor, viewWidth / 2,
+                viewHeight / 2);
+
+        fixTrans();
+        return false;
+    }
+
+    @Override
+    public boolean onDoubleTapEvent(MotionEvent motionEvent) {
+        return false;
+    }
+
+    @Override
+    public boolean onDown(MotionEvent motionEvent) {
+        return false;
+    }
+
+    @Override
+    public void onShowPress(MotionEvent motionEvent) {
+
+    }
+
+    @Override
+    public boolean onSingleTapUp(MotionEvent motionEvent) {
+        return false;
+    }
+
+    @Override
+    public boolean onScroll(MotionEvent motionEvent, MotionEvent motionEvent1, float v, float v1) {
+        return false;
+    }
+
+    @Override
+    public void onLongPress(MotionEvent motionEvent) {
+
+    }
+
+    @Override
+    public boolean onFling(MotionEvent motionEvent, MotionEvent motionEvent1, float v, float v1) {
+        return false;
     }
 
     private class ScaleListener extends
