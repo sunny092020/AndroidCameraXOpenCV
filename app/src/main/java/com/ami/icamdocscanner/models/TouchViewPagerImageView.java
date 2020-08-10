@@ -3,6 +3,7 @@ package com.ami.icamdocscanner.models;
 import android.content.Context;
 import android.graphics.Matrix;
 import android.graphics.PointF;
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -54,6 +55,10 @@ public class TouchViewPagerImageView extends androidx.appcompat.widget.AppCompat
         sharedConstructing(context);
     }
 
+    public void resetScale() {
+        saveScale = 1f;
+    }
+
     private void sharedConstructing(Context context) {
         super.setClickable(true);
         this.context = context;
@@ -62,7 +67,7 @@ public class TouchViewPagerImageView extends androidx.appcompat.widget.AppCompat
         m = new float[9];
         setImageMatrix(matrix);
         setScaleType(ScaleType.MATRIX);
-
+        
         setOnTouchListener((v, event) -> {
             mScaleDetector.onTouchEvent(event);
             PointF curr = new PointF(event.getX(), event.getY());
@@ -76,6 +81,7 @@ public class TouchViewPagerImageView extends androidx.appcompat.widget.AppCompat
 
                 case MotionEvent.ACTION_MOVE:
                     if (mode == DRAG) {
+                        viewPager.setUserInputEnabled(false);
                         float deltaX = curr.x - last.x;
                         float deltaY = curr.y - last.y;
                         float fixTransX = getFixDragTrans(deltaX, viewWidth,
@@ -153,6 +159,11 @@ public class TouchViewPagerImageView extends androidx.appcompat.widget.AppCompat
         float fixTransX = getFixTrans(transX, viewWidth, origWidth * saveScale);
         float fixTransY = getFixTrans(transY, viewHeight, origHeight
                 * saveScale);
+
+        if(saveScale<=1) viewPager.setUserInputEnabled(true);
+        else {
+            if(fixTransX!=0) viewPager.setUserInputEnabled(true);
+        }
 
         if (fixTransX != 0 || fixTransY != 0)
             matrix.postTranslate(fixTransX, fixTransY);

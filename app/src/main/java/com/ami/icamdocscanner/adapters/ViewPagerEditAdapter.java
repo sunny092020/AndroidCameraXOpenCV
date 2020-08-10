@@ -8,14 +8,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
 
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.ami.icamdocscanner.R;
 import com.ami.icamdocscanner.helpers.FileUtils;
-import com.ami.icamdocscanner.helpers.ScannerState;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
 import com.ami.icamdocscanner.models.TouchViewPagerImageView;
 
@@ -60,6 +58,7 @@ public class ViewPagerEditAdapter extends RecyclerView.Adapter<ViewPagerEditAdap
         }
 
         void bind(RecyclerImageFile image) {
+            imageView.resetScale();
             if(!image.isSaved()) {
                 imageView.setImageBitmap(null);
             } else {
