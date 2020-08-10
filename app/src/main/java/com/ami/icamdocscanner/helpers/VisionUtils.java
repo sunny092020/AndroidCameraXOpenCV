@@ -495,15 +495,18 @@ public class VisionUtils {
     }
 
     public static MatOfPoint2f dummyContour(int width, int height) {
+        return dummyContour(width, height, 0.8);
+    }
+
+    public static MatOfPoint2f dummyContour(int width, int height, double ratio) {
         MatOfPoint2f contour = new MatOfPoint2f();
         List<Point> cornerPoints = new ArrayList<>();
 
-        cornerPoints.add(new Point((float)width/5, (float)height/5));
-        cornerPoints.add(new Point((float)width*4/5, (float)height/5));
-        cornerPoints.add(new Point((float)width/5, (float)height*4/5));
-        cornerPoints.add(new Point((float)width*4/5, (float)height*4/5));
+        cornerPoints.add(new Point((float)width*(1-ratio), (float)height*(1-ratio)));
+        cornerPoints.add(new Point((float)width*ratio, (float)height*(1-ratio)));
+        cornerPoints.add(new Point((float)width*(1-ratio), (float)height*ratio));
+        cornerPoints.add(new Point((float)width*ratio, (float)height*ratio));
         contour.fromList(cornerPoints);
         return contour;
     }
-
 }

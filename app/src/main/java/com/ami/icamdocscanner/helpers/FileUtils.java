@@ -15,10 +15,12 @@ import android.provider.OpenableColumns;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -82,6 +84,9 @@ public class FileUtils {
 
     public static Bitmap getThumbnailNoCreate(RecyclerImageFile imageFile) {
         String thumbnailPath = imageFile.getParent() + "/thumbnails/" + imageFile.getName();
+        if(imageFile.isDirectory()) {
+            thumbnailPath += ".jpg";
+        }
 
         if(FileUtils.isFileType(imageFile.getName(), "pdf")) {
             thumbnailPath = imageFile.getParent() + "/thumbnails/" + FileUtils.fileNameWithoutExtension(imageFile.getName()) + "-pdf.jpg";
@@ -108,10 +113,10 @@ public class FileUtils {
     }
 
     public static Bitmap createThumbnail(RecyclerImageFile imageFile, String thumbnailPath) {
-
-        File directory = new File(imageFile.getParent() + "/thumbnails/");
-        if (!directory.exists()){
-            if (!directory.mkdir()) return null;
+        String thumbnailsDirectoryPath = new File(thumbnailPath).getParent();
+        File thumbnailsDirectory = new File(thumbnailsDirectoryPath);
+        if (!thumbnailsDirectory.exists()){
+            if (!thumbnailsDirectory.mkdir()) return null;
         }
 
         Bitmap originBitmap;
@@ -218,11 +223,11 @@ public class FileUtils {
     }
 
     public static String getOriginFileName(String fileName) {
-        if (fileName.indexOf("crop_") > 0)
+        if (fileName.indexOf("crop_") >= 0)
             return fileName.substring(fileName.lastIndexOf("crop_") + 5);
-        if (fileName.indexOf("edit_") > 0)
+        if (fileName.indexOf("edit_") >= 0)
             return fileName.substring(fileName.lastIndexOf("edit_") + 5);
-        if (fileName.indexOf("done_") > 0)
+        if (fileName.indexOf("done_") >= 0)
             return fileName.substring(fileName.lastIndexOf("done_") + 5);
         return fileName;
     }
@@ -398,4 +403,39 @@ public class FileUtils {
         }
         return filename;
     }
+
+    public static void copyFileUsingChannel(File source, File dest) {
+        FileChannel sourceChannel = null;
+        FileChannel destChannel = null;
+        try {
+            sourceChannel = new FileInputStream(source).getChannel();
+            destChannel = new FileOutputStream(dest).getChannel();
+            destChannel.transferFrom(sourceChannel, 0, sourceChannel.size());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        finally{
+            if(sourceChannel!=null) {
+                try {
+                    sourceChannel.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if(destChannel!=null){
+                try {
+                    destChannel.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public static String fileType(RecyclerImageFile file) {
+        if(fileExtension(file.getName()).equalsIgnoreCase("pdf"))
+            return "application/pdf";
+        else return "image/*";
+    }
+
 }

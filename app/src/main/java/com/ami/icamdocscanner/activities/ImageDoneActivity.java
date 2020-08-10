@@ -47,6 +47,7 @@ import com.googlecode.tesseract.android.TessBaseAPI;
 import org.opencv.android.OpenCVLoader;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -119,8 +120,14 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
     }
 
     private void setupAdapter() {
-        adapter = null;
+        if(ScannerState.getDoneImages().size() > 0) {
+            displayDoneImages();
+        } else {
+            displayDir();
+        }
+    }
 
+    private void displayDoneImages() {
         // set up the RecyclerView
         RecyclerView recyclerView = findViewById(R.id.files);
         int numberOfColumns = 2;
@@ -152,7 +159,15 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
 
                 RecyclerImageFile savedFile = ScannerState.getFileByName(filename, ScannerState.getSavedImages());
                 String thumbnailPath = savedFile.getParent() + "/thumbnails/" + savedFile.getName();
+                Log.d("thumbnailPath", thumbnailPath);
                 FileUtils.createThumbnail(savedFile, thumbnailPath);
+
+                if(position==0) {
+                    String dirThumbnailPath = FileUtils.home(context) + "/thumbnails/" + folderName + ".jpg";
+                    Log.d("dirThumbnailPath", dirThumbnailPath);
+
+                    FileUtils.createThumbnail(savedFile, dirThumbnailPath);
+                }
 
                 int finalPosition = position;
                 runOnUiThread(() -> {
@@ -164,11 +179,28 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
             ScannerState.getEditImages().clear();
             ScannerState.getDoneImages().clear();
         }).start();
+    }
 
+    private void displayDir() {
+        // set up the RecyclerView
+        RecyclerView recyclerView = findViewById(R.id.files);
+        int numberOfColumns = 2;
+        recyclerView.setLayoutManager(new GridLayoutManager(this, numberOfColumns));
+
+        File directory = (RecyclerImageFile) getIntent().getSerializableExtra("directory");
+        if(directory==null) directory = context.getFilesDir();
+        adapter = new FileRecyclerViewAdapter(this, listFiles(directory));
+        recyclerView.setAdapter(adapter);
     }
 
     private List<RecyclerImageFile> listFiles(File directory) {
-        File[] files = directory.listFiles(File::isFile);
+        File[] files = directory.listFiles(file -> {
+            if(file.getName().equalsIgnoreCase("thumbnails"))
+                return false;
+            if(file.getName().equalsIgnoreCase("temp_dir"))
+                return false;
+            return true;
+        });
         assert files != null;
         Arrays.sort( files, (o1, o2) -> {
             long lastModified1 = o1.lastModified();

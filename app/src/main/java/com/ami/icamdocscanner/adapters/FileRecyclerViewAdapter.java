@@ -1,6 +1,7 @@
 package com.ami.icamdocscanner.adapters;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,11 +13,14 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.ami.icamdocscanner.R;
+import com.ami.icamdocscanner.activities.ImageDoneActivity;
 import com.ami.icamdocscanner.helpers.FileUtils;
 import com.ami.icamdocscanner.helpers.ItemTouchHelperViewHolder;
 import com.ami.icamdocscanner.helpers.OnStartDragListener;
+import com.ami.icamdocscanner.helpers.ScannerState;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -97,6 +101,17 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
 
             fileName.setText(file.getName());
             itemView.setOnClickListener(view -> {
+                if(!ScannerState.isSelectmode()) {
+                    Context context = itemView.getContext();
+                    if(file.isDirectory()) {
+                        Intent doneIntent = new Intent(context, ImageDoneActivity.class);
+                        doneIntent.putExtra("directory", (Serializable) file);
+                        context.startActivity(doneIntent);
+                    } else if(file.isFile()) {
+
+                    }
+                    return;
+                }
                 file.setChecked(!file.isChecked());
                 check.setVisibility(file.isChecked() ? View.VISIBLE : View.GONE);
             });
