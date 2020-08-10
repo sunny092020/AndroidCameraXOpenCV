@@ -48,7 +48,7 @@ public class ImageEditActivity extends AppCompatActivity {
         context = this;
 
         viewPagerEdit = findViewById(R.id.viewPagerEdit);
-        adapter = new ViewPagerEditAdapter(this);
+        adapter = new ViewPagerEditAdapter(this, ScannerState.getEditImages());
         viewPagerEdit.setAdapter(adapter);
 
         new Thread(() -> {

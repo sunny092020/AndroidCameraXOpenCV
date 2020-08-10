@@ -17,11 +17,15 @@ import com.ami.icamdocscanner.helpers.FileUtils;
 import com.ami.icamdocscanner.helpers.ScannerState;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
 
+import java.util.List;
+
 public class ViewPagerEditAdapter extends RecyclerView.Adapter<ViewPagerEditAdapter.ViewHolder> {
+    private List<RecyclerImageFile> images;
     private LayoutInflater mInflater;
 
-    public ViewPagerEditAdapter(Context context) {
+    public ViewPagerEditAdapter(Context context, List<RecyclerImageFile> images) {
         this.mInflater = LayoutInflater.from(context);
+        this.images = images;
     }
 
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -30,11 +34,12 @@ public class ViewPagerEditAdapter extends RecyclerView.Adapter<ViewPagerEditAdap
     }
 
     public void onBindViewHolder(ViewPagerEditAdapter.ViewHolder holder, int position) {
-        holder.bind(position);
+        RecyclerImageFile image = images.get(position);
+        holder.bind(image);
     }
 
     public int getItemCount() {
-        return ScannerState.getEditImages().size();
+        return images.size();
     }
 
     // stores and recycles views as they are scrolled off screen
@@ -49,14 +54,13 @@ public class ViewPagerEditAdapter extends RecyclerView.Adapter<ViewPagerEditAdap
             setFrameLayoutRatio();
         }
 
-        void bind(int currentImagePosition) {
-            RecyclerImageFile file = ScannerState.getEditImages().get(currentImagePosition);
-            if(!file.isSaved()) {
+        void bind(RecyclerImageFile image) {
+            if(!image.isSaved()) {
                 imageView.setImageBitmap(null);
             } else {
                 imageView.setImageBitmap(null);
                 new Thread(() -> {
-                    Bitmap bitmap = FileUtils.readBitmap(file);
+                    Bitmap bitmap = FileUtils.readBitmap(image);
                     Activity activity = (Activity) itemView.getContext();
                     activity.runOnUiThread(() -> {
                         imageView.setImageBitmap(bitmap);
