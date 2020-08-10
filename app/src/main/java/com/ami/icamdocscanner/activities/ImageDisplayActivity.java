@@ -28,7 +28,7 @@ public class ImageDisplayActivity extends AppCompatActivity {
         File directory = (RecyclerImageFile) getIntent().getSerializableExtra("directory");
 
         List<RecyclerImageFile> images = FileUtils.listFiles(directory);
-        adapter = new ViewPagerEditAdapter(this, images);
+        adapter = new ViewPagerEditAdapter(this, images, viewPagerEdit);
         viewPagerEdit.setAdapter(adapter);
 
         int currentPos = getIntent().getIntExtra("position", 0);

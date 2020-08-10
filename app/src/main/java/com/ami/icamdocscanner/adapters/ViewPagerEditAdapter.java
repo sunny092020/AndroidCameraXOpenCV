@@ -11,26 +11,30 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.ami.icamdocscanner.R;
 import com.ami.icamdocscanner.helpers.FileUtils;
 import com.ami.icamdocscanner.helpers.ScannerState;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
+import com.ami.icamdocscanner.models.TouchViewPagerImageView;
 
 import java.util.List;
 
 public class ViewPagerEditAdapter extends RecyclerView.Adapter<ViewPagerEditAdapter.ViewHolder> {
     private List<RecyclerImageFile> images;
     private LayoutInflater mInflater;
+    private ViewPager2 viewPager;
 
-    public ViewPagerEditAdapter(Context context, List<RecyclerImageFile> images) {
+    public ViewPagerEditAdapter(Context context, List<RecyclerImageFile> images, ViewPager2 viewPager) {
         this.mInflater = LayoutInflater.from(context);
         this.images = images;
+        this.viewPager = viewPager;
     }
 
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = mInflater.inflate(R.layout.item_edit_viewpager, parent, false);
-        return new ViewPagerEditAdapter.ViewHolder(view);
+        return new ViewPagerEditAdapter.ViewHolder(view, viewPager);
     }
 
     public void onBindViewHolder(ViewPagerEditAdapter.ViewHolder holder, int position) {
@@ -44,13 +48,14 @@ public class ViewPagerEditAdapter extends RecyclerView.Adapter<ViewPagerEditAdap
 
     // stores and recycles views as they are scrolled off screen
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        ImageView imageView;
+        TouchViewPagerImageView imageView;
         View itemView;
 
-        ViewHolder(View itemView) {
+        ViewHolder(View itemView, ViewPager2 viewPager) {
             super(itemView);
             this.itemView = itemView;
             imageView = itemView.findViewById(R.id.imageView);
+            imageView.setViewPagerCrop(viewPager);
             setFrameLayoutRatio();
         }
 
