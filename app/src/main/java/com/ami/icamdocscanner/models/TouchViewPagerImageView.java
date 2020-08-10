@@ -76,7 +76,6 @@ public class TouchViewPagerImageView extends androidx.appcompat.widget.AppCompat
 
                 case MotionEvent.ACTION_MOVE:
                     if (mode == DRAG) {
-                        viewPager.setUserInputEnabled(false);
                         float deltaX = curr.x - last.x;
                         float deltaY = curr.y - last.y;
                         float fixTransX = getFixDragTrans(deltaX, viewWidth,
