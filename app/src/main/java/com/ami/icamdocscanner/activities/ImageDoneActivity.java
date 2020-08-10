@@ -47,11 +47,9 @@ import com.googlecode.tesseract.android.TessBaseAPI;
 import org.opencv.android.OpenCVLoader;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -189,32 +187,8 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
 
         File directory = (RecyclerImageFile) getIntent().getSerializableExtra("directory");
         if(directory==null) directory = context.getFilesDir();
-        adapter = new FileRecyclerViewAdapter(this, listFiles(directory));
+        adapter = new FileRecyclerViewAdapter(this, FileUtils.listFiles(directory));
         recyclerView.setAdapter(adapter);
-    }
-
-    private List<RecyclerImageFile> listFiles(File directory) {
-        File[] files = directory.listFiles(file -> {
-            if(file.getName().equalsIgnoreCase("thumbnails"))
-                return false;
-            if(file.getName().equalsIgnoreCase("temp_dir"))
-                return false;
-            return true;
-        });
-        assert files != null;
-        Arrays.sort( files, (o1, o2) -> {
-            long lastModified1 = o1.lastModified();
-            long lastModified2 = o2.lastModified();
-            return Long.compare(lastModified2, lastModified1);
-        });
-
-        List<RecyclerImageFile> recyclerImageFiles = new ArrayList<>();
-
-        for (File file : files) {
-            recyclerImageFiles.add(new RecyclerImageFile(file));
-        }
-
-        return recyclerImageFiles;
     }
 
     private void setupButtonListener() {

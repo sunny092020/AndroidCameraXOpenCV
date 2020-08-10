@@ -113,6 +113,7 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
                         Intent displayIntent = new Intent(context, ImageDisplayActivity.class);
                         RecyclerImageFile parentDir = new RecyclerImageFile(file.getParent());
                         displayIntent.putExtra("directory", (Serializable) parentDir);
+                        displayIntent.putExtra("position", position);
                         context.startActivity(displayIntent);
                     }
                     return;

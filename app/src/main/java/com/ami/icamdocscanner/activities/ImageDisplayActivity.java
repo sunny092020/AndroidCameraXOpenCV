@@ -1,18 +1,17 @@
 package com.ami.icamdocscanner.activities;
 
+import android.os.Bundle;
+import android.widget.TextView;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.ami.icamdocscanner.R;
 import com.ami.icamdocscanner.adapters.ViewPagerEditAdapter;
-import com.ami.icamdocscanner.helpers.ScannerState;
+import com.ami.icamdocscanner.helpers.FileUtils;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
 
-import android.os.Bundle;
-import android.widget.TextView;
-
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
 public class ImageDisplayActivity extends AppCompatActivity {
@@ -27,15 +26,16 @@ public class ImageDisplayActivity extends AppCompatActivity {
         viewPagerEdit = findViewById(R.id.viewPagerEdit);
 
         File directory = (RecyclerImageFile) getIntent().getSerializableExtra("directory");
-        List<RecyclerImageFile> images = new ArrayList<>();
-        for(File f: directory.listFiles(File::isFile)) {
-            RecyclerImageFile imageFile = new RecyclerImageFile(f);
-            imageFile.setSaved(true);
-            images.add(imageFile);
-        }
 
+        List<RecyclerImageFile> images = FileUtils.listFiles(directory);
         adapter = new ViewPagerEditAdapter(this, images);
         viewPagerEdit.setAdapter(adapter);
+
+        int currentPos = getIntent().getIntExtra("position", 0);
+        TextView pager = findViewById(R.id.pager);
+        pager.setText(currentPos+1 + "/" + images.size());
+
+        viewPagerEdit.setCurrentItem(currentPos, false);
 
         viewPagerEdit.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override

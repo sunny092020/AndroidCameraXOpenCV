@@ -432,10 +432,30 @@ public class FileUtils {
         }
     }
 
-    public static String fileType(RecyclerImageFile file) {
-        if(fileExtension(file.getName()).equalsIgnoreCase("pdf"))
-            return "application/pdf";
-        else return "image/*";
+    public static List<RecyclerImageFile> listFiles(File directory) {
+        File[] files = directory.listFiles(file -> {
+            if(file.getName().equalsIgnoreCase("thumbnails"))
+                return false;
+            if(file.getName().equalsIgnoreCase("temp_dir"))
+                return false;
+            return true;
+        });
+        assert files != null;
+        Arrays.sort( files, (o1, o2) -> {
+            long lastModified1 = o1.lastModified();
+            long lastModified2 = o2.lastModified();
+            return Long.compare(lastModified2, lastModified1);
+        });
+
+        List<RecyclerImageFile> recyclerImageFiles = new ArrayList<>();
+
+        for (File file : files) {
+            RecyclerImageFile imageFile = new RecyclerImageFile(file);
+            imageFile.setSaved(true);
+            recyclerImageFiles.add(imageFile);
+        }
+
+        return recyclerImageFiles;
     }
 
 }
