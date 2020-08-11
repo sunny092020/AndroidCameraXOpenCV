@@ -462,7 +462,7 @@ public class FileUtils {
         Arrays.sort( files, (o1, o2) -> {
             long lastModified1 = o1.lastModified();
             long lastModified2 = o2.lastModified();
-            return Long.compare(lastModified2, lastModified1);
+            return Long.compare(lastModified1, lastModified2);
         });
 
         List<RecyclerImageFile> recyclerImageFiles = new ArrayList<>();
