@@ -57,7 +57,6 @@ public class PdfActivity extends AppCompatActivity implements OnStartDragListene
 
             for (int i = 0; i < adapter.getSelected().size(); i++) {
                 RecyclerImageFile imgFile = adapter.getSelected().get(i);
-//                outPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + "/" + FileUtils.fileNameWithoutExtension(imgFile.getName());
 
                 outPath =  imgFile.getParent() + "/" + FileUtils.fileNameWithoutExtension(imgFile.getName());
                 PdfUtils.toPDFSingle(imgFile, outPath);
@@ -90,7 +89,6 @@ public class PdfActivity extends AppCompatActivity implements OnStartDragListene
             String filename = String.format("AMI_ICAMDOC_SCANNER-%1$tY-%1$tm-%1$td-%1$tk-%1$tS-%1$tp", cal);
 
             String outPath = adapter.getSelected().get(0).getParent() + "/" + filename;
-//            String outPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + "/ami";
 
             PdfUtils.toPDFMulti(adapter.getSelected(), outPath);
 
