@@ -3,7 +3,6 @@ package com.ami.icamdocscanner.models;
 import android.content.Context;
 import android.graphics.Matrix;
 import android.graphics.PointF;
-import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -76,7 +75,6 @@ public class TouchViewPagerImageView extends androidx.appcompat.widget.AppCompat
         setOnTouchListener((v, event) -> {
             mScaleDetector.onTouchEvent(event);
             mGestureDetector.onTouchEvent(event);
-            
             PointF curr = new PointF(event.getX(), event.getY());
 
             switch (event.getAction()) {
@@ -87,8 +85,8 @@ public class TouchViewPagerImageView extends androidx.appcompat.widget.AppCompat
                     break;
 
                 case MotionEvent.ACTION_MOVE:
+                    viewPager.setUserInputEnabled(false);
                     if (mode == DRAG) {
-                        viewPager.setUserInputEnabled(false);
                         float deltaX = curr.x - last.x;
                         float deltaY = curr.y - last.y;
                         float fixTransX = getFixDragTrans(deltaX, viewWidth,
