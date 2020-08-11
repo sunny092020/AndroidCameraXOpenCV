@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.util.Log;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
@@ -16,6 +17,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.ami.icamdocscanner.R;
@@ -108,25 +110,25 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
 
             fileName.setText(file.getName());
             itemView.setOnClickListener(view -> {
-                if(actionMode == null) {
-                    Context context = itemView.getContext();
-                    if(file.isDirectory()) {
-                        Intent doneIntent = new Intent(context, ImageDoneActivity.class);
-                        doneIntent.putExtra("directory", (Serializable) file);
-                        context.startActivity(doneIntent);
-                    } else if(file.isFile()) {
-                        Intent displayIntent = new Intent(context, ImageDisplayActivity.class);
-                        RecyclerImageFile parentDir = new RecyclerImageFile(file.getParent());
-                        displayIntent.putExtra("directory", (Serializable) parentDir);
-                        displayIntent.putExtra("position", position);
-                        context.startActivity(displayIntent);
-                    }
+                if(actionMode != null) {
+                    file.setChecked(!file.isChecked());
+                    check.setVisibility(file.isChecked() ? View.VISIBLE : View.GONE);
+                    actionMode.setTitle(getSelected().size() + " selected");
                     return;
                 }
 
-                file.setChecked(!file.isChecked());
-                check.setVisibility(file.isChecked() ? View.VISIBLE : View.GONE);
-                actionMode.setTitle(getSelected().size() + " selected");
+                Context context = itemView.getContext();
+                if(file.isDirectory()) {
+                    Intent doneIntent = new Intent(context, ImageDoneActivity.class);
+                    doneIntent.putExtra("directory", (Serializable) file);
+                    context.startActivity(doneIntent);
+                } else if(file.isFile()) {
+                    Intent displayIntent = new Intent(context, ImageDisplayActivity.class);
+                    RecyclerImageFile parentDir = new RecyclerImageFile(file.getParent());
+                    displayIntent.putExtra("directory", (Serializable) parentDir);
+                    displayIntent.putExtra("position", position);
+                    context.startActivity(displayIntent);
+                }
             });
 
             itemView.setOnLongClickListener(view -> {
