@@ -346,13 +346,16 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
             builder.setPositiveButton(R.string.ok, (dialog, id) -> {
                 // User clicked OK button
 
-                int numDeleted = 0;
                 for (int i = 0; i < adapter.getSelected().size(); i++) {
                     RecyclerImageFile file = adapter.getSelected().get(i);
-                    if(file.delete()) numDeleted++;
                     FileUtils.removeThumbnail(file);
+                    if(file.isFile()) {
+                        file.delete();
+                    } else {
+                        FileUtils.deleteDirectoryStream(file);
+                    }
                 }
-                showToast(numDeleted + " files has been deleted.");
+                showToast("Files has been deleted.");
                 setupAdapter();
             });
             builder.setNegativeButton(R.string.cancel, (dialog, id) -> {});

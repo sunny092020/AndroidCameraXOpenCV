@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -104,6 +106,10 @@ public class FileUtils {
     public static void removeThumbnail(RecyclerImageFile imageFile) {
         String thumbnailPath = imageFile.getParent() + "/thumbnails/" + imageFile.getName();
 
+        if(imageFile.isDirectory()) {
+            thumbnailPath += ".jpg";
+        }
+
         if(FileUtils.isFileType(imageFile.getName(), "pdf")) {
             thumbnailPath = imageFile.getParent() + "/thumbnails/" + FileUtils.fileNameWithoutExtension(imageFile.getName()) + "-pdf.jpg";
         }
@@ -170,6 +176,18 @@ public class FileUtils {
                 }
             }
             directory.delete();
+        }
+    }
+
+    public static void deleteDirectoryStream(File directory) {
+        Path path = directory.toPath();
+        try {
+            Files.walk(path)
+                    .sorted(Comparator.reverseOrder())
+                    .map(Path::toFile)
+                    .forEach(File::delete);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
