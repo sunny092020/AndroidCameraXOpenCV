@@ -203,7 +203,8 @@ public class ImageEditActivity extends AppCompatActivity {
 
             Bitmap currentImageEditBitmap = FileUtils.readBitmap(currentImageEdit.getAbsolutePath());
             imageView.setImageBitmap(currentImageEditBitmap);
-            FileUtils.writeBitmap(currentImageEditBitmap, currentImageDone.getAbsolutePath());
+
+            FileUtils.copyFileUsingChannel(currentImageEdit, currentImageDone);
         });
 
         imgGray.setOnClickListener(v -> {
