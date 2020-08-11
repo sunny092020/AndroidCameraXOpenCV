@@ -353,8 +353,14 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
                         FileUtils.deleteDirectoryStream(file);
                     }
                 }
+                adapter.exitActionMode();
+
+                File directory = (RecyclerImageFile) getIntent().getSerializableExtra("directory");
+                if(directory==null) directory = context.getFilesDir();
+                adapter.setFiles(FileUtils.listFiles(directory));
+                adapter.notifyDataSetChanged();
                 showToast("Files has been deleted.");
-                setupAdapter();
+
             });
             builder.setNegativeButton(R.string.cancel, (dialog, id) -> {});
 

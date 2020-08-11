@@ -34,6 +34,10 @@ import java.util.Collections;
 import java.util.List;
 
 public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerViewAdapter.ViewHolder> implements ItemTouchHelperAdapter {
+    public void setFiles(List<RecyclerImageFile> files) {
+        this.files = files;
+    }
+
     private List<RecyclerImageFile> files;
     private LayoutInflater mInflater;
     private ItemClickListener mClickListener;
@@ -244,6 +248,10 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
             }
         }
         return selected;
+    }
+
+    public void exitActionMode() {
+        if(actionMode!=null) actionMode.finish();
     }
 
     public List<RecyclerImageFile> getSelectedByExtension(String extension) {
