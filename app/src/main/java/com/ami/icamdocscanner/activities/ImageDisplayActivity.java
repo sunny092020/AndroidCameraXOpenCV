@@ -31,8 +31,9 @@ public class ImageDisplayActivity extends AppCompatActivity {
         adapter = new ViewPagerEditAdapter(this, images, viewPagerEdit);
         viewPagerEdit.setAdapter(adapter);
 
-        int currentPos = getIntent().getIntExtra("position", 0);
+        String fileName = getIntent().getStringExtra("fileName");
         TextView pager = findViewById(R.id.pager);
+        int currentPos = currentPos(fileName, images);
         pager.setText(currentPos+1 + "/" + images.size());
 
         viewPagerEdit.setCurrentItem(currentPos, false);
@@ -53,5 +54,14 @@ public class ImageDisplayActivity extends AppCompatActivity {
                 super.onPageScrollStateChanged(state);
             }
         });
+    }
+
+    private int currentPos(String fileName, List<RecyclerImageFile> images) {
+        int currentPos = 0;
+        for(RecyclerImageFile file: images) {
+            if(fileName.equalsIgnoreCase(file.getName())) break;
+            currentPos++;
+        }
+        return currentPos;
     }
 }
