@@ -16,16 +16,6 @@ public class ScannerState {
     private static List<RecyclerImageFile> savedImages = new ArrayList<>();
     public static int holderCropWidth = 0, holderCropHeight = 0;
 
-    public static boolean isSelectmode() {
-        return isSelectmode;
-    }
-
-    public static void setIsSelectmode(boolean isSelectmode) {
-        ScannerState.isSelectmode = isSelectmode;
-    }
-
-    private static boolean isSelectmode = false;
-
     // retake image, back to main activity from crop activity
     public static void resetScannerState() {
         cropImages.clear();

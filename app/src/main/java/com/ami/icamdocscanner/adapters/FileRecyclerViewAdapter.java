@@ -1,9 +1,15 @@
 package com.ami.icamdocscanner.adapters;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.util.Log;
+import android.view.ActionMode;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -18,10 +24,8 @@ import com.ami.icamdocscanner.activities.ImageDoneActivity;
 import com.ami.icamdocscanner.helpers.FileUtils;
 import com.ami.icamdocscanner.helpers.ItemTouchHelperViewHolder;
 import com.ami.icamdocscanner.helpers.OnStartDragListener;
-import com.ami.icamdocscanner.helpers.ScannerState;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
 
-import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,6 +36,7 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
     private LayoutInflater mInflater;
     private ItemClickListener mClickListener;
     private OnStartDragListener mDragStartListener;
+    ActionMode actionMode;
 
     // data is passed into the constructor
     public FileRecyclerViewAdapter(Context context, List<RecyclerImageFile> data) {
@@ -103,7 +108,7 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
 
             fileName.setText(file.getName());
             itemView.setOnClickListener(view -> {
-                if(!ScannerState.isSelectmode()) {
+                if(actionMode == null) {
                     Context context = itemView.getContext();
                     if(file.isDirectory()) {
                         Intent doneIntent = new Intent(context, ImageDoneActivity.class);
@@ -118,11 +123,25 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
                     }
                     return;
                 }
+
                 file.setChecked(!file.isChecked());
                 check.setVisibility(file.isChecked() ? View.VISIBLE : View.GONE);
+                actionMode.setTitle(getSelected().size() + " selected");
             });
 
-            itemView.setOnLongClickListener(view -> true);
+            itemView.setOnLongClickListener(view -> {
+                file.setChecked(true);
+                check.setVisibility(View.VISIBLE);
+
+                if (actionMode == null) {
+                    // Start the contextual action bar
+                    // using the ActionMode.Callback.
+                    Activity activity = (Activity) itemView.getContext();
+                    actionMode = activity.startActionMode(mActionModeCallback);
+                    actionMode.setTitle("1 selected");
+                }
+                return true;
+            });
         }
 
         @Override
@@ -141,6 +160,50 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
         }
     }
 
+    public ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {
+        private boolean selectAll = true;
+
+        @Override
+        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+            // Inflate a menu resource providing context menu items
+            MenuInflater inflater = mode.getMenuInflater();
+            inflater.inflate(R.menu.menu_context, menu);
+            return true;
+        }
+
+        @Override
+        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+            return false;
+            //do nothing if nothing is clicked
+        }
+
+        @Override
+        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+            switch (item.getItemId()) {
+                case R.id.select_context:
+                    if(selectAll) {
+                        item.setTitle("Deselect All");
+                    } else {
+                        item.setTitle("Select All");
+                    }
+
+                    selectAll(selectAll);
+                    selectAll = !selectAll;
+                    actionMode.setTitle(getSelected().size() + " selected");
+
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        @Override
+        public void onDestroyActionMode(ActionMode mode) {
+            selectAll(false);
+            actionMode = null;
+        }
+    };
+
     // convenience method for getting data at click position
     RecyclerImageFile getItem(int id) {
         return files.get(id);
@@ -158,6 +221,17 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
 
     public List<RecyclerImageFile> getAll() {
         return files;
+    }
+
+    public void selectAll(boolean bool) {
+        for(RecyclerImageFile f: files) {
+            f.setChecked(bool);
+        }
+        notifyDataChanged();
+    }
+
+    public void notifyDataChanged() {
+        this.notifyDataSetChanged();
     }
 
     public List<RecyclerImageFile> getSelected() {

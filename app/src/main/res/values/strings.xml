@@ -21,6 +21,11 @@
     <string name="cancel">Cancel</string>
     <string name="title_activity_settings">Settings</string>
     <string name="title_activity_ocr_languages">Ocr languages</string>
+    <string name="edit">Edit</string>
+    <string name="share">Share</string>
+    <string name="delete">Delete</string>
+    <string name="select">Select All</string>
+    <string name="deselect">De select All</string>
 
     <!-- Preference Titles -->
     <string name="messages_header">Messages</string>
