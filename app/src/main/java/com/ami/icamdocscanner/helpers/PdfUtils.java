@@ -43,7 +43,7 @@ public class PdfUtils {
                 PDPageContentStream contentStream = new PDPageContentStream(document, page);
 
                 // https://stackoverflow.com/questions/39948870/pdfbox-convert-image-to-pdf-pdf-resolution
-                PDRectangle pageSize = page.getMediaBox().createRetranslatedRectangle();
+                PDRectangle pageSize = page.getMediaBox();
                 float widthRatio = pageSize.getWidth()/pdImage.getWidth();
                 float heightRatio = pageSize.getHeight()/pdImage.getHeight();
                 float scaleDownRatio = Math.min(widthRatio, heightRatio);
