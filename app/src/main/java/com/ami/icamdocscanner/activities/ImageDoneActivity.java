@@ -128,7 +128,7 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
     private void displayDoneImages() {
         // set up the RecyclerView
         RecyclerView recyclerView = findViewById(R.id.files);
-        int numberOfColumns = 2;
+        int numberOfColumns = 3;
         recyclerView.setLayoutManager(new GridLayoutManager(this, numberOfColumns));
 
         // Get a Calendar and set it to the current time.
@@ -180,7 +180,7 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
     private void displayDir() {
         // set up the RecyclerView
         RecyclerView recyclerView = findViewById(R.id.files);
-        int numberOfColumns = 2;
+        int numberOfColumns = 3;
         recyclerView.setLayoutManager(new GridLayoutManager(this, numberOfColumns));
 
         File directory = (RecyclerImageFile) getIntent().getSerializableExtra("directory");
