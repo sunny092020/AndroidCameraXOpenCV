@@ -66,6 +66,7 @@ dependencies {
     implementation 'androidx.viewpager2:viewpager2:1.0.0'
 
     implementation 'cz.adaptech.android:tesseract4android:2.1.0'
+    implementation 'com.tom_roush:pdfbox-android:1.8.10.1'
 }
 repositories {
     mavenCentral()

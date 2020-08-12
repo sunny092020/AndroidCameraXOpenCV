@@ -3,7 +3,9 @@ package com.ami.icamdocscanner.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Gravity;
+import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -74,6 +76,9 @@ public class PdfActivity extends AppCompatActivity implements OnStartDragListene
     private void setupMultiButtonListener() {
         LinearLayout multiBtn = findViewById(R.id.multiBtn);
 
+        LinearLayout progressBarHolder = findViewById(R.id.progressBarHolder);
+        progressBarHolder.setVisibility(View.GONE);
+
         multiBtn.setOnClickListener(v -> {
             if(adapter.getSelected().size() == 0) {
                 showToast("No Selection");
@@ -90,14 +95,19 @@ public class PdfActivity extends AppCompatActivity implements OnStartDragListene
 
             String outPath = adapter.getSelected().get(0).getParent() + "/" + filename;
 
-            PdfUtils.toPDFMulti(adapter.getSelected(), outPath);
+            progressBarHolder.setVisibility(View.VISIBLE);
+            ProgressBar progressBar = findViewById(R.id.progressBar);
 
-            String thumbnailPath = adapter.getSelected().get(0).getParent() + "/thumbnails/" + filename + "-pdf.jpg";
-            FileUtils.createThumbnail(adapter.getSelected().get(0), thumbnailPath);
+            new Thread(() -> {
+                PdfUtils.toPDFMulti(adapter.getSelected(), outPath, progressBar);
+                String thumbnailPath = adapter.getSelected().get(0).getParent() + "/thumbnails/" + filename + "-pdf.jpg";
+                FileUtils.createThumbnail(adapter.getSelected().get(0), thumbnailPath);
+                runOnUiThread(() -> progressBarHolder.setVisibility(View.GONE));
+                Intent intent = new Intent(this, ImageDoneActivity.class);
+                startActivity(intent);
+                finish();
+            }).start();
 
-            Intent intent = new Intent(this, ImageDoneActivity.class);
-            startActivity(intent);
-            finish();
         });
     }
 
