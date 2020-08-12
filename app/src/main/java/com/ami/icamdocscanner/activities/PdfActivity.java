@@ -48,6 +48,8 @@ public class PdfActivity extends AppCompatActivity implements OnStartDragListene
 
     private void setupSingleButtonListener() {
         LinearLayout singleBtn = findViewById(R.id.singleBtn);
+        LinearLayout progressBarHolder = findViewById(R.id.progressBarHolder);
+        progressBarHolder.setVisibility(View.GONE);
 
         singleBtn.setOnClickListener(v -> {
             if(adapter.getSelected().size() == 0) {
@@ -55,21 +57,28 @@ public class PdfActivity extends AppCompatActivity implements OnStartDragListene
                 return;
             }
 
-            String outPath;
+            progressBarHolder.setVisibility(View.VISIBLE);
+            ProgressBar progressBar = findViewById(R.id.progressBar);
 
-            for (int i = 0; i < adapter.getSelected().size(); i++) {
-                RecyclerImageFile imgFile = adapter.getSelected().get(i);
+            new Thread(() -> {
+                String outPath;
+                for (int i = 0; i < adapter.getSelected().size(); i++) {
+                    RecyclerImageFile imgFile = adapter.getSelected().get(i);
 
-                outPath =  imgFile.getParent() + "/" + FileUtils.fileNameWithoutExtension(imgFile.getName());
-                PdfUtils.toPDFSingle(imgFile, outPath);
+                    outPath =  imgFile.getParent() + "/" + FileUtils.fileNameWithoutExtension(imgFile.getName());
+                    PdfUtils.toPDFSingle(imgFile, outPath);
 
-                String thumbnailPath = imgFile.getParent() + "/thumbnails/" + FileUtils.fileNameWithoutExtension(imgFile.getName()) + "-pdf.jpg";
-                FileUtils.createThumbnail(imgFile, thumbnailPath);
-            }
+                    String thumbnailPath = imgFile.getParent() + "/thumbnails/" + FileUtils.fileNameWithoutExtension(imgFile.getName()) + "-pdf.jpg";
+                    FileUtils.createThumbnail(imgFile, thumbnailPath);
+                    int percent = (int) (i+1)*100/adapter.getSelected().size();
+                    progressBar.setProgress(percent);
+                }
 
-            Intent intent = new Intent(this, ImageDoneActivity.class);
-            startActivity(intent);
-            finish();
+                runOnUiThread(() -> progressBarHolder.setVisibility(View.GONE));
+                Intent intent = new Intent(this, ImageDoneActivity.class);
+                startActivity(intent);
+                finish();
+            }).start();
         });
     }
 
