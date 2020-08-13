@@ -8,11 +8,24 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="AppTheme.NoActionBar" parent="Theme.MaterialComponents.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
     <style name="TextShadow">
         <item name="android:shadowColor">@color/colorBlackFortyPercentAlpha</item>
         <item name="android:shadowDx">2</item>
         <item name="android:shadowDy">2</item>
         <item name="android:shadowRadius">5</item>
+    </style>
+
+    <style name="BottomMenuColor" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:textColorSecondary">@android:color/white
+
+        </item>
     </style>
 
 </resources>

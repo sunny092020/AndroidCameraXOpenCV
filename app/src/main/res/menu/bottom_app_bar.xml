@@ -1,4 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/btnAutoCapture"
+        android:icon="@drawable/ic_auto_enable"
+        android:title="Choose photo"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/btnChoosePhoto"
+        android:icon="@drawable/ic_photo"
+        android:title="Choose photo"
+        app:showAsAction="always" />
 
 </menu>

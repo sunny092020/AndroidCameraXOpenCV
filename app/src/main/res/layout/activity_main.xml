@@ -45,54 +45,20 @@
 
     </FrameLayout>
 
-    <RelativeLayout
-        android:id="@+id/bottomPanel"
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/borders"
-        app:layout_constraintBottom_toBottomOf="parent">
+        android:layout_height="match_parent"
+        android:id="@+id/bottomAppBarHolder">
 
-        <ImageButton
-            android:id="@+id/btnAutoCapture"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginRight="30dp"
-            android:background="@android:color/transparent"
-            android:scaleType="fitCenter"
-            android:layout_toStartOf="@+id/btnCapture"
-            android:layout_centerInParent="true"
-            app:srcCompat="@drawable/ic_auto_enable" />
-
-        <ImageButton
-            android:id="@+id/btnCapture"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:scaleType="fitCenter"
-            android:background="@android:color/transparent"
-            android:src="@drawable/ic_shutter"
-            android:layout_centerInParent="true"/>
-
-        <ImageButton
-            android:id="@+id/btnChoosePhoto"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginLeft="30dp"
-            android:background="@android:color/transparent"
-            android:scaleType="fitCenter"
-            android:layout_toEndOf="@+id/btnCapture"
-            android:layout_centerInParent="true"
-            app:srcCompat="@drawable/ic_photo" />
-
-
-        <RelativeLayout
-            android:layout_width="wrap_content"
+        <com.google.android.material.bottomappbar.BottomAppBar
+            android:id="@+id/bottonAppBar"
+            style="@style/Widget.MaterialComponents.BottomAppBar"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginRight="5dp"
-            android:layout_marginLeft="5dp"
-            android:layout_marginTop="10dp"
-            android:layout_centerInParent="true"
-            android:layout_alignParentRight="true">
+            android:layout_gravity="bottom"
+            app:backgroundTint="@color/colorPrimary"
+            app:fabCradleRoundedCornerRadius="16dp"
+            app:navigationIcon="@drawable/ic_home_black_24dp">
 
             <RelativeLayout
                 android:id="@+id/batchThumbnailsHolder"
@@ -102,6 +68,7 @@
                 android:layout_marginRight="5dp"
                 android:layout_marginLeft="5dp"
                 android:layout_marginTop="10dp"
+                app:layout_constraintBottom_toTopOf="@+id/bottomAppBarHolder"
                 android:layout_centerInParent="true"
                 android:layout_alignParentRight="true">
 
@@ -125,11 +92,19 @@
                     android:textColor="#FFFFFF"
                     android:textSize="12sp"
                     android:visibility="gone"/>
-
             </RelativeLayout>
+        </com.google.android.material.bottomappbar.BottomAppBar>
 
-        </RelativeLayout>
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/btnCapture"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_shutter"
+            app:fabSize="normal"
 
-    </RelativeLayout>
+            app:layout_anchor="@+id/bottonAppBar" />
+
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

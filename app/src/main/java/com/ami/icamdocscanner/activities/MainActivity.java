@@ -18,9 +18,11 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -55,6 +57,8 @@ import com.ami.icamdocscanner.helpers.ScannerConstant;
 import com.ami.icamdocscanner.helpers.ScannerState;
 import com.ami.icamdocscanner.helpers.VisionUtils;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
+import com.google.android.material.bottomappbar.BottomAppBar;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.jetbrains.annotations.NotNull;
@@ -110,6 +114,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         context = this;
 
+        setupBottomAppBar();
+
         setupButtons();
         deleteTempDir();
 
@@ -123,6 +129,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         resetCaptureTime();
 
+        setupBottomAppBar();
+
         if (allPermissionsGranted()) {
             startCamera();
         } else {
@@ -130,8 +138,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    private void setupBottomAppBar() {
+        BottomAppBar bottomAppBar = findViewById(R.id.bottonAppBar);
+        //main line for setting bottomAppBar
+        setSupportActionBar(bottomAppBar);
+    }
+
     private void setupButtons() {
-        ImageButton btnCapture = findViewById(R.id.btnCapture);
+        FloatingActionButton btnCapture = findViewById(R.id.btnCapture);
         btnCapture.setOnClickListener(v -> {
             // preventing double, using threshold of 1000 ms
             if (lastManualCaptureEarly()){
@@ -140,34 +154,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             markManualCaptureTime();
             takePictureManual();
         });
-
-        ImageButton btnAutoCapture = findViewById(R.id.btnAutoCapture);
-        btnAutoCapture.setOnClickListener(v -> {
-            Activity activity = (Activity) context;
-            // set text to "" to make way for other hint
-            if(Preferences.getAutoCapture(activity)) {
-                btnAutoCapture.setImageResource(R.drawable.ic_auto_disable);
-                Preferences.setAutoCapture(activity, false);
-                displayHint("Auto capture: Off");
-                resetManualCaptureTime();
-            } else {
-                btnAutoCapture.setImageResource(R.drawable.ic_auto_enable);
-                Preferences.setAutoCapture(activity, true);
-                displayHint("Auto capture: On");
-            }
-            // make "Auto capture: On/Off" last 1 seconds
-            new Handler().postDelayed(() -> {
-                // set text to "" to make way for other hint
-                captureHintText.setText("");
-                captureHintText.setVisibility(View.INVISIBLE);
-            }, 1000);
-        });
-
-        if(Preferences.getAutoCapture(this)) {
-            btnAutoCapture.setImageResource(R.drawable.ic_auto_enable);
-        } else {
-            btnAutoCapture.setImageResource(R.drawable.ic_auto_disable);
-        }
 
         RelativeLayout btnBatchThumbnails = findViewById(R.id.batchThumbnailsHolder);
         btnBatchThumbnails.setOnClickListener(v -> startCropActivity());
@@ -189,9 +175,44 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             batchNumTxt.setText(String.format(Locale.US, "%d", ScannerState.getCropImages().size()));
             batchNumTxt.setVisibility(View.VISIBLE);
         }
+    }
 
-        ImageView btnChoosePhoto = findViewById(R.id.btnChoosePhoto);
-        btnChoosePhoto.setOnClickListener(v -> {
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.bottom_app_bar,menu);
+
+        MenuItem btnAutoCapture = menu.findItem(R.id.btnAutoCapture);
+        if(Preferences.getAutoCapture(this)) {
+            btnAutoCapture.setIcon(R.drawable.ic_auto_enable);
+        } else {
+            btnAutoCapture.setIcon(R.drawable.ic_auto_disable);
+        }
+
+        btnAutoCapture.setOnMenuItemClickListener(item -> {
+            Activity activity = (Activity) context;
+            // set text to "" to make way for other hint
+            if(Preferences.getAutoCapture(activity)) {
+                btnAutoCapture.setIcon(R.drawable.ic_auto_disable);
+                Preferences.setAutoCapture(activity, false);
+                displayHint("Auto capture: Off");
+                resetManualCaptureTime();
+            } else {
+                btnAutoCapture.setIcon(R.drawable.ic_auto_enable);
+                Preferences.setAutoCapture(activity, true);
+                displayHint("Auto capture: On");
+            }
+            // make "Auto capture: On/Off" last 1 seconds
+            new Handler().postDelayed(() -> {
+                // set text to "" to make way for other hint
+                captureHintText.setText("");
+                captureHintText.setVisibility(View.INVISIBLE);
+            }, 1000);
+
+            return false;
+        });
+
+        MenuItem btnChoosePhoto = menu.findItem(R.id.btnChoosePhoto);
+        btnChoosePhoto.setOnMenuItemClickListener(item -> {
             Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
             // The MIME data type filter
             intent.setType("image/*");
@@ -200,8 +221,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             // Only return URIs that can be opened with ContentResolver
             intent.addCategory(Intent.CATEGORY_OPENABLE);
             startActivityForResult(intent, ScannerConstant.LAUNCH_FILE_PICKER);
+            return false;
         });
+
+        return true;
     }
+
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -329,11 +354,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         int width = displayMetrics.widthPixels;
         int height = displayMetrics.heightPixels;
 
-        RelativeLayout bottomPanel = findViewById(R.id.bottomPanel);
-
         // Changes the height and width to the specified *pixels*
         params.width = width;
-        params.height = height-bottomPanel.getHeight();
+        params.height = height;
 
         frameLayout.setLayoutParams(params);
     }
@@ -625,7 +648,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
             if (allPermissionsGranted()) {
                 startCamera();
@@ -643,12 +665,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 return false;
             }
         }
-        return true;
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
