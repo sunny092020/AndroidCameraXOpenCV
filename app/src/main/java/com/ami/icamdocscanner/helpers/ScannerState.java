@@ -1,12 +1,8 @@
 package com.ami.icamdocscanner.helpers;
 
-import android.util.Log;
-
 import com.ami.icamdocscanner.models.RecyclerImageFile;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 public class ScannerState {
