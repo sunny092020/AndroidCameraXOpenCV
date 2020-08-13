@@ -572,7 +572,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
 
-        String fileName =  FileUtils.cropImagePath(context, ScannerState.getNextFileName(ScannerState.getCropImages()) + ".jpg");
+        String fileName =  FileUtils.cropImagePath(context, ScannerState.getCropImages().size() + ".jpg");
         RecyclerImageFile file = new RecyclerImageFile(fileName);
         MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, this);
         if(contour == null) {
