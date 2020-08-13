@@ -18,6 +18,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 import android.view.Menu;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -287,25 +288,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             setFrameLayoutRatio();
 
+            setFocusOnTab();
+
         }), ContextCompat.getMainExecutor(this));
     }
 
-    private void setAutoFocus() {
-        float width = (float) previewView.getWidth();
-        float height = (float)previewView.getHeight();
+    private void setFocusOnTab() {
+        previewView.setOnTouchListener((v, event) -> {
+            if (event.getAction() != MotionEvent.ACTION_UP) {
+            /* Original post returns false here, but in my experience this makes
+            onTouch not being triggered for ACTION_UP event */
+                return true;
+            }
 
-        float centerWidth = width / 2;
-        float centerHeight = height / 2;
+            float width = (float) previewView.getWidth();
+            float height = (float)previewView.getHeight();
 
-        MeteringPointFactory factory = new SurfaceOrientedMeteringPointFactory(
-                width, height);
+            MeteringPointFactory factory = new SurfaceOrientedMeteringPointFactory(
+                    width, height);
 
-        MeteringPoint centerPoint = factory.createPoint(centerWidth, centerHeight, 1);
-        camera.getCameraControl().startFocusAndMetering(
-            new FocusMeteringAction.Builder(
-                    centerPoint,
-                    FocusMeteringAction.FLAG_AF
-            ).build());
+            MeteringPoint point = factory.createPoint(event.getX(), event.getY());
+            camera.getCameraControl().startFocusAndMetering(
+                    new FocusMeteringAction.Builder(
+                            point,
+                            FocusMeteringAction.FLAG_AF
+                    ).build());
+
+            return true;
+        });
     }
 
     private void setFrameLayoutRatio() {
