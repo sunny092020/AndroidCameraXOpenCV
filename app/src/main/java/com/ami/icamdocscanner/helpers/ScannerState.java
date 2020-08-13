@@ -39,28 +39,7 @@ public class ScannerState {
     public static List<RecyclerImageFile> getSavedImages() {
         return savedImages;
     }
-
-    public static int getNextFileName(List<RecyclerImageFile> files) {
-        if(files.size()==0) return 0;
-        Comparator<RecyclerImageFile> nameComparator = (o1, o2) -> {
-            try {
-                int nameInt1 = Integer.parseInt(o1.getName().split("_")[0]);
-                int nameInt2 = Integer.parseInt(o2.getName().split("_")[0]);
-                return Integer.compare(nameInt1, nameInt2);
-            } catch (Exception e) {
-                return 0;
-            }
-        };
-        Collections.sort(files, nameComparator);
-        int nameInt;
-        try {
-            nameInt = Integer.parseInt(files.get(files.size()-1).getName().split("_")[0]);
-        }catch (Exception e) {
-            return 1;
-        }
-        return nameInt+1;
-    }
-
+    
     public static RecyclerImageFile getFileByName(String fileName, List<RecyclerImageFile> files) {
         for(RecyclerImageFile file: files) {
             if(fileName.equalsIgnoreCase(file.getAbsolutePath())) {
