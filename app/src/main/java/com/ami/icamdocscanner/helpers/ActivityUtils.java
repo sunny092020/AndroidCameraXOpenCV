@@ -60,9 +60,14 @@ public class ActivityUtils {
             for(int position=0; position<ScannerState.getCropImages().size(); position++) {
                 RecyclerImageFile file = ScannerState.getCropImages().get(position);
                 Uri uri = file.getUri();
-                String fileName = FileUtils.cropImagePath(activity, FileUtils.fileNameFromUri(activity, uri));
-                try {
-                    Bitmap bitmap = FileUtils.readBitmap(activity, uri);
+                Bitmap bitmap = null;
+
+                if(uri != null) {
+                    try {
+                        bitmap = FileUtils.readBitmap(activity, uri);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     int originW = bitmap.getWidth();
                     int originH = bitmap.getHeight();
                     if(originW > originH) {
@@ -77,30 +82,40 @@ public class ActivityUtils {
                         contour = VisionUtils.dummyContour(originW, originH);
                     }
 
-                    FileUtils.writeBitmap(bitmap, fileName);
-                    ScannerState.getFileByName(fileName, ScannerState.getCropImages()).setCroppedPolygon(contour);
-                    ScannerState.getFileByName(fileName, ScannerState.getCropImages()).setOriginWidth(bitmap.getWidth());
-                    ScannerState.getFileByName(fileName, ScannerState.getCropImages()).setOriginHeight(bitmap.getHeight());
+                    FileUtils.writeBitmap(bitmap, file.getAbsolutePath());
+                    file.setCroppedPolygon(contour);
+                }
 
-                    while (ScannerState.holderCropWidth == 0 || ScannerState.holderCropHeight == 0) {
-                        FrameLayout holderImageCrop = activity.findViewById(R.id.holderImageCrop);
-                        holderImageCrop.post(() -> {
-                            ScannerState.holderCropWidth = holderImageCrop.getWidth();
-                            ScannerState.holderCropHeight = holderImageCrop.getHeight();
-                        });
+                bitmap = FileUtils.readBitmap(file);
+
+                file.setOriginWidth(bitmap.getWidth());
+                file.setOriginHeight(bitmap.getHeight());
+
+                while (ScannerState.holderCropWidth == 0 || ScannerState.holderCropHeight == 0) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
 
-                    Bitmap scaledBitmap = VisionUtils.scaledBitmap(bitmap, ScannerState.holderCropWidth, ScannerState.holderCropHeight);
-                    ScannerState.getFileByName(fileName, ScannerState.getCropImages()).setScaledBitmap(scaledBitmap);
+                    FrameLayout holderImageCrop = activity.findViewById(R.id.holderImageCrop);
+                    if(holderImageCrop==null) continue;
+                    FrameLayout finalHolderImageCrop = holderImageCrop;
 
-                    int finalPosition = position;
-                    activity.runOnUiThread(() -> {
-                        activity.getAdapter().notifyItemChanged(finalPosition);
+                    holderImageCrop.post(() -> {
+                        ScannerState.holderCropWidth = finalHolderImageCrop.getWidth();
+                        ScannerState.holderCropHeight = finalHolderImageCrop.getHeight();
                     });
-
-                } catch (IOException e) {
-                    e.printStackTrace();
                 }
+
+                Bitmap scaledBitmap = VisionUtils.scaledBitmap(bitmap, ScannerState.holderCropWidth, ScannerState.holderCropHeight);
+                file.setScaledBitmap(scaledBitmap);
+
+                int finalPosition = position;
+                activity.runOnUiThread(() -> {
+                    activity.getAdapter().notifyItemChanged(finalPosition);
+                });
+
             }
         }).start();
     }

@@ -137,7 +137,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 return;
             }
             markManualCaptureTime();
-            setAutoFocus();
             takePictureManual();
         });
 
@@ -318,10 +317,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         int width = displayMetrics.widthPixels;
+        int height = displayMetrics.heightPixels;
+
+        RelativeLayout bottomPanel = findViewById(R.id.bottomPanel);
 
         // Changes the height and width to the specified *pixels*
         params.width = width;
-        params.height = width*4/3;
+        params.height = height-bottomPanel.getHeight();
 
         frameLayout.setLayoutParams(params);
     }
@@ -423,7 +425,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             markAutoCaptureTime();
         }
 
-        setAutoFocus();
         new Handler(Looper.getMainLooper()).post(() -> new CountDownTimer(2000, 100) {
             public void onTick(long millisUntilFinished) {
                 if(lastManualCaptureEarly()) cancel();
@@ -471,8 +472,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
                 Bitmap previewBitmap = previewView.getBitmap();
-                int previewBitmapW = previewBitmap.getWidth(), previewBitmapH = previewBitmap.getHeight();
-                Bitmap rotated90croppedBmp = cropCapturedImage(capturedImg, previewBitmapW, previewBitmapH);
+                Bitmap rotated90croppedBmp = cropCapturedImage(capturedImg);
                 MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, (Activity) context);
 
                 if(contour == null) {
@@ -494,22 +494,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
                 Bitmap previewBitmap = previewView.getBitmap();
-                int previewBitmapW = previewBitmap.getWidth(), previewBitmapH = previewBitmap.getHeight();
-                Bitmap rotated90croppedBmp = cropCapturedImage(capturedImg, previewBitmapW, previewBitmapH);
+                Bitmap rotated90croppedBmp = cropCapturedImage(capturedImg);
                 batchModeCapture(previewBitmap, rotated90croppedBmp);
             }
             public void onError(@NotNull ImageCaptureException exception) {}
         });
     }
 
-    private Bitmap cropCapturedImage(File file, int previewBitmapW, int previewBitmapH) {
+    private Bitmap cropCapturedImage(File file) {
         String filePath = file.getPath();
         Bitmap captureBitmap = BitmapFactory.decodeFile(filePath);
-        file.delete();
+        int originW = captureBitmap.getWidth();
+        int originH = captureBitmap.getHeight();
+        if(originW > originH) {
+            captureBitmap = VisionUtils.rotateBitmap(captureBitmap, 90);
+        }
 
-        double h = (double) previewBitmapH*captureBitmap.getHeight()/previewBitmapW;
-        Bitmap croppedBmp = Bitmap.createBitmap(captureBitmap, (int) ((captureBitmap.getWidth()-h)/2), 0, (int) h, captureBitmap.getHeight());
-        return  VisionUtils.rotateBitmap(croppedBmp, 90);
+        return  captureBitmap;
     }
 
     public void displayHint(String text) {
