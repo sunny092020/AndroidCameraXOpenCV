@@ -138,8 +138,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void setupBottomAppBar() {
         BottomAppBar bottomAppBar = findViewById(R.id.bottonAppBar);
+
         //main line for setting bottomAppBar
         setSupportActionBar(bottomAppBar);
+        
+        bottomAppBar.setNavigationOnClickListener(item -> {
+            Intent doneIntent = new Intent(this, ImageDoneActivity.class);
+            startActivity(doneIntent);
+            finish();
+        });
     }
 
     private void setupButtons() {

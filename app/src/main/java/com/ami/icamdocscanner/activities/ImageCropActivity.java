@@ -25,7 +25,7 @@ public class ImageCropActivity extends AppCompatActivity {
     ViewPager2 viewPagerCrop;
 
     // we need this field to handle 2 cases : from main screen and from edit screen
-    // when back from main screen, we 
+    // when back from main screen, we have to store the currentImagePosition
     int currentImagePosition = -1;
 
     public ViewPagerCropAdapter getAdapter() {
