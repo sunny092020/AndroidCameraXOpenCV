@@ -141,8 +141,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         //main line for setting bottomAppBar
         setSupportActionBar(bottomAppBar);
-        
+
         bottomAppBar.setNavigationOnClickListener(item -> {
+            FileUtils.deleteTempDir(context);
+            ScannerState.resetScannerState();
             Intent doneIntent = new Intent(this, ImageDoneActivity.class);
             startActivity(doneIntent);
             finish();
