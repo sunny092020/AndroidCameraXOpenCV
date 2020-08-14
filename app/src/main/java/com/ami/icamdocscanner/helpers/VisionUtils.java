@@ -2,13 +2,16 @@ package com.ami.icamdocscanner.helpers;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.graphics.PointF;
 import android.graphics.RectF;
+import android.util.Log;
 
 import com.ami.icamdocscanner.libraries.Line;
 import com.ami.icamdocscanner.libraries.LinePolar;
 import com.ami.icamdocscanner.libraries.PerspectiveTransformation;
+import com.ami.icamdocscanner.models.RecyclerImageFile;
 
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
@@ -508,5 +511,38 @@ public class VisionUtils {
         cornerPoints.add(new Point((float)width*ratio, (float)height*ratio));
         contour.fromList(cornerPoints);
         return contour;
+    }
+
+    public static android.util.Size size(RecyclerImageFile image) {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        Bitmap bitmap = BitmapFactory.decodeFile(image.getAbsolutePath(), options);
+        Log.d("bitmap", "" + bitmap);
+        int imageHeight = options.outHeight;
+        int imageWidth = options.outWidth;
+        return new android.util.Size(imageWidth, imageHeight);
+    }
+
+    public static Bitmap getImage(RecyclerImageFile image, int reqW, int reqH) {
+        BitmapFactory.Options newOpts = new BitmapFactory.Options();
+
+        android.util.Size actualSize = size(image);
+
+        newOpts.inJustDecodeBounds = false;
+        int w = actualSize.getWidth();
+        int h = actualSize.getHeight();
+
+        //Zoom ratio. Because it is a fixed scale, only one of the high or wide data can be used to calculate.
+        int be = 1;//be=1 denotes no zooming
+        if (w > h && w > reqW) {//If the width is large, the size is fixed according to the width.
+            be = w / reqW;
+        } else if (w < h && h > reqH) {//If the height is high, the size is fixed according to the width.
+            be = h / reqH;
+        }
+        if (be <= 0)
+            be = 1;
+        newOpts.inSampleSize = be;//Set zoom ratio
+        //Reread the picture and notice that options.inJustDecodeBounds has been set back to false at this time.
+        return BitmapFactory.decodeFile(image.getAbsolutePath(), newOpts);
     }
 }

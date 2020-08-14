@@ -469,7 +469,6 @@ public class FileUtils {
 
         for (File file : files) {
             RecyclerImageFile imageFile = new RecyclerImageFile(file);
-            imageFile.setSaved(true);
             recyclerImageFiles.add(imageFile);
         }
 

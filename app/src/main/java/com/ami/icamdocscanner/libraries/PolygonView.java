@@ -47,7 +47,26 @@ public class PolygonView extends FrameLayout {
     private Magnifier magnifier;
 
     private ViewPager2 viewPagerCrop;
-    private int originWidth, originHeight;
+    private int holderCropWidth;
+
+    public void setHolderCropWidth(int holderCropWidth) {
+        this.holderCropWidth = holderCropWidth;
+    }
+
+    public void setHolderCropHeight(int holderCropHeight) {
+        this.holderCropHeight = holderCropHeight;
+    }
+
+    public int getHolderCropWidth() {
+        return holderCropWidth;
+    }
+
+    public int getHolderCropHeight() {
+        return holderCropHeight;
+    }
+
+    private int holderCropHeight;
+    private int originWidth=0, originHeight=0;
 
     public PolygonView(Context context) {
         super(context);
@@ -87,8 +106,8 @@ public class PolygonView extends FrameLayout {
 
         if(pointFs.size() != 4) return null;
 
-        float kx = (float) ScannerState.holderCropWidth/originWidth;
-        float ky = (float) ScannerState.holderCropHeight/originHeight;
+        float kx = (float) holderCropWidth/originWidth;
+        float ky = (float) holderCropHeight/originHeight;
         float k = (Math.min(kx, ky));
 
         Point[] points = {

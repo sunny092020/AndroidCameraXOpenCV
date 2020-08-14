@@ -59,23 +59,19 @@ public class ViewPagerEditAdapter extends RecyclerView.Adapter<ViewPagerEditAdap
 
         void bind(RecyclerImageFile image) {
             imageView.resetScale();
-            if(!image.isSaved()) {
-                imageView.setImageBitmap(null);
-            } else {
-                imageView.setImageBitmap(null);
-                new Thread(() -> {
-                    Bitmap bitmap;
-                    if(FileUtils.fileExtension(image.getName()).equalsIgnoreCase("pdf")) {
-                        bitmap = FileUtils.getThumbnailNoCreate(image);
-                    } else {
-                        bitmap = FileUtils.readBitmap(image);
-                    }
-                    Activity activity = (Activity) itemView.getContext();
-                    activity.runOnUiThread(() -> {
-                        imageView.setImageBitmap(bitmap);
-                    });
-                }).start();
-            }
+            imageView.setImageBitmap(null);
+            new Thread(() -> {
+                Bitmap bitmap;
+                if(FileUtils.fileExtension(image.getName()).equalsIgnoreCase("pdf")) {
+                    bitmap = FileUtils.getThumbnailNoCreate(image);
+                } else {
+                    bitmap = FileUtils.readBitmap(image);
+                }
+                Activity activity = (Activity) itemView.getContext();
+                activity.runOnUiThread(() -> {
+                    imageView.setImageBitmap(bitmap);
+                });
+            }).start();
         }
 
         void setFrameLayoutRatio() {

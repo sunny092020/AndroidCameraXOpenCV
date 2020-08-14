@@ -1,10 +1,12 @@
 package com.ami.icamdocscanner.adapters;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.PointF;
 import android.graphics.drawable.BitmapDrawable;
 import android.util.Log;
+import android.util.Size;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.ami.icamdocscanner.R;
+import com.ami.icamdocscanner.helpers.FileUtils;
 import com.ami.icamdocscanner.helpers.ScannerState;
 import com.ami.icamdocscanner.helpers.VisionUtils;
 import com.ami.icamdocscanner.libraries.PolygonView;
@@ -72,21 +75,34 @@ public class ViewPagerCropAdapter extends RecyclerView.Adapter<ViewPagerCropAdap
 
         void bind(int position) {
             RecyclerImageFile file = ScannerState.getCropImages().get(position);
-            if (file.getScaledBitmap()== null) {
-                imageView.setImageBitmap(null);
-            } else {
-                imageView.setImageBitmap(file.getScaledBitmap());
-                drawPolygon(file);
-            }
+            imageView.setImageBitmap(null);
+
+            new Thread(() -> {
+                FrameLayout holderImageCrop = itemView.findViewById(R.id.holderImageCrop);
+
+                holderImageCrop.post(() -> {
+                    int holderCropWidth, holderCropHeight;
+                    holderCropWidth = holderImageCrop.getWidth();
+                    holderCropHeight = holderImageCrop.getHeight();
+                    polygonView.setHolderCropWidth(holderCropWidth);
+                    polygonView.setHolderCropHeight(holderCropHeight);
+
+                    Bitmap bitmap = FileUtils.readBitmap(file);
+                    Bitmap scaledBitmap = VisionUtils.scaledBitmap(bitmap, holderCropWidth, holderCropHeight);
+                    imageView.setImageBitmap(scaledBitmap);
+                    drawPolygon(file, holderCropWidth, holderCropHeight);
+                });
+            }).start();
         }
 
-        private void drawPolygon(RecyclerImageFile file) {
-            polygonView.setOriginSize(file.getOriginWidth(), file.getOriginHeight());
+        private void drawPolygon(RecyclerImageFile file, int holderCropWidth, int holderCropHeight) {
+            Size originSize = VisionUtils.size(file);
+            polygonView.setOriginSize(originSize.getWidth(), originSize.getHeight());
             Bitmap tempBitmap = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
 
             Map<Integer, PointF> pointFs;
             try {
-                pointFs = getEdgePoints(tempBitmap, file);
+                pointFs = getEdgePoints(tempBitmap, file, originSize.getWidth(), originSize.getHeight(), holderCropWidth, holderCropHeight);
                 polygonView.setPoints(pointFs);
                 polygonView.setVisibility(View.VISIBLE);
                 int padding = (int) itemView.getResources().getDimension(R.dimen.scanPadding);
@@ -100,12 +116,12 @@ public class ViewPagerCropAdapter extends RecyclerView.Adapter<ViewPagerCropAdap
             }
         }
 
-        private Map<Integer, PointF> getEdgePoints(Bitmap tempBitmap, RecyclerImageFile file) {
-            List<PointF> pointFs = getContourEdgePoints(file);
+        private Map<Integer, PointF> getEdgePoints(Bitmap tempBitmap, RecyclerImageFile file, int originWidth, int originHeight, int holderCropWidth, int holderCropHeight) {
+            List<PointF> pointFs = getContourEdgePoints(file, originWidth, originHeight, holderCropWidth, holderCropHeight);
             return orderedValidEdgePoints(tempBitmap, pointFs);
         }
 
-        private List<PointF> getContourEdgePoints(RecyclerImageFile file) {
+        private List<PointF> getContourEdgePoints(RecyclerImageFile file, int originWidth, int originHeight,  int holderCropWidth, int holderCropHeight) {
             MatOfPoint2f point2f = file.getCroppedPolygon();
             if (point2f == null)
                 point2f = new MatOfPoint2f();
@@ -113,8 +129,8 @@ public class ViewPagerCropAdapter extends RecyclerView.Adapter<ViewPagerCropAdap
 
             List<PointF> result = new ArrayList<>();
 
-            float kx = (float) ScannerState.holderCropWidth/file.getOriginWidth();
-            float ky = (float) ScannerState.holderCropHeight/file.getOriginHeight();
+            float kx = (float) holderCropWidth/originWidth;
+            float ky = (float) holderCropHeight/originHeight;
             float k = (Math.min(kx, ky));
 
             for (int i = 0; i < points.size(); i++) {

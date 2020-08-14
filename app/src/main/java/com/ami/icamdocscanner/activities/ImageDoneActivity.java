@@ -150,18 +150,14 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
             for(int position=0; position<ScannerState.getDoneImages().size(); position++) {
                 RecyclerImageFile file = ScannerState.getDoneImages().get(position);
                 String filename = FileUtils.home(context) + "/" + folderName + "/" + FileUtils.getOriginFileName(file.getName());
-                file.waitUntilSaved();
                 RecyclerImageFile savedFile = ScannerState.getFileByName(filename, ScannerState.getSavedImages());
                 FileUtils.copyFileUsingChannel(file, savedFile);
 
                 String thumbnailPath = savedFile.getParent() + "/thumbnails/" + savedFile.getName();
-                Log.d("thumbnailPath", thumbnailPath);
                 FileUtils.createThumbnail(savedFile, thumbnailPath);
 
                 if(position==0) {
                     String dirThumbnailPath = FileUtils.home(context) + "/thumbnails/" + folderName + ".jpg";
-                    Log.d("dirThumbnailPath", dirThumbnailPath);
-
                     FileUtils.createThumbnail(savedFile, dirThumbnailPath);
                 }
 
