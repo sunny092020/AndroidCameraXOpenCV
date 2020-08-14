@@ -153,11 +153,6 @@ public class ImageCropActivity extends AppCompatActivity {
 
             FileUtils.writeBitmap(croppedBitmap, editImageFilePath);
             FileUtils.writeBitmap(croppedBitmap, doneImageFilePath);
-
-            int finalPosition = position;
-            runOnUiThread(() -> {
-                adapter.notifyItemChanged(finalPosition);
-            });
         }
 
         Intent intent = new Intent(this, ImageEditActivity.class);
