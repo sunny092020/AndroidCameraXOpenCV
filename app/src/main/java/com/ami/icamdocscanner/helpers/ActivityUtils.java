@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -77,8 +78,16 @@ public class ActivityUtils {
 
                 FileUtils.writeBitmap(bitmap, croppedFile.getAbsolutePath());
                 croppedFile.setCroppedPolygon(contour);
-
+                croppedFile.setChanged(false);
                 ScannerState.getCropImages().add(croppedFile);
+
+                Bitmap croppedBitmap = VisionUtils.getCroppedImage(croppedFile);
+                String editImageFilePath =  FileUtils.editImagePath(context, FileUtils.getOriginFileName(croppedFile.getName()));
+                String doneImageFilePath =  FileUtils.doneImagePath(context, FileUtils.getOriginFileName(croppedFile.getName()));
+                ScannerState.getEditImages().add(new RecyclerImageFile(editImageFilePath));
+                ScannerState.getDoneImages().add(new RecyclerImageFile(doneImageFilePath));
+                FileUtils.writeBitmap(croppedBitmap, editImageFilePath);
+                FileUtils.writeBitmap(croppedBitmap, doneImageFilePath);
 
                 int percent = (i+1) *100/uris.size();
                 progressBar.setProgress(percent);

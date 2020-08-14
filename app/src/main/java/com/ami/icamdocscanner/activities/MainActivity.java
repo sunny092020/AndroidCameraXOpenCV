@@ -608,6 +608,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
 
             retakingFile.setCroppedPolygon(contour);
+            retakingFile.setChanged(false);
+            Bitmap croppedBitmap = VisionUtils.getCroppedImage(retakingFile);
+            String editImageFilePath =  FileUtils.editImagePath(context, FileUtils.getOriginFileName(retakingFile.getName()));
+            String doneImageFilePath =  FileUtils.doneImagePath(context, FileUtils.getOriginFileName(retakingFile.getName()));
+            RecyclerImageFile editFile = ScannerState.getFileByName(editImageFilePath, ScannerState.getEditImages());
+            RecyclerImageFile doneFile = ScannerState.getFileByName(doneImageFilePath, ScannerState.getDoneImages());
+            if(editFile==null) {
+                ScannerState.getEditImages().add(new RecyclerImageFile(editImageFilePath));
+            }
+            if(doneFile==null) {
+                ScannerState.getDoneImages().add(new RecyclerImageFile(doneImageFilePath));
+            }
+            FileUtils.writeBitmap(croppedBitmap, editImageFilePath);
+            FileUtils.writeBitmap(croppedBitmap, doneImageFilePath);
 
             Intent cropIntent = new Intent(this, ImageCropActivity.class);
             cropIntent.putExtra("currentImagePosition", currentImagePosition);
@@ -627,9 +641,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         file.setCroppedPolygon(contour);
         ScannerState.getCropImages().add(file);
-
         FileUtils.ensureTempDir(this);
         FileUtils.writeBitmap(rotated90croppedBmp, fileName);
+
+        file.setChanged(false);
+        Bitmap croppedBitmap = VisionUtils.getCroppedImage(file);
+        String editImageFilePath =  FileUtils.editImagePath(context, FileUtils.getOriginFileName(file.getName()));
+        String doneImageFilePath =  FileUtils.doneImagePath(context, FileUtils.getOriginFileName(file.getName()));
+        ScannerState.getEditImages().add(new RecyclerImageFile(editImageFilePath));
+        ScannerState.getDoneImages().add(new RecyclerImageFile(doneImageFilePath));
+        FileUtils.writeBitmap(croppedBitmap, editImageFilePath);
+        FileUtils.writeBitmap(croppedBitmap, doneImageFilePath);
 
         if(Preferences.getIsCropAfterEachCapture(this)) {
             startCropActivity();

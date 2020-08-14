@@ -7,7 +7,10 @@ import android.graphics.Matrix;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.util.Log;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
 
+import com.ami.icamdocscanner.R;
 import com.ami.icamdocscanner.libraries.Line;
 import com.ami.icamdocscanner.libraries.LinePolar;
 import com.ami.icamdocscanner.libraries.PerspectiveTransformation;
@@ -30,6 +33,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiFunction;
 
@@ -544,5 +548,36 @@ public class VisionUtils {
         newOpts.inSampleSize = be;//Set zoom ratio
         //Reread the picture and notice that options.inJustDecodeBounds has been set back to false at this time.
         return BitmapFactory.decodeFile(image.getAbsolutePath(), newOpts);
+    }
+
+    public static Bitmap getCroppedImage(RecyclerImageFile imageFile) {
+        try {
+            Bitmap imageFileBitmap = FileUtils.readBitmap(imageFile.getAbsolutePath());
+            List<Point> cropPolygonPoints = imageFile.getCroppedPolygon().toList();
+
+            List<Point> points = new ArrayList<>();
+            float k = 1f;
+            points.add(new Point(cropPolygonPoints.get(0).x * k, cropPolygonPoints.get(0).y * k));
+            points.add(new Point(cropPolygonPoints.get(1).x * k, cropPolygonPoints.get(1).y * k));
+            points.add(new Point(cropPolygonPoints.get(2).x * k, cropPolygonPoints.get(2).y * k));
+            points.add(new Point(cropPolygonPoints.get(3).x * k, cropPolygonPoints.get(3).y * k));
+
+            float xRatio = 1f;
+            float yRatio = 1f;
+
+            float x1 = (float) ((Objects.requireNonNull(points.get(0)).x) * xRatio);
+            float x2 = (float) ((Objects.requireNonNull(points.get(1)).x) * xRatio);
+            float x3 = (float) ((Objects.requireNonNull(points.get(2)).x) * xRatio);
+            float x4 = (float) ((Objects.requireNonNull(points.get(3)).x) * xRatio);
+            float y1 = (float) ((Objects.requireNonNull(points.get(0)).y) * yRatio);
+            float y2 = (float) ((Objects.requireNonNull(points.get(1)).y) * yRatio);
+            float y3 = (float) ((Objects.requireNonNull(points.get(2)).y) * yRatio);
+            float y4 = (float) ((Objects.requireNonNull(points.get(3)).y) * yRatio);
+
+            return VisionUtils.getScannedBitmap(imageFileBitmap, x1, y1, x2, y2, x3, y3, x4, y4);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

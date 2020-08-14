@@ -203,6 +203,9 @@ public class ImageCropActivity extends AppCompatActivity {
             float xRatio = (float) imageFileBitmap.getWidth() / imageView.getWidth();
             float yRatio = (float) imageFileBitmap.getHeight() / imageView.getHeight();
 
+            Log.d("imageView.getWidth()", "" + imageView.getWidth());
+            Log.d("imageView.getHeight()", "" + imageView.getHeight());
+
             float x1 = (float) ((Objects.requireNonNull(points.get(0)).x) * xRatio);
             float x2 = (float) ((Objects.requireNonNull(points.get(1)).x) * xRatio);
             float x3 = (float) ((Objects.requireNonNull(points.get(2)).x) * xRatio);
