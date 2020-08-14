@@ -125,7 +125,7 @@ public class PdfActivity extends AppCompatActivity implements OnStartDragListene
 
         // set up the RecyclerView
         RecyclerView recyclerView = findViewById(R.id.files);
-        int numberOfColumns = 2;
+        int numberOfColumns = 3;
         recyclerView.setLayoutManager(new GridLayoutManager(this, numberOfColumns));
 
         adapter = new FileRecyclerViewAdapter(this, selectedFiles, this);

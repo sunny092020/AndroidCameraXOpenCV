@@ -293,6 +293,7 @@ public class ImageEditActivity extends AppCompatActivity {
         checkBtn.setOnClickListener(v -> {
             Intent doneIntent = new Intent(context, ImageDoneActivity.class);
             context.startActivity(doneIntent);
+            finish();
         });
     }
 
