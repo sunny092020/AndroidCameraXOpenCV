@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import com.ami.icamdocscanner.R;
 import com.ami.icamdocscanner.activities.ImageCropActivity;
@@ -44,14 +45,15 @@ public class ActivityUtils {
 
         LinearLayout progressBarHolder = activity.findViewById(R.id.progressBarHolder);
         progressBarHolder.setVisibility(View.VISIBLE);
-        ProgressBar progressBar = ((Activity)context).findViewById(R.id.progressBar);
+        ProgressBar progressBar = activity.findViewById(R.id.progressBar);
+        TextView pbText = activity.findViewById(R.id.pbText);
 
         new Thread(() -> {
             for(int i=0; i<uris.size(); i++) {
                 Uri uri = uris.get(i);
                 String fileName = FileUtils.cropImagePath(context, FileUtils.fileNameFromUri(context, uri));
                 if(ScannerState.isFileExist(fileName, ScannerState.getCropImages())) continue;
-                RecyclerImageFile file = new RecyclerImageFile(fileName);
+                RecyclerImageFile croppedFile = new RecyclerImageFile(fileName);
                 Bitmap bitmap = null;
 
                 try {
@@ -73,14 +75,18 @@ public class ActivityUtils {
                     contour = VisionUtils.dummyContour(originW, originH);
                 }
 
-                FileUtils.writeBitmap(bitmap, file.getAbsolutePath());
-                file.setCroppedPolygon(contour);
+                FileUtils.writeBitmap(bitmap, croppedFile.getAbsolutePath());
+                croppedFile.setCroppedPolygon(contour);
 
-
-                ScannerState.getCropImages().add(file);
+                ScannerState.getCropImages().add(croppedFile);
 
                 int percent = (i+1) *100/uris.size();
                 progressBar.setProgress(percent);
+
+                int finalI = i;
+                activity.runOnUiThread(() -> {
+                    pbText.setText("Import: " + (finalI +1) + "/" + uris.size() + " files");
+                });
             }
 
             activity.runOnUiThread(() -> progressBarHolder.setVisibility(View.GONE));

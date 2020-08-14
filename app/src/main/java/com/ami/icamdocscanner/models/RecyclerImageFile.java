@@ -11,6 +11,16 @@ public class RecyclerImageFile extends File implements Serializable {
 
     private boolean isChecked = false;
 
+    public boolean isChanged() {
+        return isChanged;
+    }
+
+    public void setChanged(boolean changed) {
+        isChanged = changed;
+    }
+
+    private boolean isChanged = true;
+
     private MatOfPoint2f croppedPolygon;
 
     public RecyclerImageFile(@NonNull File file) {

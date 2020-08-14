@@ -129,44 +129,28 @@ public class ImageCropActivity extends AppCompatActivity {
 
     private OnClickListener btnImageEnhanceClick = v -> {
         int currentImagePosition =  getIntent().getIntExtra("currentImagePosition", -1);
-        if(currentImagePosition == -1) {
-            toEditImage();
-        } else {
-            RecyclerImageFile croppedFile = ScannerState.getCropImages().get(currentImagePosition);
-            Bitmap croppedBitmap = getCroppedImage(croppedFile);
-
-            String editImageFilePath =  FileUtils.editImagePath(context, FileUtils.getOriginFileName(croppedFile.getName()));
-            String doneImageFilePath =  FileUtils.doneImagePath(context, FileUtils.getOriginFileName(croppedFile.getName()));
-
-            FileUtils.writeBitmap(croppedBitmap, editImageFilePath);
-            FileUtils.writeBitmap(croppedBitmap, doneImageFilePath);
-
-            Intent intent = new Intent(this, ImageEditActivity.class);
-            intent.putExtra("currentImagePosition", currentImagePosition);
-            setResult(Activity.RESULT_OK,intent);
-            finish();
-        }
-    };
-
-    private void toEditImage() {
         LinearLayout progressBarHolder = findViewById(R.id.progressBarHolder);
         progressBarHolder.setVisibility(View.VISIBLE);
-
         ProgressBar progressBar = ((Activity)context).findViewById(R.id.progressBar);
-
-        Log.d("ScannerState.getDoneImages().size()", "" + ScannerState.getDoneImages().size());
+        TextView pbText = ((Activity)context).findViewById(R.id.pbText);
 
         new Thread(() -> {
             for(int position=0; position<ScannerState.getCropImages().size(); position++) {
                 RecyclerImageFile croppedFile = ScannerState.getCropImages().get(position);
+                if(!croppedFile.isChanged()) continue;
+                croppedFile.setChanged(false);
+
                 Bitmap croppedBitmap = getCroppedImage(croppedFile);
                 String editImageFilePath =  FileUtils.editImagePath(context, FileUtils.getOriginFileName(croppedFile.getName()));
                 String doneImageFilePath =  FileUtils.doneImagePath(context, FileUtils.getOriginFileName(croppedFile.getName()));
-
-                if(ScannerState.isFileExist(doneImageFilePath, ScannerState.getDoneImages())) continue;
-
-                ScannerState.getEditImages().add(new RecyclerImageFile(editImageFilePath));
-                ScannerState.getDoneImages().add(new RecyclerImageFile(doneImageFilePath));
+                RecyclerImageFile editFile = ScannerState.getFileByName(editImageFilePath, ScannerState.getEditImages());
+                RecyclerImageFile doneFile = ScannerState.getFileByName(doneImageFilePath, ScannerState.getDoneImages());
+                if(editFile==null) {
+                    ScannerState.getEditImages().add(new RecyclerImageFile(editImageFilePath));
+                }
+                if(doneFile==null) {
+                    ScannerState.getDoneImages().add(new RecyclerImageFile(doneImageFilePath));
+                }
 
                 Log.d("write done", position + "" + doneImageFilePath);
 
@@ -175,16 +159,25 @@ public class ImageCropActivity extends AppCompatActivity {
 
                 int percent = (position+1) *100/ScannerState.getCropImages().size();
                 progressBar.setProgress(percent);
+                int finalPosition = position;
+                ((Activity)context).runOnUiThread(() -> {
+                    pbText.setText("Processed: " + (finalPosition +1) + "/" + ScannerState.getCropImages().size() + " files");
+                });
             }
 
             runOnUiThread(() -> progressBarHolder.setVisibility(View.GONE));
 
             Intent intent = new Intent(this, ImageEditActivity.class);
-            startActivity(intent);
-            finish();
+            intent.putExtra("currentImagePosition", viewPagerCrop.getCurrentItem());
 
+            if(currentImagePosition == -1) {
+                startActivity(intent);
+            } else {
+                setResult(Activity.RESULT_OK,intent);
+            }
+            finish();
         }).start();
-    }
+    };
 
     private Bitmap getCroppedImage(RecyclerImageFile imageFile) {
         try {
@@ -192,6 +185,10 @@ public class ImageCropActivity extends AppCompatActivity {
             List<Point> cropPolygonPoints = imageFile.getCroppedPolygon().toList();
 
             FrameLayout holderImageCrop = findViewById(R.id.holderImageCrop);
+
+            Log.d("holderImageCrop.getWidth()", "" + holderImageCrop.getWidth());
+            Log.d("holderImageCrop.getHeight()", "" + holderImageCrop.getHeight());
+
             float kx = (float) holderImageCrop.getWidth()/imageFileBitmap.getWidth();
             float ky = (float) holderImageCrop.getHeight()/imageFileBitmap.getHeight();
             float k = (Math.min(kx, ky));
