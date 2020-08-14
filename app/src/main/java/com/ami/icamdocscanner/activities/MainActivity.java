@@ -595,6 +595,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
 
             retakingFile.setCroppedPolygon(contour);
+            Bitmap scaledBitmap = VisionUtils.scaledBitmap(rotated90croppedBmp, ScannerState.holderCropWidth, ScannerState.holderCropHeight);
+            retakingFile.setScaledBitmap(scaledBitmap);
 
             Intent cropIntent = new Intent(this, ImageCropActivity.class);
             cropIntent.putExtra("currentImagePosition", currentImagePosition);

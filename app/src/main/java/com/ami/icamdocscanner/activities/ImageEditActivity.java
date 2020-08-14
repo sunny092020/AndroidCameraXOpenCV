@@ -312,7 +312,7 @@ public class ImageEditActivity extends AppCompatActivity {
                 FileUtils.writeBitmap(croppedBitmap, editImageFilePath);
                 FileUtils.writeBitmap(croppedBitmap, doneImageFilePath);
 
-                viewPagerEdit.setCurrentItem(currentImagePosition);
+                viewPagerEdit.setCurrentItem(currentImagePosition, false);
                 adapter.notifyItemChanged(currentImagePosition);
             }
         }

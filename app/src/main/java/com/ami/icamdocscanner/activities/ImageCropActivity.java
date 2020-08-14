@@ -24,6 +24,10 @@ import com.ami.icamdocscanner.models.RecyclerImageFile;
 public class ImageCropActivity extends AppCompatActivity {
     ViewPager2 viewPagerCrop;
 
+    // we need this field to handle 2 cases : from main screen and from edit screen
+    // when back from main screen, we 
+    int currentImagePosition = -1;
+
     public ViewPagerCropAdapter getAdapter() {
         return adapter;
     }
@@ -67,9 +71,7 @@ public class ImageCropActivity extends AppCompatActivity {
     // user go back to re-crop
     protected void onStart() {
         super.onStart();
-        int currentImagePosition =  getIntent().getIntExtra("currentImagePosition", -1);
-        Log.d("onStart currentImagePosition", "" + currentImagePosition);
-        viewPagerCrop.setCurrentItem(currentImagePosition, false);
+        viewPagerCrop.setCurrentItem(getIntent().getIntExtra("currentImagePosition", currentImagePosition), false);
     }
 
     private void initView() {
@@ -85,8 +87,7 @@ public class ImageCropActivity extends AppCompatActivity {
 
     private OnClickListener btnCloseClick = v -> {
         Intent intent = new Intent(this, MainActivity.class);
-        int currentImagePosition = viewPagerCrop.getCurrentItem();
-        intent.putExtra("currentImagePosition", currentImagePosition);
+        intent.putExtra("currentImagePosition", viewPagerCrop.getCurrentItem());
         startActivityForResult(intent, ScannerConstant.RETAKE_PHOTO);
     };
 
@@ -102,9 +103,9 @@ public class ImageCropActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == ScannerConstant.RETAKE_PHOTO) {
             if(resultCode == Activity.RESULT_OK){
-                int currentImagePosition =  data.getIntExtra("currentImagePosition", ScannerState.getCropImages().size());
-                viewPagerCrop.setCurrentItem(currentImagePosition);
+                currentImagePosition =  data.getIntExtra("currentImagePosition", ScannerState.getCropImages().size());
                 adapter.notifyItemChanged(currentImagePosition);
+                viewPagerCrop.setCurrentItem(currentImagePosition, false);
             }
             if (resultCode == Activity.RESULT_CANCELED) {}
         }
