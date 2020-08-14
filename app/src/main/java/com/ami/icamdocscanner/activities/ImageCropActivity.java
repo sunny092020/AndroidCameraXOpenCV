@@ -4,11 +4,16 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -22,8 +27,10 @@ import com.ami.icamdocscanner.helpers.ScannerState;
 import com.ami.icamdocscanner.helpers.VisionUtils;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
 
+import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -85,6 +92,9 @@ public class ImageCropActivity extends AppCompatActivity {
         Button btnClose = findViewById(R.id.btnClose);
         Button btnAdd = findViewById(R.id.btnAdd);
 
+        LinearLayout progressBarHolder = findViewById(R.id.progressBarHolder);
+        progressBarHolder.setVisibility(View.GONE);
+
         btnImageCrop.setOnClickListener(btnImageEnhanceClick);
         btnClose.setOnClickListener(btnCloseClick);
 
@@ -139,25 +149,41 @@ public class ImageCropActivity extends AppCompatActivity {
     };
 
     private void toEditImage() {
-        ScannerState.getEditImages().clear();
-        ScannerState.getDoneImages().clear();
+        LinearLayout progressBarHolder = findViewById(R.id.progressBarHolder);
+        progressBarHolder.setVisibility(View.VISIBLE);
 
-        for(int position=0; position<ScannerState.getCropImages().size(); position++) {
-            RecyclerImageFile croppedFile = ScannerState.getCropImages().get(position);
+        ProgressBar progressBar = ((Activity)context).findViewById(R.id.progressBar);
 
-            Bitmap croppedBitmap = getCroppedImage(croppedFile);
-            String editImageFilePath =  FileUtils.editImagePath(context, FileUtils.getOriginFileName(croppedFile.getName()));
-            String doneImageFilePath =  FileUtils.doneImagePath(context, FileUtils.getOriginFileName(croppedFile.getName()));
-            ScannerState.getEditImages().add(new RecyclerImageFile(editImageFilePath));
-            ScannerState.getDoneImages().add(new RecyclerImageFile(doneImageFilePath));
+        Log.d("ScannerState.getDoneImages().size()", "" + ScannerState.getDoneImages().size());
 
-            FileUtils.writeBitmap(croppedBitmap, editImageFilePath);
-            FileUtils.writeBitmap(croppedBitmap, doneImageFilePath);
-        }
+        new Thread(() -> {
+            for(int position=0; position<ScannerState.getCropImages().size(); position++) {
+                RecyclerImageFile croppedFile = ScannerState.getCropImages().get(position);
+                Bitmap croppedBitmap = getCroppedImage(croppedFile);
+                String editImageFilePath =  FileUtils.editImagePath(context, FileUtils.getOriginFileName(croppedFile.getName()));
+                String doneImageFilePath =  FileUtils.doneImagePath(context, FileUtils.getOriginFileName(croppedFile.getName()));
 
-        Intent intent = new Intent(this, ImageEditActivity.class);
-        startActivity(intent);
-        finish();
+                if(ScannerState.isFileExist(doneImageFilePath, ScannerState.getDoneImages())) continue;
+
+                ScannerState.getEditImages().add(new RecyclerImageFile(editImageFilePath));
+                ScannerState.getDoneImages().add(new RecyclerImageFile(doneImageFilePath));
+
+                Log.d("write done", position + "" + doneImageFilePath);
+
+                FileUtils.writeBitmap(croppedBitmap, editImageFilePath);
+                FileUtils.writeBitmap(croppedBitmap, doneImageFilePath);
+
+                int percent = (position+1) *100/ScannerState.getCropImages().size();
+                progressBar.setProgress(percent);
+            }
+
+            runOnUiThread(() -> progressBarHolder.setVisibility(View.GONE));
+
+            Intent intent = new Intent(this, ImageEditActivity.class);
+            startActivity(intent);
+            finish();
+
+        }).start();
     }
 
     private Bitmap getCroppedImage(RecyclerImageFile imageFile) {

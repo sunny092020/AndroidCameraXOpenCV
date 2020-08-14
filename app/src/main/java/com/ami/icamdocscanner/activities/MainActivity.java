@@ -24,6 +24,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -219,6 +220,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
 
         MenuItem btnChoosePhoto = menu.findItem(R.id.btnChoosePhoto);
+
+        LinearLayout progressBarHolder = findViewById(R.id.progressBarHolder);
+        progressBarHolder.setVisibility(View.GONE);
+
         btnChoosePhoto.setOnMenuItemClickListener(item -> {
             Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
             // The MIME data type filter
@@ -240,7 +245,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (requestCode == ScannerConstant.LAUNCH_FILE_PICKER) {
             if(resultCode == Activity.RESULT_OK) {
                 ActivityUtils.filePickerProcessResult(context, data);
-                startCropActivity();
             }
             else if (resultCode == Activity.RESULT_CANCELED) {
                 //Write your code if there's no result

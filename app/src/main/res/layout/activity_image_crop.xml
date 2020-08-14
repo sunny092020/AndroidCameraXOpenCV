@@ -86,4 +86,6 @@
             android:layout_alignParentRight="true"
             android:textColor="#ffffff"/>
     </RelativeLayout>
+
+    <include layout="@layout/progress_bar_determint"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

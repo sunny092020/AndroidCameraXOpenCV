@@ -100,5 +100,6 @@
             app:layout_anchor="@+id/bottonAppBar" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
+    <include layout="@layout/progress_bar_determint"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

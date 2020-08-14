@@ -262,6 +262,10 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
 
     private void setupChoosePhotoButtonListener() {
         ImageView choosePhotoBtn = findViewById(R.id.choosePhotoBtn);
+
+        LinearLayout progressBarHolder = findViewById(R.id.progressBarHolder);
+        progressBarHolder.setVisibility(View.GONE);
+
         choosePhotoBtn.setOnClickListener(v -> {
             ScannerState.resetScannerState();
             Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
@@ -280,9 +284,6 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
         if (requestCode == ScannerConstant.LAUNCH_FILE_PICKER) {
             if(resultCode == Activity.RESULT_OK) {
                 ActivityUtils.filePickerProcessResult(context, data);
-                Intent cropIntent = new Intent(this, ImageCropActivity.class);
-                startActivity(cropIntent);
-                finish();
             }
             if (resultCode == Activity.RESULT_CANCELED) {
                 //Write your code if there's no result
