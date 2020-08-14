@@ -32,6 +32,8 @@ public class ActivityUtils {
             }
         }
 
+        FileUtils.ensureTempDir(context);
+
         for(int i=0; i<uris.size(); i++) {
             Uri uri = uris.get(i);
             String fileName = FileUtils.cropImagePath(context, FileUtils.fileNameFromUri(context, uri));
