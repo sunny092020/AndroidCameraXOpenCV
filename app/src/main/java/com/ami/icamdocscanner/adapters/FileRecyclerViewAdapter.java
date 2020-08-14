@@ -112,7 +112,11 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
             Bitmap thumbnailBitmap = FileUtils.getThumbnailNoCreate(file);
             thumbnail.setImageBitmap(thumbnailBitmap);
 
-            fileName.setText(file.getName());
+            String title = file.getName();
+            if(file.isDirectory()) {
+                title = "(" + FileUtils.listFiles(file).size() + ")" + title;
+            }
+            fileName.setText(title);
             itemView.setOnClickListener(view -> {
                 if(actionMode != null) {
                     file.setChecked(!file.isChecked());
