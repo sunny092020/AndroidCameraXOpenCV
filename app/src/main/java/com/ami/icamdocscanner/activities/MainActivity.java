@@ -614,9 +614,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             String doneImageFilePath =  FileUtils.doneImagePath(context, FileUtils.getOriginFileName(retakingFile.getName()));
             RecyclerImageFile editFile = ScannerState.getFileByName(editImageFilePath, ScannerState.getEditImages());
             RecyclerImageFile doneFile = ScannerState.getFileByName(doneImageFilePath, ScannerState.getDoneImages());
+
+            // in case of add a new scan
             if(editFile==null) {
                 ScannerState.getEditImages().add(new RecyclerImageFile(editImageFilePath));
             }
+
+            // in case of add a new scan
             if(doneFile==null) {
                 ScannerState.getDoneImages().add(new RecyclerImageFile(doneImageFilePath));
             }
