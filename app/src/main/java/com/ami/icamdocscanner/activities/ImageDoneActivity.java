@@ -235,11 +235,10 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
     }
 
     private void setupRetakeButtonListener() {
-        FileUtils.deleteTempDir(context);
         ImageView retakeBtn = findViewById(R.id.retakeBtn);
-
         retakeBtn.setOnClickListener(v -> {
             ScannerState.resetScannerState();
+            FileUtils.deleteTempDir(context);
             Intent intent = new Intent(this, MainActivity.class);
             startActivity(intent);
             finish();
@@ -247,7 +246,6 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
     }
 
     private void setupChoosePhotoButtonListener() {
-        FileUtils.deleteTempDir(context);
         ImageView choosePhotoBtn = findViewById(R.id.choosePhotoBtn);
 
         LinearLayout progressBarHolder = findViewById(R.id.progressBarHolder);
@@ -255,6 +253,7 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
 
         choosePhotoBtn.setOnClickListener(v -> {
             ScannerState.resetScannerState();
+            FileUtils.deleteTempDir(context);
             Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
             // The MIME data type filter
             intent.setType("image/*");

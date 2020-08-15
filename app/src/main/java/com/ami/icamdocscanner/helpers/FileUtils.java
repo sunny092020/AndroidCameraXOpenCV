@@ -92,6 +92,7 @@ public class FileUtils {
     }
 
     public static boolean deleteDirectoryStream(File directory) {
+        if(!directory.exists()) return true;
         Path path = directory.toPath();
         try {
             Files.walk(path)
