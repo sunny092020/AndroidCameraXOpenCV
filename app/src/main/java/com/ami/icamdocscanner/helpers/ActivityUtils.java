@@ -50,7 +50,7 @@ public class ActivityUtils {
         new Thread(() -> {
             for(int i=0; i<uris.size(); i++) {
                 Uri uri = uris.get(i);
-                String fileName = FileUtils.cropImagePath(context, FileUtils.fileNameFromUri(context, uri));
+                String fileName = FileUtils.originImagePath(context, FileUtils.fileNameFromUri(context, uri));
                 if(ScannerState.isFileExist(fileName, ScannerState.getOriginImages())) continue;
                 RecyclerImageFile originImage = new RecyclerImageFile(fileName);
                 Bitmap originBitmap = null;
@@ -80,8 +80,8 @@ public class ActivityUtils {
                 ScannerState.getOriginImages().add(originImage);
 
                 Bitmap croppedBitmap = VisionUtils.getCroppedImage(originBitmap, contour);
-                String editImageFilePath =  FileUtils.editImagePath(context, FileUtils.getOriginFileName(originImage.getName()));
-                String doneImageFilePath =  FileUtils.doneImagePath(context, FileUtils.getOriginFileName(originImage.getName()));
+                String editImageFilePath =  FileUtils.editImagePath(context, originImage.getName());
+                String doneImageFilePath =  FileUtils.doneImagePath(context, originImage.getName());
 
                 RecyclerImageFile editImage = new RecyclerImageFile(editImageFilePath);
                 RecyclerImageFile doneImage = new RecyclerImageFile(doneImageFilePath);

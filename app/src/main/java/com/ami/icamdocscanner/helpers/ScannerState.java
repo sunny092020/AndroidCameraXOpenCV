@@ -15,15 +15,11 @@ public class ScannerState {
     // filtered images
     private static List<RecyclerImageFile> doneImages = new ArrayList<>();
 
-    // saved images
-    private static List<RecyclerImageFile> savedImages = new ArrayList<>();
-
     // retake image, back to main activity from crop activity
     public static void resetScannerState() {
         originImages.clear();
         editImages.clear();
         doneImages.clear();
-        savedImages.clear();
     }
 
     public static List<RecyclerImageFile> getOriginImages() {
@@ -38,10 +34,6 @@ public class ScannerState {
         return doneImages;
     }
 
-    public static List<RecyclerImageFile> getSavedImages() {
-        return savedImages;
-    }
-    
     public static RecyclerImageFile getFileByName(String fileName, List<RecyclerImageFile> files) {
         for(RecyclerImageFile file: files) {
             if(fileName.equalsIgnoreCase(file.getAbsolutePath())) {

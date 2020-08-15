@@ -4,8 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.net.Uri;
-import android.util.Log;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -17,7 +15,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.ami.icamdocscanner.R;
@@ -109,7 +106,7 @@ public class FileRecyclerViewAdapter extends RecyclerView.Adapter<FileRecyclerVi
 
             check.setVisibility(file.isChecked() ? View.VISIBLE : View.GONE);
 
-            Bitmap thumbnailBitmap = FileUtils.getThumbnailNoCreate(file);
+            Bitmap thumbnailBitmap = file.getThumbnail();
             thumbnail.setImageBitmap(thumbnailBitmap);
 
             String title = file.getName();

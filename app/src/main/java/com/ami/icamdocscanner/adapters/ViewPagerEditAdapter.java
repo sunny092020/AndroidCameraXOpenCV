@@ -63,7 +63,7 @@ public class ViewPagerEditAdapter extends RecyclerView.Adapter<ViewPagerEditAdap
             new Thread(() -> {
                 Bitmap bitmap;
                 if(FileUtils.fileExtension(image.getName()).equalsIgnoreCase("pdf")) {
-                    bitmap = FileUtils.getThumbnailNoCreate(image);
+                    bitmap = image.getThumbnail();
                 } else {
                     bitmap = FileUtils.readBitmap(image);
                 }

@@ -117,71 +117,56 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
     }
 
     private void setupAdapter() {
+        File directory;
         if(ScannerState.getDoneImages().size() > 0) {
-            displayDoneImages();
+            FileUtils.deleteDirectoryStream(new File(FileUtils.tempDir(context) + "/edit"));
+            directory = prepareNewDir();
+            ScannerState.resetScannerState();
         } else {
-            displayDir();
+            directory = (RecyclerImageFile) getIntent().getSerializableExtra("directory");
+            if(directory==null) directory = context.getFilesDir();
         }
+        displayDir(directory);
     }
 
-    private void displayDoneImages() {
-        // set up the RecyclerView
-        RecyclerView recyclerView = findViewById(R.id.files);
-        int numberOfColumns = 3;
-        recyclerView.setLayoutManager(new GridLayoutManager(this, numberOfColumns));
-
+    private File prepareNewDir() {
         // Get a Calendar and set it to the current time.
         Calendar cal = Calendar.getInstance();
         cal.setTime(Date.from(Instant.now()));
 
         String folderName = String.format(Locale.US, "AMI_ICAMDOC_SCANNER-%1$tY-%1$tm-%1$td-%1$tk-%1$tS-%1$tp", cal);
-        FileUtils.ensureDir(context, folderName);
 
-        for(RecyclerImageFile file: ScannerState.getDoneImages()) {
-            String filename = FileUtils.home(context) + "/" + folderName + "/" + FileUtils.getOriginFileName(file.getName());
-            ScannerState.getSavedImages().add(new RecyclerImageFile(filename));
-        }
-
-        adapter = new FileRecyclerViewAdapter(this, ScannerState.getSavedImages());
-        recyclerView.setAdapter(adapter);
-
-        new Thread(() -> {
-            for(int position=0; position<ScannerState.getDoneImages().size(); position++) {
-                RecyclerImageFile file = ScannerState.getDoneImages().get(position);
-                String filename = FileUtils.home(context) + "/" + folderName + "/" + FileUtils.getOriginFileName(file.getName());
-                RecyclerImageFile savedFile = ScannerState.getFileByName(filename, ScannerState.getSavedImages());
-                FileUtils.copyFileUsingChannel(file, savedFile);
-
-                String thumbnailPath = savedFile.getParent() + "/thumbnails/" + savedFile.getName();
-                FileUtils.createThumbnail(savedFile, thumbnailPath);
-
-                if(position==0) {
-                    String dirThumbnailPath = FileUtils.home(context) + "/thumbnails/" + folderName + ".jpg";
-                    FileUtils.createThumbnail(savedFile, dirThumbnailPath);
-                }
-
-                int finalPosition = position;
-                runOnUiThread(() -> {
-                    adapter.notifyItemChanged(finalPosition);
-                });
-            }
-            FileUtils.deleteTempDir(context);
-            ScannerState.getOriginImages().clear();
-            ScannerState.getEditImages().clear();
-            ScannerState.getDoneImages().clear();
-        }).start();
+        File oldFolder = new File(FileUtils.tempDir(context));
+        File newFolder = new File(FileUtils.home(context) + "/" + folderName);
+        boolean success = oldFolder.renameTo(newFolder);
+        Log.d("renameTo success", "" + success);
+        return newFolder;
     }
 
-    private void displayDir() {
+    private void displayDir(File directory) {
         // set up the RecyclerView
         RecyclerView recyclerView = findViewById(R.id.files);
         int numberOfColumns = 3;
         recyclerView.setLayoutManager(new GridLayoutManager(this, numberOfColumns));
 
-        File directory = (RecyclerImageFile) getIntent().getSerializableExtra("directory");
-        if(directory==null) directory = context.getFilesDir();
-        adapter = new FileRecyclerViewAdapter(this, FileUtils.listFiles(directory));
+        List<RecyclerImageFile> images = FileUtils.listFiles(directory);
+
+        adapter = new FileRecyclerViewAdapter(this, images);
         recyclerView.setAdapter(adapter);
+
+        new Thread(() -> {
+            for(int position=0; position<images.size(); position++) {
+                RecyclerImageFile file = images.get(position);
+
+                if(!file.thumbnailExist()) {
+                    file.createThumbnail();
+                    int finalPosition = position;
+                    runOnUiThread(() -> {
+                        adapter.notifyItemChanged(finalPosition);
+                    });
+                }
+            }
+        }).start();
     }
 
     private void setupButtonListener() {
@@ -342,12 +327,7 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
 
                 for (int i = 0; i < adapter.getSelected().size(); i++) {
                     RecyclerImageFile file = adapter.getSelected().get(i);
-                    FileUtils.removeThumbnail(file);
-                    if(file.isFile()) {
-                        file.delete();
-                    } else {
-                        FileUtils.deleteDirectoryStream(file);
-                    }
+                    file.delete();
                 }
                 adapter.exitActionMode();
 

@@ -610,8 +610,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             retakingFile.setCroppedPolygon(contour);
             retakingFile.setChanged(false);
             Bitmap croppedBitmap = VisionUtils.getCroppedImage(rotated90croppedBmp, contour);
-            String editImageFilePath =  FileUtils.editImagePath(context, FileUtils.getOriginFileName(retakingFile.getName()));
-            String doneImageFilePath =  FileUtils.doneImagePath(context, FileUtils.getOriginFileName(retakingFile.getName()));
+            String editImageFilePath =  FileUtils.editImagePath(context, retakingFile.getName());
+            String doneImageFilePath =  FileUtils.doneImagePath(context, retakingFile.getName());
             RecyclerImageFile editFile = ScannerState.getFileByName(editImageFilePath, ScannerState.getEditImages());
             RecyclerImageFile doneFile = ScannerState.getFileByName(doneImageFilePath, ScannerState.getDoneImages());
 
@@ -634,7 +634,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
 
-        String fileName =  FileUtils.cropImagePath(context, ScannerState.getOriginImages().size() + ".jpg");
+        String fileName =  FileUtils.originImagePath(context, ScannerState.getOriginImages().size() + ".jpg");
         RecyclerImageFile file = new RecyclerImageFile(fileName);
         MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, this);
         if(contour == null) {
@@ -650,8 +650,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         file.setChanged(false);
         Bitmap croppedBitmap = VisionUtils.getCroppedImage(rotated90croppedBmp, contour);
-        String editImageFilePath =  FileUtils.editImagePath(context, FileUtils.getOriginFileName(file.getName()));
-        String doneImageFilePath =  FileUtils.doneImagePath(context, FileUtils.getOriginFileName(file.getName()));
+        String editImageFilePath =  FileUtils.editImagePath(context, file.getName());
+        String doneImageFilePath =  FileUtils.doneImagePath(context, file.getName());
         ScannerState.getEditImages().add(new RecyclerImageFile(editImageFilePath));
         ScannerState.getDoneImages().add(new RecyclerImageFile(doneImageFilePath));
         FileUtils.writeBitmap(croppedBitmap, editImageFilePath);

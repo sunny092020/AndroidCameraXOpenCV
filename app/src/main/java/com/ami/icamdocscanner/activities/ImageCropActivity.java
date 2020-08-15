@@ -133,24 +133,28 @@ public class ImageCropActivity extends AppCompatActivity {
 
         new Thread(() -> {
             for(int position = 0; position<ScannerState.getOriginImages().size(); position++) {
-                RecyclerImageFile croppedFile = ScannerState.getOriginImages().get(position);
-                if(!croppedFile.isChanged()) continue;
-                croppedFile.setChanged(false);
+                RecyclerImageFile originImage = ScannerState.getOriginImages().get(position);
+                if(!originImage.isChanged()) continue;
+                originImage.setChanged(false);
 
-                Bitmap croppedBitmap = getCroppedImage(croppedFile);
-                String editImageFilePath =  FileUtils.editImagePath(context, FileUtils.getOriginFileName(croppedFile.getName()));
-                String doneImageFilePath =  FileUtils.doneImagePath(context, FileUtils.getOriginFileName(croppedFile.getName()));
-                RecyclerImageFile editFile = ScannerState.getFileByName(editImageFilePath, ScannerState.getEditImages());
-                RecyclerImageFile doneFile = ScannerState.getFileByName(doneImageFilePath, ScannerState.getDoneImages());
+                Bitmap croppedBitmap = getCroppedImage(originImage);
+                String editImageFilePath =  FileUtils.editImagePath(context, originImage.getName());
+                String doneImageFilePath =  FileUtils.doneImagePath(context, originImage.getName());
+                RecyclerImageFile editFile = new RecyclerImageFile(editImageFilePath);
+                RecyclerImageFile doneFile = new RecyclerImageFile(doneImageFilePath);
+
+                Log.d("editImageFilePath", editImageFilePath);
+
+                Log.d("doneImageFilePath", doneImageFilePath);
 
                 // in case of add a new scan
-                if(editFile==null) {
-                    ScannerState.getEditImages().add(new RecyclerImageFile(editImageFilePath));
+                if(!editFile.exists()) {
+                    ScannerState.getEditImages().add(editFile);
                 }
 
                 // in case of add a new scan
-                if(doneFile==null) {
-                    ScannerState.getDoneImages().add(new RecyclerImageFile(doneImageFilePath));
+                if(!doneFile.exists()) {
+                    ScannerState.getDoneImages().add(doneFile);
                 }
                 
                 FileUtils.writeBitmap(croppedBitmap, editImageFilePath);

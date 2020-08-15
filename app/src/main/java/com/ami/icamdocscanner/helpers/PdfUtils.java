@@ -1,5 +1,6 @@
 package com.ami.icamdocscanner.helpers;
 
+import android.graphics.Bitmap;
 import android.widget.ProgressBar;
 
 import com.ami.icamdocscanner.models.RecyclerImageFile;
@@ -9,13 +10,40 @@ import com.tom_roush.pdfbox.pdmodel.PDPageContentStream;
 import com.tom_roush.pdfbox.pdmodel.common.PDRectangle;
 import com.tom_roush.pdfbox.pdmodel.graphics.image.JPEGFactory;
 import com.tom_roush.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import com.tom_roush.pdfbox.rendering.PDFRenderer;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
 public class PdfUtils {
+    public static Bitmap thumbnail(File pdfFile) {
+        PDDocument document = null;
+        Bitmap image = null;
+        try {
+            document = PDDocument.load(pdfFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        PDFRenderer renderer = new PDFRenderer(document);
+        try {
+            image = renderer.renderImage(0);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if(document!=null) {
+                try {
+                    document.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return image;
+    }
+
     public static void toPDFMulti(List<RecyclerImageFile> imageFiles, String outPath, ProgressBar progressBar) {
         toPDFMultiAndroidBuiltIn(imageFiles, outPath, progressBar);
     }

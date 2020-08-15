@@ -67,9 +67,7 @@ public class PdfActivity extends AppCompatActivity implements OnStartDragListene
 
                     outPath =  imgFile.getParent() + "/" + FileUtils.fileNameWithoutExtension(imgFile.getName());
                     PdfUtils.toPDFSingle(imgFile, outPath);
-
-                    String thumbnailPath = imgFile.getParent() + "/thumbnails/" + FileUtils.fileNameWithoutExtension(imgFile.getName()) + "-pdf.jpg";
-                    FileUtils.createThumbnail(imgFile, thumbnailPath);
+                    imgFile.createThumbnail();
                     int percent = (int) (i+1)*100/adapter.getSelected().size();
                     progressBar.setProgress(percent);
                 }
@@ -109,8 +107,7 @@ public class PdfActivity extends AppCompatActivity implements OnStartDragListene
 
             new Thread(() -> {
                 PdfUtils.toPDFMulti(adapter.getSelected(), outPath, progressBar);
-                String thumbnailPath = adapter.getSelected().get(0).getParent() + "/thumbnails/" + filename + "-pdf.jpg";
-                FileUtils.createThumbnail(adapter.getSelected().get(0), thumbnailPath);
+                adapter.getSelected().get(0).createThumbnail();
                 runOnUiThread(() -> progressBarHolder.setVisibility(View.GONE));
                 Intent intent = new Intent(this, ImageDoneActivity.class);
                 startActivity(intent);

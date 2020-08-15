@@ -62,100 +62,20 @@ public class FileUtils {
         return FileUtils.fileExtension(fileName).equalsIgnoreCase(extension);
     }
 
-    public static Bitmap getThumbnail(RecyclerImageFile imageFile) {
-        String thumbnailPath = imageFile.getParent() + "/thumbnails/" + imageFile.getName();
-
-        if(FileUtils.isFileType(imageFile.getName(), "pdf")) {
-            thumbnailPath = imageFile.getParent() + "/thumbnails/" + FileUtils.fileNameWithoutExtension(imageFile.getName()) + "-pdf.jpg";
-        }
-
-        File thumbnailFile = new File(thumbnailPath);
-
-        if(thumbnailFile.exists()) {
-            return BitmapFactory.decodeFile(thumbnailFile.getAbsolutePath());
-        }else {
-
-            if(FileUtils.isFileType(imageFile.getName(), "pdf")) {
-                // TODO: cannot create thumbnail of a pdf
-                return null;
-            } else {
-                return createThumbnail(imageFile, thumbnailPath);
-            }
-        }
-    }
-
-    public static Bitmap getThumbnailNoCreate(RecyclerImageFile imageFile) {
-        String thumbnailPath = imageFile.getParent() + "/thumbnails/" + imageFile.getName();
-        if(imageFile.isDirectory()) {
-            thumbnailPath += ".jpg";
-        }
-
-        if(FileUtils.isFileType(imageFile.getName(), "pdf")) {
-            thumbnailPath = imageFile.getParent() + "/thumbnails/" + FileUtils.fileNameWithoutExtension(imageFile.getName()) + "-pdf.jpg";
-        }
-
-        File thumbnailFile = new File(thumbnailPath);
-
-        if(thumbnailFile.exists()) {
-            return BitmapFactory.decodeFile(thumbnailFile.getAbsolutePath());
-        }else {
-            return null;
-        }
-    }
-
-    public static void removeThumbnail(RecyclerImageFile imageFile) {
-        String thumbnailPath = imageFile.getParent() + "/thumbnails/" + imageFile.getName();
-
-        if(imageFile.isDirectory()) {
-            thumbnailPath += ".jpg";
-        }
-
-        if(FileUtils.isFileType(imageFile.getName(), "pdf")) {
-            thumbnailPath = imageFile.getParent() + "/thumbnails/" + FileUtils.fileNameWithoutExtension(imageFile.getName()) + "-pdf.jpg";
-        }
-
-        File thumbnailFile = new File(thumbnailPath);
-        thumbnailFile.delete();
-    }
-
-    public static Bitmap createThumbnail(RecyclerImageFile imageFile, String thumbnailPath) {
-        String thumbnailsDirectoryPath = new File(thumbnailPath).getParent();
-        File thumbnailsDirectory = new File(thumbnailsDirectoryPath);
-        if (!thumbnailsDirectory.exists()){
-            if (!thumbnailsDirectory.mkdir()) return null;
-        }
-
-        Bitmap originBitmap;
-
-        originBitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
-        int DOWNSCALE_IMAGE_SIZE = 300;
-
-        Bitmap smallOriginBitmap = VisionUtils.scaledBitmap(originBitmap, DOWNSCALE_IMAGE_SIZE, DOWNSCALE_IMAGE_SIZE);
-
-        FileOutputStream out = null;
-        try {
-            out = new FileOutputStream(thumbnailPath);
-            smallOriginBitmap.compress(Bitmap.CompressFormat.JPEG, 99, out);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        finally {
-            if(out!=null) {
-                try {
-                    out.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        return smallOriginBitmap;
-    }
-
     public static void ensureTempDir(Context context) {
-        File directory = new File(context.getFilesDir().getAbsolutePath() + "/" +  "temp_dir" + "/");
-        if (!directory.exists()){
-            if (!directory.mkdir()) return;
+        File tempDir = new File(context.getFilesDir().getAbsolutePath() + "/" +  "temp_dir/");
+        if (!tempDir.exists()){
+            if (!tempDir.mkdir()) return;
+        }
+
+        File originDir = new File(context.getFilesDir().getAbsolutePath() + "/" +  "temp_dir/origin/");
+        if (!originDir.exists()){
+            if (!originDir.mkdir()) return;
+        }
+
+        File editDir = new File(context.getFilesDir().getAbsolutePath() + "/" +  "temp_dir/edit/");
+        if (!editDir.exists()){
+            if (!editDir.mkdir()) return;
         }
     }
 
@@ -179,15 +99,17 @@ public class FileUtils {
         }
     }
 
-    public static void deleteDirectoryStream(File directory) {
+    public static boolean deleteDirectoryStream(File directory) {
         Path path = directory.toPath();
         try {
             Files.walk(path)
                     .sorted(Comparator.reverseOrder())
                     .map(Path::toFile)
                     .forEach(File::delete);
+            return true;
         } catch (IOException e) {
             e.printStackTrace();
+            return false;
         }
     }
 
@@ -228,26 +150,16 @@ public class FileUtils {
         return context.getFilesDir().getAbsolutePath() + "/" +  "temp_dir" + "/";
     }
 
-    public static String cropImagePath(Context context, String fileName) {
-        return FileUtils.tempDir(context) + "crop_" + FileUtils.getOriginFileName(fileName);
+    public static String originImagePath(Context context, String fileName) {
+        return FileUtils.tempDir(context) + "/origin/" + fileName;
     }
 
     public static String editImagePath(Context context, String fileName) {
-        return FileUtils.tempDir(context) + "edit_" + FileUtils.getOriginFileName(fileName);
+        return FileUtils.tempDir(context) + "/edit/" + fileName;
     }
 
     public static String doneImagePath(Context context, String fileName) {
-        return FileUtils.tempDir(context) + "done_" + FileUtils.getOriginFileName(fileName);
-    }
-
-    public static String getOriginFileName(String fileName) {
-        if (fileName.indexOf("crop_") >= 0)
-            return fileName.substring(fileName.lastIndexOf("crop_") + 5);
-        if (fileName.indexOf("edit_") >= 0)
-            return fileName.substring(fileName.lastIndexOf("edit_") + 5);
-        if (fileName.indexOf("done_") >= 0)
-            return fileName.substring(fileName.lastIndexOf("done_") + 5);
-        return fileName;
+        return FileUtils.tempDir(context) + fileName;
     }
 
     public static String ocrDir(Context context) {
@@ -456,6 +368,9 @@ public class FileUtils {
                 return false;
             if(file.getName().equalsIgnoreCase("temp_dir"))
                 return false;
+            if(file.getName().equalsIgnoreCase("origin"))
+                return false;
+
             return true;
         });
         assert files != null;
