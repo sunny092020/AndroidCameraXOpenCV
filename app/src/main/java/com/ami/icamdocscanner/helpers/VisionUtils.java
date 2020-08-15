@@ -553,11 +553,9 @@ public class VisionUtils {
         return BitmapFactory.decodeFile(image.getAbsolutePath(), newOpts);
     }
 
-    public static Bitmap getCroppedImage(RecyclerImageFile imageFile) {
+    public static Bitmap getCroppedImage(Bitmap originBitmap, MatOfPoint2f contour) {
         try {
-            Bitmap imageFileBitmap = FileUtils.readBitmap(imageFile.getAbsolutePath());
-            List<Point> cropPolygonPoints = imageFile.getCroppedPolygon().toList();
-
+            List<Point> cropPolygonPoints = contour.toList();
             List<Point> points = new ArrayList<>();
             float k = 1f;
             points.add(new Point(cropPolygonPoints.get(0).x * k, cropPolygonPoints.get(0).y * k));
@@ -577,7 +575,7 @@ public class VisionUtils {
             float y3 = (float) ((Objects.requireNonNull(points.get(2)).y) * yRatio);
             float y4 = (float) ((Objects.requireNonNull(points.get(3)).y) * yRatio);
 
-            return VisionUtils.getScannedBitmap(imageFileBitmap, x1, y1, x2, y2, x3, y3, x4, y4);
+            return VisionUtils.getScannedBitmap(originBitmap, x1, y1, x2, y2, x3, y3, x4, y4);
         } catch (Exception e) {
             e.printStackTrace();
             return null;

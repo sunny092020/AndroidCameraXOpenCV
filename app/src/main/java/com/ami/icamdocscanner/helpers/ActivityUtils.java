@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -14,7 +13,6 @@ import android.widget.TextView;
 
 import com.ami.icamdocscanner.R;
 import com.ami.icamdocscanner.activities.ImageCropActivity;
-import com.ami.icamdocscanner.activities.ImageDoneActivity;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
 
 import org.opencv.core.MatOfPoint2f;
@@ -53,41 +51,44 @@ public class ActivityUtils {
             for(int i=0; i<uris.size(); i++) {
                 Uri uri = uris.get(i);
                 String fileName = FileUtils.cropImagePath(context, FileUtils.fileNameFromUri(context, uri));
-                if(ScannerState.isFileExist(fileName, ScannerState.getCropImages())) continue;
-                RecyclerImageFile croppedFile = new RecyclerImageFile(fileName);
-                Bitmap bitmap = null;
+                if(ScannerState.isFileExist(fileName, ScannerState.getOriginImages())) continue;
+                RecyclerImageFile originImage = new RecyclerImageFile(fileName);
+                Bitmap originBitmap = null;
 
                 try {
-                    bitmap = FileUtils.readBitmap(context, uri);
+                    originBitmap = FileUtils.readBitmap(context, uri);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                int originW = bitmap.getWidth();
-                int originH = bitmap.getHeight();
+                int originW = originBitmap.getWidth();
+                int originH = originBitmap.getHeight();
                 if(originW > originH) {
-                    bitmap = VisionUtils.rotateBitmap(bitmap, 90);
-                    originW = bitmap.getWidth();
-                    originH = bitmap.getHeight();
+                    originBitmap = VisionUtils.rotateBitmap(originBitmap, 90);
+                    originW = originBitmap.getWidth();
+                    originH = originBitmap.getHeight();
                 }
 
-                MatOfPoint2f contour = VisionUtils.findContours(bitmap, (Activity) context);
+                MatOfPoint2f contour = VisionUtils.findContours(originBitmap, (Activity) context);
 
                 if(contour == null) {
                     contour = VisionUtils.dummyContour(originW, originH);
                 }
 
-                FileUtils.writeBitmap(bitmap, croppedFile.getAbsolutePath());
-                croppedFile.setCroppedPolygon(contour);
-                croppedFile.setChanged(false);
-                ScannerState.getCropImages().add(croppedFile);
+                FileUtils.writeBitmap(originBitmap, originImage.getAbsolutePath());
+                originImage.setCroppedPolygon(contour);
+                originImage.setChanged(false);
+                ScannerState.getOriginImages().add(originImage);
 
-                Bitmap croppedBitmap = VisionUtils.getCroppedImage(croppedFile);
-                String editImageFilePath =  FileUtils.editImagePath(context, FileUtils.getOriginFileName(croppedFile.getName()));
-                String doneImageFilePath =  FileUtils.doneImagePath(context, FileUtils.getOriginFileName(croppedFile.getName()));
-                ScannerState.getEditImages().add(new RecyclerImageFile(editImageFilePath));
-                ScannerState.getDoneImages().add(new RecyclerImageFile(doneImageFilePath));
+                Bitmap croppedBitmap = VisionUtils.getCroppedImage(originBitmap, contour);
+                String editImageFilePath =  FileUtils.editImagePath(context, FileUtils.getOriginFileName(originImage.getName()));
+                String doneImageFilePath =  FileUtils.doneImagePath(context, FileUtils.getOriginFileName(originImage.getName()));
+
+                RecyclerImageFile editImage = new RecyclerImageFile(editImageFilePath);
+                RecyclerImageFile doneImage = new RecyclerImageFile(doneImageFilePath);
+                ScannerState.getEditImages().add(editImage);
+                ScannerState.getDoneImages().add(doneImage);
                 FileUtils.writeBitmap(croppedBitmap, editImageFilePath);
-                FileUtils.writeBitmap(croppedBitmap, doneImageFilePath);
+                FileUtils.copyFileUsingChannel(editImage, doneImage);
 
                 int percent = (i+1) *100/uris.size();
                 progressBar.setProgress(percent);

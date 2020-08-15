@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -27,10 +26,8 @@ import com.ami.icamdocscanner.helpers.ScannerState;
 import com.ami.icamdocscanner.helpers.VisionUtils;
 import com.ami.icamdocscanner.models.RecyclerImageFile;
 
-import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -69,7 +66,7 @@ public class ImageCropActivity extends AppCompatActivity {
             public void onPageSelected(int position) {
                 super.onPageSelected(position);
                 TextView pager = findViewById(R.id.pager);
-                pager.setText(position+1 + "/" + ScannerState.getCropImages().size());
+                pager.setText(position+1 + "/" + ScannerState.getOriginImages().size());
             }
 
             @Override
@@ -119,7 +116,7 @@ public class ImageCropActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == ScannerConstant.RETAKE_PHOTO) {
             if(resultCode == Activity.RESULT_OK){
-                currentImagePosition =  data.getIntExtra("currentImagePosition", ScannerState.getCropImages().size());
+                currentImagePosition =  data.getIntExtra("currentImagePosition", ScannerState.getOriginImages().size());
                 adapter.notifyItemChanged(currentImagePosition);
                 viewPagerCrop.setCurrentItem(currentImagePosition, false);
             }
@@ -135,8 +132,8 @@ public class ImageCropActivity extends AppCompatActivity {
         TextView pbText = ((Activity)context).findViewById(R.id.pbText);
 
         new Thread(() -> {
-            for(int position=0; position<ScannerState.getCropImages().size(); position++) {
-                RecyclerImageFile croppedFile = ScannerState.getCropImages().get(position);
+            for(int position = 0; position<ScannerState.getOriginImages().size(); position++) {
+                RecyclerImageFile croppedFile = ScannerState.getOriginImages().get(position);
                 if(!croppedFile.isChanged()) continue;
                 croppedFile.setChanged(false);
 
@@ -155,17 +152,15 @@ public class ImageCropActivity extends AppCompatActivity {
                 if(doneFile==null) {
                     ScannerState.getDoneImages().add(new RecyclerImageFile(doneImageFilePath));
                 }
-
-                Log.d("write done", position + "" + doneImageFilePath);
-
+                
                 FileUtils.writeBitmap(croppedBitmap, editImageFilePath);
-                FileUtils.writeBitmap(croppedBitmap, doneImageFilePath);
+                FileUtils.copyFileUsingChannel(editFile, doneFile);
 
-                int percent = (position+1) *100/ScannerState.getCropImages().size();
+                int percent = (position+1) *100/ScannerState.getOriginImages().size();
                 progressBar.setProgress(percent);
                 int finalPosition = position;
                 ((Activity)context).runOnUiThread(() -> {
-                    pbText.setText("Processed: " + (finalPosition +1) + "/" + ScannerState.getCropImages().size() + " files");
+                    pbText.setText("Processed: " + (finalPosition +1) + "/" + ScannerState.getOriginImages().size() + " files");
                 });
             }
 
@@ -190,9 +185,6 @@ public class ImageCropActivity extends AppCompatActivity {
 
             FrameLayout holderImageCrop = findViewById(R.id.holderImageCrop);
 
-            Log.d("holderImageCrop.getWidth()", "" + holderImageCrop.getWidth());
-            Log.d("holderImageCrop.getHeight()", "" + holderImageCrop.getHeight());
-
             float kx = (float) holderImageCrop.getWidth()/imageFileBitmap.getWidth();
             float ky = (float) holderImageCrop.getHeight()/imageFileBitmap.getHeight();
             float k = (Math.min(kx, ky));
@@ -206,9 +198,6 @@ public class ImageCropActivity extends AppCompatActivity {
             ImageView imageView = findViewById(R.id.imageView);
             float xRatio = (float) imageFileBitmap.getWidth() / imageView.getWidth();
             float yRatio = (float) imageFileBitmap.getHeight() / imageView.getHeight();
-
-            Log.d("imageView.getWidth()", "" + imageView.getWidth());
-            Log.d("imageView.getHeight()", "" + imageView.getHeight());
 
             float x1 = (float) ((Objects.requireNonNull(points.get(0)).x) * xRatio);
             float x2 = (float) ((Objects.requireNonNull(points.get(1)).x) * xRatio);

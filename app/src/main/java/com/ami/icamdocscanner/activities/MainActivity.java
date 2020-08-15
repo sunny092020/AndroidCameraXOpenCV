@@ -169,7 +169,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // add more images
         boolean add = getIntent().getBooleanExtra("add", false);
         if(add) {
-            List<RecyclerImageFile> files = ScannerState.getCropImages();
+            List<RecyclerImageFile> files = ScannerState.getOriginImages();
             RecyclerImageFile latestFile = files.get(files.size() -1);
 
             Bitmap latestFileBitmap = FileUtils.readBitmap(latestFile.getAbsolutePath());
@@ -180,7 +180,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             batchThumbnails.setImageBitmap(smallOriginBitmap);
 
             TextView batchNumTxt = findViewById(R.id.batchNum);
-            batchNumTxt.setText(String.format(Locale.US, "%d", ScannerState.getCropImages().size()));
+            batchNumTxt.setText(String.format(Locale.US, "%d", ScannerState.getOriginImages().size()));
             batchNumTxt.setVisibility(View.VISIBLE);
         }
     }
@@ -597,7 +597,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         // retake existing capture
         if(currentImagePosition >= 0) {
-            RecyclerImageFile retakingFile = ScannerState.getCropImages().get(currentImagePosition);
+            RecyclerImageFile retakingFile = ScannerState.getOriginImages().get(currentImagePosition);
             FileUtils.writeBitmap(rotated90croppedBmp, retakingFile.getAbsolutePath());
 
             MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, this);
@@ -609,7 +609,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             retakingFile.setCroppedPolygon(contour);
             retakingFile.setChanged(false);
-            Bitmap croppedBitmap = VisionUtils.getCroppedImage(retakingFile);
+            Bitmap croppedBitmap = VisionUtils.getCroppedImage(rotated90croppedBmp, contour);
             String editImageFilePath =  FileUtils.editImagePath(context, FileUtils.getOriginFileName(retakingFile.getName()));
             String doneImageFilePath =  FileUtils.doneImagePath(context, FileUtils.getOriginFileName(retakingFile.getName()));
             RecyclerImageFile editFile = ScannerState.getFileByName(editImageFilePath, ScannerState.getEditImages());
@@ -634,7 +634,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
 
-        String fileName =  FileUtils.cropImagePath(context, ScannerState.getCropImages().size() + ".jpg");
+        String fileName =  FileUtils.cropImagePath(context, ScannerState.getOriginImages().size() + ".jpg");
         RecyclerImageFile file = new RecyclerImageFile(fileName);
         MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, this);
         if(contour == null) {
@@ -644,12 +644,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         file.setCroppedPolygon(contour);
-        ScannerState.getCropImages().add(file);
+        ScannerState.getOriginImages().add(file);
         FileUtils.ensureTempDir(this);
         FileUtils.writeBitmap(rotated90croppedBmp, fileName);
 
         file.setChanged(false);
-        Bitmap croppedBitmap = VisionUtils.getCroppedImage(file);
+        Bitmap croppedBitmap = VisionUtils.getCroppedImage(rotated90croppedBmp, contour);
         String editImageFilePath =  FileUtils.editImagePath(context, FileUtils.getOriginFileName(file.getName()));
         String doneImageFilePath =  FileUtils.doneImagePath(context, FileUtils.getOriginFileName(file.getName()));
         ScannerState.getEditImages().add(new RecyclerImageFile(editImageFilePath));
@@ -669,7 +669,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             ImageView batchThumbnails = findViewById(R.id.batchThumbnails);
             batchThumbnails.setImageBitmap(smallOriginBitmap);
             TextView batchNumTxt = findViewById(R.id.batchNum);
-            batchNumTxt.setText(String.format(Locale.US, "%d", ScannerState.getCropImages().size()));
+            batchNumTxt.setText(String.format(Locale.US, "%d", ScannerState.getOriginImages().size()));
             batchNumTxt.setVisibility(View.VISIBLE);
             resetCaptureTime();
             unfreezePreview();

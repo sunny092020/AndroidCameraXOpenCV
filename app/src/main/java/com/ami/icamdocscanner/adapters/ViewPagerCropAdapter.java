@@ -1,11 +1,9 @@
 package com.ami.icamdocscanner.adapters;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.PointF;
 import android.graphics.drawable.BitmapDrawable;
-import android.util.Log;
 import android.util.Size;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -54,7 +52,7 @@ public class ViewPagerCropAdapter extends RecyclerView.Adapter<ViewPagerCropAdap
 
     @Override
     public int getItemCount() {
-        return ScannerState.getCropImages().size();
+        return ScannerState.getOriginImages().size();
     }
 
     // stores and recycles views as they are scrolled off screen
@@ -74,7 +72,7 @@ public class ViewPagerCropAdapter extends RecyclerView.Adapter<ViewPagerCropAdap
         }
 
         void bind(int position) {
-            RecyclerImageFile file = ScannerState.getCropImages().get(position);
+            RecyclerImageFile file = ScannerState.getOriginImages().get(position);
             imageView.setImageBitmap(null);
 
             new Thread(() -> {

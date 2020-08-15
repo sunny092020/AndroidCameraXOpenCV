@@ -166,7 +166,7 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
                 });
             }
             FileUtils.deleteTempDir(context);
-            ScannerState.getCropImages().clear();
+            ScannerState.getOriginImages().clear();
             ScannerState.getEditImages().clear();
             ScannerState.getDoneImages().clear();
         }).start();

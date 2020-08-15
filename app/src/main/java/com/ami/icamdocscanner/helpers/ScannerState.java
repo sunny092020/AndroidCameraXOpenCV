@@ -7,7 +7,7 @@ import java.util.List;
 
 public class ScannerState {
     // original images
-    private static List<RecyclerImageFile> cropImages = new ArrayList<>();
+    private static List<RecyclerImageFile> originImages = new ArrayList<>();
 
     // cropped images
     private static List<RecyclerImageFile> editImages = new ArrayList<>();
@@ -20,14 +20,14 @@ public class ScannerState {
 
     // retake image, back to main activity from crop activity
     public static void resetScannerState() {
-        cropImages.clear();
+        originImages.clear();
         editImages.clear();
         doneImages.clear();
         savedImages.clear();
     }
 
-    public static List<RecyclerImageFile> getCropImages() {
-        return cropImages;
+    public static List<RecyclerImageFile> getOriginImages() {
+        return originImages;
     }
 
     public static List<RecyclerImageFile> getEditImages() {
