@@ -2,17 +2,17 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_height="wrap_content"
     android:layout_width="wrap_content">
-    <CheckBoxPreference
+    <androidx.preference.CheckBoxPreference
         android:title="Auto crop after each capture"
         android:defaultValue="false"
         android:summary="This option if selected will allow the application to perform auto crop after each capture."
         android:key="is_crop_after_each_capture_key" />
 
-    <Preference
+    <androidx.preference.Preference
         android:title="Ocr languages"
         android:summary="Select the languages can be ocr">
         <intent android:targetPackage="com.ami.icamdocscanner"
             android:targetClass="com.ami.icamdocscanner.activities.OcrLanguagesActivity"/>
-    </Preference>
+    </androidx.preference.Preference>
 
 </PreferenceScreen>
