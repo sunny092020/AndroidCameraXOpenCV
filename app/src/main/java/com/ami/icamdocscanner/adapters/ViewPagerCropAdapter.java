@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.PointF;
 import android.graphics.drawable.BitmapDrawable;
+import android.util.Log;
 import android.util.Size;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -73,8 +74,6 @@ public class ViewPagerCropAdapter extends RecyclerView.Adapter<ViewPagerCropAdap
 
         void bind(int position) {
             RecyclerImageFile file = ScannerState.getOriginImages().get(position);
-            imageView.setImageBitmap(null);
-
             new Thread(() -> {
                 FrameLayout holderImageCrop = itemView.findViewById(R.id.holderImageCrop);
 

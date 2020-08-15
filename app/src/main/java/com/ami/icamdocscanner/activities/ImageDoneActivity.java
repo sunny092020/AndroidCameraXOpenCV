@@ -235,6 +235,7 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
     }
 
     private void setupRetakeButtonListener() {
+        FileUtils.deleteTempDir(context);
         ImageView retakeBtn = findViewById(R.id.retakeBtn);
 
         retakeBtn.setOnClickListener(v -> {
@@ -246,6 +247,7 @@ public class ImageDoneActivity extends AppCompatActivity implements TessBaseAPI.
     }
 
     private void setupChoosePhotoButtonListener() {
+        FileUtils.deleteTempDir(context);
         ImageView choosePhotoBtn = findViewById(R.id.choosePhotoBtn);
 
         LinearLayout progressBarHolder = findViewById(R.id.progressBarHolder);

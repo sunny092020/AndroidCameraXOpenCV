@@ -87,16 +87,8 @@ public class FileUtils {
     }
 
     public static void deleteTempDir(Context context) {
-        File directory = new File(context.getFilesDir().getAbsolutePath() + "/" +  "temp_dir");
-        if (directory.exists()) {
-            File[] allContents = directory.listFiles();
-            if (allContents != null) {
-                for (File file : allContents) {
-                    file.delete();
-                }
-            }
-            directory.delete();
-        }
+        File tempDirectory = new File(context.getFilesDir().getAbsolutePath() + "/" +  "temp_dir");
+        deleteDirectoryStream(tempDirectory);
     }
 
     public static boolean deleteDirectoryStream(File directory) {

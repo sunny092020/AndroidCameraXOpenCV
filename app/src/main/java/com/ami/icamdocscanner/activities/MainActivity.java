@@ -114,9 +114,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         context = this;
 
         setupBottomAppBar();
-
         setupButtons();
-        deleteTempDir();
 
         ivBitmap = findViewById(R.id.ivBitmap);
         capturedView = findViewById(R.id.capturedView);
@@ -251,16 +249,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Log.d("LAUNCH_FILE_PICKER result", "cancel");
             }
         }
-    }
-
-    private void deleteTempDir() {
-        // for retake image
-        int currentImagePosition =  getIntent().getIntExtra("currentImagePosition", -1);
-        boolean add = getIntent().getBooleanExtra("add", false);
-
-        if(add) return;
-        if(currentImagePosition>=0) return;
-        FileUtils.deleteTempDir(this);
     }
 
     private void freezePreview(Bitmap lastFrameBitmap) {
