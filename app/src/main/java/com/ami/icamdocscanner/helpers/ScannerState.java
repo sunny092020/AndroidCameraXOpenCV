@@ -6,9 +6,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ScannerState {
+    // original images
     private static List<RecyclerImageFile> cropImages = new ArrayList<>();
+
+    // cropped images
     private static List<RecyclerImageFile> editImages = new ArrayList<>();
+
+    // filtered images
     private static List<RecyclerImageFile> doneImages = new ArrayList<>();
+
+    // saved images
     private static List<RecyclerImageFile> savedImages = new ArrayList<>();
 
     // retake image, back to main activity from crop activity
