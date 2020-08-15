@@ -612,18 +612,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Bitmap croppedBitmap = VisionUtils.getCroppedImage(rotated90croppedBmp, contour);
             String editImageFilePath =  FileUtils.editImagePath(context, retakingFile.getName());
             String doneImageFilePath =  FileUtils.doneImagePath(context, retakingFile.getName());
-            RecyclerImageFile editFile = ScannerState.getFileByName(editImageFilePath, ScannerState.getEditImages());
-            RecyclerImageFile doneFile = ScannerState.getFileByName(doneImageFilePath, ScannerState.getDoneImages());
+            RecyclerImageFile editFile = new RecyclerImageFile(editImageFilePath);
+            RecyclerImageFile doneFile = new RecyclerImageFile(doneImageFilePath);
 
             // in case of add a new scan
-            if(editFile==null) {
-                ScannerState.getEditImages().add(new RecyclerImageFile(editImageFilePath));
+            if(!editFile.exists()) {
+                ScannerState.getEditImages().add(editFile);
             }
 
             // in case of add a new scan
-            if(doneFile==null) {
-                ScannerState.getDoneImages().add(new RecyclerImageFile(doneImageFilePath));
+            if(!doneFile.exists()) {
+                ScannerState.getDoneImages().add(doneFile);
             }
+
             FileUtils.writeBitmap(croppedBitmap, editImageFilePath);
             FileUtils.writeBitmap(croppedBitmap, doneImageFilePath);
 

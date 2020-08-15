@@ -51,8 +51,9 @@ public class ActivityUtils {
             for(int i=0; i<uris.size(); i++) {
                 Uri uri = uris.get(i);
                 String fileName = FileUtils.originImagePath(context, FileUtils.fileNameFromUri(context, uri));
-                if(ScannerState.isFileExist(fileName, ScannerState.getOriginImages())) continue;
                 RecyclerImageFile originImage = new RecyclerImageFile(fileName);
+                if(originImage.exists()) continue;
+
                 Bitmap originBitmap = null;
 
                 try {

@@ -143,10 +143,6 @@ public class ImageCropActivity extends AppCompatActivity {
                 RecyclerImageFile editFile = new RecyclerImageFile(editImageFilePath);
                 RecyclerImageFile doneFile = new RecyclerImageFile(doneImageFilePath);
 
-                Log.d("editImageFilePath", editImageFilePath);
-
-                Log.d("doneImageFilePath", doneImageFilePath);
-
                 // in case of add a new scan
                 if(!editFile.exists()) {
                     ScannerState.getEditImages().add(editFile);
