@@ -90,7 +90,8 @@ public class RecyclerImageFile extends File implements Serializable {
     }
 
     public Bitmap getThumbnail() {
-        return FileUtils.readBitmap(thumbnailPath());
+        if(thumbnailExist()) return FileUtils.readBitmap(thumbnailPath());
+        return null;
     }
 
     public boolean deleteThumbnail () {
