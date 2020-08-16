@@ -50,8 +50,8 @@ public class ActivityUtils {
         new Thread(() -> {
             for(int i=0; i<uris.size(); i++) {
                 Uri uri = uris.get(i);
-                String fileName = FileUtils.originImagePath(context, FileUtils.fileNameFromUri(context, uri));
-                RecyclerImageFile originImage = new RecyclerImageFile(fileName);
+                String originFileName = FileUtils.originImagePath(context, i+".jpg");
+                RecyclerImageFile originImage = new RecyclerImageFile(originFileName);
                 if(originImage.exists()) continue;
 
                 Bitmap originBitmap = null;
@@ -63,12 +63,6 @@ public class ActivityUtils {
                 }
                 int originW = originBitmap.getWidth();
                 int originH = originBitmap.getHeight();
-                if(originW > originH) {
-                    originBitmap = VisionUtils.rotateBitmap(originBitmap, 90);
-                    originW = originBitmap.getWidth();
-                    originH = originBitmap.getHeight();
-                }
-
                 MatOfPoint2f contour = VisionUtils.findContours(originBitmap, (Activity) context);
 
                 if(contour == null) {
