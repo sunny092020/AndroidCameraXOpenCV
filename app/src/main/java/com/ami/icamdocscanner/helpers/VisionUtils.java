@@ -40,10 +40,12 @@ import java.util.function.BiFunction;
 import static java.lang.Math.abs;
 
 public class VisionUtils {
-    private final static double MIN_WIDTH=0.55, MIN_HEIGHT = 0.55;
+    private final static double MIN_WIDTH=0.5, MIN_HEIGHT = 0.5;
 
-    private static BiFunction<Mat, Activity, MatOfPoint2f> cacheFindContoursFun = null;
-    private static int cacheMatIndex = -1;
+    static {
+        System.loadLibrary("native-lib");
+    }
+    private static native void findContours(long srcMatAddr, long debugMatAddr);
 
     public static MatOfPoint2f findContours(Bitmap bitmap, Activity activity) {
 
@@ -87,42 +89,21 @@ public class VisionUtils {
 
         Mat[] inputMats = {gray, H, S, V, notGray, notH, notS, notV};
 
-        MatOfPoint2f contour = coverAllMethods4Contours(inputMats, activity);
+        MatOfPoint2f contour = null;
+
+        for(Mat inputMat: inputMats) {
+            contour = adaptiveThreshold(inputMat, activity);
+            if(contour!=null) break;
+
+            contour = houghLines(inputMat, activity);
+            if(contour!=null) break;
+        }
 
         for(Mat inputMat: inputMats) inputMat.release();
 
         if(contour == null) return null;
 
         return MathUtils.scaleRectangle(contour, 1f / ratio);
-    }
-
-    public static MatOfPoint2f coverAllMethods4Contours(Mat[] inputMats, Activity activity) {
-        if((cacheFindContoursFun!=null) && (cacheMatIndex>=0)) {
-            Mat localMat = inputMats[cacheMatIndex];
-
-            MatOfPoint2f ret = cacheFindContoursFun.apply(localMat, activity);
-            if (ret != null) return ret;
-        }
-
-        List<BiFunction<Mat, Activity, MatOfPoint2f>> functions = new ArrayList<>();
-
-        // apply in this order
-        functions.add(VisionUtils::adaptiveThreshold);
-        functions.add(VisionUtils::houghLines);
-
-        for(BiFunction <Mat, Activity, MatOfPoint2f> f:functions) {
-            int inputMatsIndex = 0;
-            for(Mat localMat: inputMats) {
-                MatOfPoint2f contour = f.apply(localMat, activity);
-                if(contour!=null) {
-                    cacheFindContoursFun = f;
-                    cacheMatIndex = inputMatsIndex;
-                    return contour;
-                }
-                inputMatsIndex++;
-            }
-        }
-        return null;
     }
 
     private static MatOfPoint2f houghLines(Mat mat, Activity activity) {

@@ -433,7 +433,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
 
-        MatOfPoint2f contour = VisionUtils.findContours(bitmap);
+        MatOfPoint2f contour = VisionUtils.findContours(bitmap, (Activity) context);
 
         runOnUiThread(() -> {
             if(contour==null) {
@@ -505,7 +505,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
                 Bitmap previewBitmap = previewView.getBitmap();
                 Bitmap rotated90croppedBmp = cropCapturedImage(capturedImg);
-                MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp);
+                MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, (Activity) context);
 
                 if(contour == null) {
                     resetCaptureTime();
@@ -588,7 +588,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             RecyclerImageFile retakingFile = ScannerState.getOriginImages().get(currentImagePosition);
             FileUtils.writeBitmap(rotated90croppedBmp, retakingFile.getAbsolutePath());
 
-            MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp);
+            MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, (Activity) context);
             if(contour == null) {
                 int originW = rotated90croppedBmp.getWidth();
                 int originH = rotated90croppedBmp.getHeight();
@@ -625,7 +625,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         String fileName =  FileUtils.originImagePath(context, ScannerState.getOriginImages().size() + ".jpg");
         RecyclerImageFile file = new RecyclerImageFile(fileName);
-        MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp);
+        MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, (Activity) context);
         if(contour == null) {
             int originW = rotated90croppedBmp.getWidth();
             int originH = rotated90croppedBmp.getHeight();

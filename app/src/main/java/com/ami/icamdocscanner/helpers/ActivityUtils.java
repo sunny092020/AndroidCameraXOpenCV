@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -54,7 +55,7 @@ public class ActivityUtils {
                 RecyclerImageFile originImage = new RecyclerImageFile(originFileName);
                 if(originImage.exists()) continue;
 
-                Bitmap originBitmap = null;
+                Bitmap originBitmap = null, outBitmap;
 
                 try {
                     originBitmap = FileUtils.readBitmap(context, uri);
@@ -63,12 +64,20 @@ public class ActivityUtils {
                 }
                 int originW = originBitmap.getWidth();
                 int originH = originBitmap.getHeight();
+                if(originW > originH) {
+                    originBitmap = VisionUtils.rotateBitmap(originBitmap, 90);
+                    originW = originBitmap.getWidth();
+                    originH = originBitmap.getHeight();
+                }
+
                 MatOfPoint2f contour = VisionUtils.findContours(originBitmap, (Activity) context);
 
                 if(contour == null) {
                     contour = VisionUtils.dummyContour(originW, originH);
                 }
 
+//                Debugger.bitmap = originBitmap;
+//                FileUtils.writeBitmap(Debugger.bitmap, originImage.getAbsolutePath());
                 FileUtils.writeBitmap(originBitmap, originImage.getAbsolutePath());
                 originImage.setCroppedPolygon(contour);
                 originImage.setChanged(false);
