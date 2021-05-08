@@ -308,7 +308,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             // Connect the preview use case to the previewView
             preview.setSurfaceProvider(
-                    previewView.createSurfaceProvider());
+                    previewView.getSurfaceProvider());
 
             setFrameLayoutRatio();
 
