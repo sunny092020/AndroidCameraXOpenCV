@@ -418,24 +418,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
 
-        Bitmap bitmap=null;
-        try {
-            bitmap= previewView.getBitmap();
-        } catch (Exception e) {
-            // some time surface invalid error happened
-            e.printStackTrace();
-        }
-
-        // sometimes, it continues to find contours when transiting
-        // to other screen, so bitmap is null
-        if(bitmap== null) {
-            image.close();
-            return;
-        }
-
-        MatOfPoint2f contour = VisionUtils.findContours(bitmap, (Activity) context);
-
         runOnUiThread(() -> {
+            Bitmap bitmap=null;
+            try {
+                bitmap = previewView.getBitmap();
+            } catch (Exception e) {
+                // some time surface invalid error happened
+                e.printStackTrace();
+            }
+
+            // sometimes, it continues to find contours when transiting
+            // to other screen, so bitmap is null
+            if(bitmap== null) {
+                image.close();
+                return;
+            }
+
+            MatOfPoint2f contour = VisionUtils.findContours(bitmap, (Activity) context);
+
             if(contour==null) {
                 clearPoints();
                 displayHint("No document");
@@ -503,15 +503,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         imageCapture.takePicture(outputFileOptionsBuilder.build(), Executors.newSingleThreadExecutor(), new ImageCapture.OnImageSavedCallback() {
             @Override
             public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
-                Bitmap previewBitmap = previewView.getBitmap();
-                Bitmap rotated90croppedBmp = cropCapturedImage(capturedImg);
-                MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, (Activity) context);
+                runOnUiThread(() -> {
+                    Bitmap previewBitmap = previewView.getBitmap();
+                    Bitmap rotated90croppedBmp = cropCapturedImage(capturedImg);
+                    MatOfPoint2f contour = VisionUtils.findContours(rotated90croppedBmp, (Activity) context);
 
-                if(contour == null) {
-                    resetCaptureTime();
-                    return;
-                }
-                batchModeCapture(previewBitmap, rotated90croppedBmp);
+                    if(contour == null) {
+                        resetCaptureTime();
+                        return;
+                    }
+                    batchModeCapture(previewBitmap, rotated90croppedBmp);
+                });
             }
             public void onError(@NotNull ImageCaptureException exception) {}
         });
@@ -525,9 +527,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         imageCapture.takePicture(outputFileOptionsBuilder.build(), Executors.newSingleThreadExecutor(), new ImageCapture.OnImageSavedCallback() {
             @Override
             public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
-                Bitmap previewBitmap = previewView.getBitmap();
-                Bitmap rotated90croppedBmp = cropCapturedImage(capturedImg);
-                batchModeCapture(previewBitmap, rotated90croppedBmp);
+                runOnUiThread(() -> {
+                    Bitmap previewBitmap = previewView.getBitmap();
+                    Bitmap rotated90croppedBmp = cropCapturedImage(capturedImg);
+                    batchModeCapture(previewBitmap, rotated90croppedBmp);
+                });
             }
             public void onError(@NotNull ImageCaptureException exception) {}
         });
